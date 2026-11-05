@@ -1,0 +1,65 @@
+{
+  "topic": "The 'Emerald Panna' Financial Leak in 6th House Rahu",
+  "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
+  "voice": null,
+  "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
+  "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
+  "agent_evolution_level": 1.2,
+  "hook": {
+    "formula_id": 2,
+    "formula_name": "Negative Command",
+    "spoken": "Stop wearing Emerald if your Rahu is in the 6th house, fast!",
+    "on_screen": "⚠️ STOP WEARING EMERALD!",
+    "score": 84.4,
+    "verdict": "STRONG",
+    "flags": [],
+    "checks": {
+      "LENGTH": {
+        "score": 100.0,
+        "detail": "12 words, 60 chars, ~4.4s spoken (want 5-12 words)"
+      },
+      "SPECIFICITY": {
+        "score": 100.0,
+        "detail": "3 concrete marker(s): 6, Emerald, Rahu"
+      },
+      "STAKES": {
+        "score": 70.0,
+        "detail": "1 tension marker(s): stop"
+      },
+      "FRONTLOAD": {
+        "score": 100.0,
+        "detail": "payload at word 1"
+      },
+      "ADDRESS": {
+        "score": 100.0,
+        "detail": "speaks to the viewer"
+      }
+    }
+  },
+  "seo_audit": {
+    "overall_seo_score": 92.5,
+    "verdict": "OPTIMIZED",
+    "checks": {
+      "hashtag_count_valid": {
+        "score": 100,
+        "detail": "5 tags (Target: 3-5)"
+      },
+      "caption_hook_visible": {
+        "score": 100,
+        "detail": "89 chars (Target: <=125)"
+      },
+      "visual_pacing_valid": {
+        "score": 70,
+        "detail": "5 visual scenes with high pacing"
+      },
+      "high_value_cta": {
+        "score": 100,
+        "detail": "Includes Save/Share/Comment trigger"
+      }
+    }
+  },
+  "duration_seconds": 54.324,
+  "generated_at": "2026-11-06 00:17:52",
+  "algorithm_phase": "Algorithmic Indexing & Quiet Hours",
+  "daily_post_enforced": true
+}

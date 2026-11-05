@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  instagram-ai-agent:
+    build: .
+    container_name: instagram_ai_agent
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Persist daily tracker, publish history, and algorithm memory
+      - ./storage:/app/storage
+      # Mount output folder to easily access rendered videos
+      - ./insta content:/app/insta content
+      - ./output:/app/output
+      - ./logs:/app/logs
+    command: ["python", "app/autonomous/daily_algorithm_publisher.py", "--daemon"]

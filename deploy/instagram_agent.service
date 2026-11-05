@@ -1,0 +1,17 @@
+[Unit]
+Description=Autonomous Instagram Reels AI Publishing Agent (24/7 Daemon)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/instagram_agent
+EnvironmentFile=/opt/instagram_agent/.env
+ExecStart=/opt/instagram_agent/.venv/bin/python app/autonomous/daily_algorithm_publisher.py --daemon
+Restart=always
+RestartSec=15
+StandardOutput=append:/opt/instagram_agent/logs/systemd_daemon.log
+StandardError=append:/opt/instagram_agent/logs/systemd_error.log
+
+[Install]
+WantedBy=multi-user.target
