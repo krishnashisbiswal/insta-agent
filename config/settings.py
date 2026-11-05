@@ -80,7 +80,7 @@ CONTENT_QUEUE_FILE = STORAGE_DIR / "content_queue.json"
 # ---------------------------------------------------------------------------
 VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920
-VIDEO_FPS = 30
+VIDEO_FPS = 24
 VIDEO_ASPECT_RATIO = "9:16"
 
 # Fonts: bold high-visibility fonts for viral Instagram captions

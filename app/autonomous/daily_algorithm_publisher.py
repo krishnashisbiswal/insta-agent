@@ -138,11 +138,19 @@ class DailyAlgorithmPublisher:
             print(f"    Hook Strategy:    {trend['hook_angle']}")
 
         # Smart Voice & Language Switch (Zero Pronunciation Compromise)
-        voice_mode = os.getenv("VOICE_MODE", "smart")
-        gender = os.getenv("VOICE_GENDER", "male")
+        voice_mode = os.getenv("VOICE_MODE", "smart").lower().strip()
+        gender = os.getenv("VOICE_GENDER", "male").lower().strip()
         smart_lang, smart_voice, script_mode = determine_smart_voice(topic=topic, voice_mode=voice_mode, gender=gender)
-        active_lang = language if language and language != "Hindi mixed with English" else smart_lang
-        active_voice = voice or smart_voice
+
+        if voice_mode in ["hindi", "hi"]:
+            active_lang = "Hindi"
+            active_voice = "hi-IN-MadhurNeural" if gender == "male" else "hi-IN-SwaraNeural"
+        elif voice_mode in ["english", "en"]:
+            active_lang = "English"
+            active_voice = "en-IN-PrabhatNeural" if gender == "male" else "en-IN-NeerjaNeural"
+        else:
+            active_lang = smart_lang
+            active_voice = voice or smart_voice
 
         print(f" -> Smart Switch Mode:    {voice_mode.upper()} -> {active_lang} ({active_voice})")
 
@@ -159,23 +167,12 @@ class DailyAlgorithmPublisher:
         print(f"    On-Screen Title:  \"{hook['on_screen']}\"")
         print(f"    Hook Score:       {hook.get('score', 'N/A')}/100 [{hook.get('verdict', 'OK')}]")
 
-        # 4. Studio Neural Voiceover with Zero Pronunciation Distortion
-        full_text = script_data["full_script"]
-        if active_voice.startswith("hi-"):
-            full_text = clean_pronunciation_for_hindi(full_text)
-
-        print(f"\n[STEP 4/6] Recording studio neural voiceover ({active_voice})...")
-        audio_meta = generate_speech(text=full_text, voice=active_voice)
-        audio_path = audio_meta["audio_path"]
-        print(f" -> Audio Path:       {audio_path}")
-        print(f"    Duration:         {audio_meta['duration']:.2f} seconds")
-
-        # 5. Real Human-Edited Cinematic Composition
-        print("\n[STEP 5/6] Composing cinematic reel with Ken Burns zoom, light leaks & kinetic subtitles...")
+        # 4 & 5. Studio Neural Voiceover & Frame-Synchronized Cinematic Composition
+        print(f"\n[STEP 4 & 5/6] Composing cinematic reel with frame-synchronized audio & video ({active_voice})...")
         output_filename = f"daily_reel_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
         video_path = create_cinematic_reel_video(
             script_data=script_data,
-            audio_path=audio_path,
+            voice=active_voice,
             output_filename=output_filename,
         )
         print(f" -> Rendered MP4:     {video_path}")
@@ -201,23 +198,26 @@ class DailyAlgorithmPublisher:
         shutil.copy2(video_path, final_video_dest)
 
         final_audio_dest = dest_dir / "voiceover_audio.mp3"
-        shutil.copy2(audio_path, final_audio_dest)
 
         caption_dest = dest_dir / "caption_and_hashtags.txt"
         with open(caption_dest, "w", encoding="utf-8") as f:
             f.write(final_caption + "\n\n" + " ".join(hashtags) + "\n")
 
+        from moviepy import VideoFileClip
+        with VideoFileClip(str(final_video_dest)) as v_chk:
+            final_duration = round(v_chk.duration, 2)
+
         overview_dest = dest_dir / "content_overview.json"
         overview_data = {
             "topic": topic,
             "niche": niche,
-            "voice": voice,
+            "voice": active_voice,
             "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
             "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
             "agent_evolution_level": playbook.get("evolution_level", 1.0),
             "hook": hook,
             "seo_audit": seo_audit,
-            "duration_seconds": audio_meta["duration"],
+            "duration_seconds": final_duration,
             "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
             "algorithm_phase": algo_state["active_phase"],
             "daily_post_enforced": True,
