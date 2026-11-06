@@ -661,8 +661,9 @@ def create_cinematic_reel_video(
         else:
             active_voice = "en-IN-PrabhatNeural"
 
-    # 2. Dynamically resolve topic-specific gemstone and planetary visuals
-    broll_files = resolve_topic_visuals(topic)
+    # 2. Dynamically resolve semantically matching visuals per-scene (Zero Mismatch, Zero Repetition)
+    from app.video.semantic_visual_router import SemanticVisualRouter
+    used_scene_images: Set[Path] = set()
 
     def get_scene_badge(sc_dict: Dict[str, Any], scene_idx: int, topic_str: str) -> str:
         if sc_dict.get("badge"):
@@ -716,7 +717,13 @@ def create_cinematic_reel_video(
 
         print(f" -> Scene {scene_num}/{total_scenes}: {speech_dur:.2f}s speech -> {scene_dur:.2f}s clip | \"{screen_text}\"")
 
-        img_file = broll_files[idx % len(broll_files)]
+        img_file = SemanticVisualRouter.resolve_scene_visual(
+            scene=sc,
+            topic=topic,
+            scene_idx=idx,
+            total_scenes=total_scenes,
+            used_images=used_scene_images,
+        )
         badge = get_scene_badge(sc, idx, topic)
 
         clip = create_cinematic_scene_clip(
