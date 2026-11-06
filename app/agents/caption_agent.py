@@ -9,7 +9,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from config.settings import VENDOR_SKILLS_DIR
-from app.agents.gemini_client import generate_json, generate_text
+from app.agents.gemini_client import generate_json
 
 CAPTION_DIR = VENDOR_SKILLS_DIR / "ig-caption"
 if str(CAPTION_DIR) not in sys.path:
@@ -54,45 +54,78 @@ def optimize_caption(
     draft_caption: str,
     niche: str = "Vedic astrology",
     target_keyword: Optional[str] = None,
+    script_data: Optional[Dict[str, Any]] = None,
+    language: str = "Hindi",
 ) -> Dict[str, Any]:
     """
-    Use Gemini to craft an Instagram caption engineered for the feed cut.
-    Instagram truncates after ~125 chars. The first line must hook the reader.
+    Crafts an Instagram caption that is 100% harmonized with the video content:
+    - First Line: Matches the video's hook line.
+    - Story & Explanation: Explains the exact same astrological mechanism as the spoken scenes.
+    - Scriptural Remedy: Details the exact remedy mentioned in Scene 4.
+    - Call to Action: Mirrors the exact CTA spoken in Scene 5.
+    - Language Match: If reel is in Hindi, caption is in engaging Hindi; if English, in clean English.
     """
-    prompt = f"""
-You are an expert Instagram copywriter.
+    scenes = script_data.get("scenes", []) if script_data else []
+    spoken_script = "\n".join(
+        f"Scene {s.get('scene_num', i+1)}: {s.get('spoken_line', '')}"
+        for i, s in enumerate(scenes)
+    )
+    cta_spoken = scenes[-1].get("spoken_line", "") if scenes else ""
+    remedy_spoken = scenes[3].get("spoken_line", "") if len(scenes) >= 4 else ""
 
-Optimize this Instagram Reel caption for maximum reach and conversion.
+    is_hindi = language.lower() in ["hindi", "hi"]
+
+    language_instruction = (
+        "MANDATORY LANGUAGE: WRITE IN ENGAGING, AUTHENTIC HINDI (with clean English keywords in parentheses where helpful, e.g. 'शुक्र (Venus)', '11वें भाव', 'कुंडली'). "
+        "DO NOT write a generic English essay when the video is in Hindi! Both audio and caption must feel unified."
+        if is_hindi
+        else "MANDATORY LANGUAGE: Write in elegant, fluent English directly elaborating the video's exact spoken points."
+    )
+
+    prompt = f"""
+You are the master Instagram copywriter for an authentic Vedic Astrology & Gemstone Energy channel (@neodivinestore.in).
+
+CRITICAL MISSION - 100% SYNCHRONIZATION WITH VIDEO SCRIPT:
+The caption must provide the companion breakdown to the EXACT video that the viewer just watched.
+Never invent unrelated rules or generic filler. Match the exact planet, house, gemstone, remedy, and call to action!
 
 TOPIC: {topic}
 NICHE: {niche}
-REEL HOOK: {script_hook}
-CURRENT DRAFT: {draft_caption}
-KEYWORD TO CALL TO ACTION: {target_keyword or "GUIDE"}
+REEL SPOKEN SCRIPT (SCENE BY SCENE):
+{spoken_script}
 
-CRITICAL INSTAGRAM ALGORITHM RULES:
-1. The first line MUST be under 120 characters and act as an irresistible hook before the "... more" cut.
-2. Include 1-2 concrete specifics (dates, names, practical steps).
-3. Do NOT use fake urgency or cheesy emoji spam (max 2-3 clean emojis total).
-4. Exactly 3-5 hyper-targeted niche hashtags (Instagram announced using fewer than 5 targeted hashtags performs best).
-5. Add a clear CTA: "Comment {target_keyword or 'GUIDE'} and I'll DM you the breakdown" or "Save this for your next transit".
-6. Never put hashtags in the first sentence.
+REEL OPENING HOOK: {script_hook}
+REMEDY SPOKEN IN SCENE 4: {remedy_spoken}
+CALL TO ACTION SPOKEN IN SCENE 5: {cta_spoken}
+DESIRED CTA ACTION: {target_keyword or "DATE OF BIRTH"}
+
+{language_instruction}
+
+INSTAGRAM ALGORITHM & ENGAGEMENT RULES:
+1. First line MUST be under 115 characters and match the video's hook message before the "... more" cut.
+2. The explanation must directly explain why this placement causes financial/karmic drain according to Vedic Jyotish (Scenes 2 & 3).
+3. The remedy section MUST give the exact zero-cost ritual or puja mentioned in Scene 4.
+4. The CTA MUST match Scene 5: ask viewers to drop their Date of Birth / Lagna in the comments for a free chart check.
+5. Exactly 4 to 5 hyper-targeted hashtags (no hashtag spam).
+6. Clean formatting with double-spaced paragraphs for mobile readability.
 
 Return ONLY valid JSON in this exact structure:
 {{
-  "visible_first_line": "Hook under 120 chars that shows before '... more'",
-  "caption_body": "Engaging explanation and breakdown...",
-  "cta": "Comment GUIDE to get...",
-  "hashtags": ["#Tag1", "#Tag2", "#Tag3", "#Tag4", "#Tag5"],
-  "full_caption": "Complete combined caption ready to paste"
+  "visible_first_line": "Hook under 115 chars that displays before '... more'",
+  "caption_body": "Detailed breakdown with exact astrological mechanism and remedy...",
+  "cta": "Exact matching CTA...",
+  "hashtags": ["#VedicAstrology", "#PlanetTag", "#GemstoneTag", "#Jyotish", "#KarmicHealing"],
+  "full_caption": "Complete combined caption ready to publish"
 }}
 """
     data = generate_json(prompt)
     full = data.get("full_caption", "")
     if not full:
+        first = data.get("visible_first_line", script_hook)
         body = data.get("caption_body", "")
+        cta = data.get("cta", "")
         tags = " ".join(data.get("hashtags", []))
-        full = f"{data.get('visible_first_line', '')}\n\n{body}\n\n{data.get('cta', '')}\n\n{tags}"
+        full = f"{first}\n\n{body}\n\n{cta}\n\n{tags}"
 
     lint_result = lint_caption(full)
 
@@ -106,8 +139,12 @@ Return ONLY valid JSON in this exact structure:
 
 
 if __name__ == "__main__":
-    sample = "Stop doing this with Saturn in 2026. Here is why the planetary transit changes your career."
-    print("Testing caption linting...")
-    lint = lint_caption(sample)
-    print("Visible:", lint["visible_preview"])
-    print("Passed:", lint["passed"])
+    sample = "Stop wearing Blue Sapphire if Saturn sits in your 8th house."
+    print("Testing caption synchronization...")
+    res = optimize_caption(
+        topic=sample,
+        script_hook=sample,
+        draft_caption="Check your chart",
+        language="Hindi",
+    )
+    print("Full Caption:\n", res["full_caption"])

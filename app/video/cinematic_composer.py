@@ -42,6 +42,54 @@ logger = logging.getLogger("CinematicComposer")
 CINEMATIC_BROLL_DIR = PROJECT_ROOT / "assets" / "cinematic_broll"
 
 
+def resolve_topic_visuals(topic_str: str) -> List[Path]:
+    """
+    Dynamically maps the topic to its exact matching gemstone and planetary visuals!
+    Scene 1 -> Matching Gemstone (Diamond, Coral, Ruby, Emerald, Yellow Sapphire, Blue Sapphire, Pearl)
+    Scene 2 -> Vedic Kundli birth chart
+    Scene 3 -> Matching Planet (Venus, Mars, Sun, Jupiter, Saturn, Mercury, Moon)
+    Scene 4 -> Sacred Havan holy fire ritual
+    Scene 5 -> Ancient Temple sanctum
+    """
+    t = (topic_str or "").lower()
+
+    # Gemstone & Planet matching based on Vedic Jyotish correspondences
+    if any(k in t for k in ["diamond", "heera", "shukra", "venus"]):
+        gem_img = CINEMATIC_BROLL_DIR / "gemstone_diamond.jpg"
+        planet_img = CINEMATIC_BROLL_DIR / "planet_venus.jpg"
+    elif any(k in t for k in ["coral", "moonga", "mangal", "mars", "angarak"]):
+        gem_img = CINEMATIC_BROLL_DIR / "gemstone_red_coral.jpg"
+        planet_img = CINEMATIC_BROLL_DIR / "planet_mars.jpg"
+    elif any(k in t for k in ["yellow sapphire", "pukhraj", "jupiter", "guru", "brihaspati"]):
+        gem_img = CINEMATIC_BROLL_DIR / "gemstone_yellow_sapphire.jpg"
+        planet_img = CINEMATIC_BROLL_DIR / "planet_jupiter.jpg"
+    elif any(k in t for k in ["ruby", "manik", "sun", "surya", "aditya"]):
+        gem_img = CINEMATIC_BROLL_DIR / "gemstone_ruby.jpg"
+        planet_img = CINEMATIC_BROLL_DIR / "planet_sun.jpg"
+    elif any(k in t for k in ["emerald", "panna", "budh", "mercury"]):
+        gem_img = CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg"
+        planet_img = CINEMATIC_BROLL_DIR / "planet_mercury.jpg"
+    elif any(k in t for k in ["pearl", "moti", "moon", "chandra"]):
+        gem_img = CINEMATIC_BROLL_DIR / "gemstone_pearl.jpg"
+        planet_img = CINEMATIC_BROLL_DIR / "planet_moon.jpg"
+    else:
+        gem_img = CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg"
+        planet_img = CINEMATIC_BROLL_DIR / "planet_saturn.jpg"
+
+    # Fallbacks if a specific image does not exist
+    if not gem_img.exists():
+        gem_img = CINEMATIC_BROLL_DIR / "1_gemstone_hook.jpg"
+    if not planet_img.exists():
+        planet_img = CINEMATIC_BROLL_DIR / "planet_saturn.jpg" if (CINEMATIC_BROLL_DIR / "planet_saturn.jpg").exists() else CINEMATIC_BROLL_DIR / "3_shani_saturn.jpg"
+
+    kundli_img = CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg"
+    havan_img = CINEMATIC_BROLL_DIR / "4_sacred_havan.jpg"
+    temple_img = CINEMATIC_BROLL_DIR / "5_temple_sanctum.jpg"
+
+    logger.info(f"Dynamic Visual Mapping for '{topic_str}': Gemstone={gem_img.name}, Planet={planet_img.name}")
+    return [gem_img, kundli_img, planet_img, havan_img, temple_img]
+
+
 def get_font(size: int, bold: bool = True) -> ImageFont.FreeTypeFont:
     """Prioritize high-impact viral fonts: Bundled Impact -> Windows -> Linux."""
     paths = [
@@ -464,14 +512,8 @@ def create_cinematic_reel_video(
         else:
             active_voice = "en-IN-PrabhatNeural"
 
-    # 2. Map photorealistic cinematic B-roll assets
-    broll_files = [
-        CINEMATIC_BROLL_DIR / "1_gemstone_hook.jpg",
-        CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
-        CINEMATIC_BROLL_DIR / "3_shani_saturn.jpg",
-        CINEMATIC_BROLL_DIR / "4_sacred_havan.jpg",
-        CINEMATIC_BROLL_DIR / "5_temple_sanctum.jpg",
-    ]
+    # 2. Dynamically resolve topic-specific gemstone and planetary visuals
+    broll_files = resolve_topic_visuals(topic)
 
     def get_scene_badge(sc_dict: Dict[str, Any], scene_idx: int, topic_str: str) -> str:
         if sc_dict.get("badge"):

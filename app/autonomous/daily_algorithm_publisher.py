@@ -183,8 +183,10 @@ class DailyAlgorithmPublisher:
         caption_res = optimize_caption(
             topic=topic,
             script_hook=hook["spoken"],
-            draft_caption=script_data["caption"],
+            draft_caption=script_data.get("caption", ""),
             niche=niche,
+            script_data=script_data,
+            language=active_lang,
         )
         final_caption = caption_res["full_caption"]
         hashtags = caption_res["hashtags"]
@@ -201,8 +203,14 @@ class DailyAlgorithmPublisher:
         final_audio_dest = dest_dir / "voiceover_audio.mp3"
 
         caption_dest = dest_dir / "caption_and_hashtags.txt"
+        tags_str = " ".join(hashtags)
+        if any(t in final_caption for t in hashtags):
+            caption_text_to_save = final_caption
+        else:
+            caption_text_to_save = f"{final_caption}\n\n{tags_str}"
+
         with open(caption_dest, "w", encoding="utf-8") as f:
-            f.write(final_caption + "\n\n" + " ".join(hashtags) + "\n")
+            f.write(caption_text_to_save.strip() + "\n")
 
         from moviepy import VideoFileClip
         with VideoFileClip(str(final_video_dest)) as v_chk:
