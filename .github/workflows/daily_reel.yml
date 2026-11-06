@@ -35,8 +35,8 @@ jobs:
 
       - name: Install FFmpeg & System Fonts
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-dejavu fonts-freefont-ttf
+          sudo apt-get update || true
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu fonts-freefont-ttf
 
       - name: Install Python Dependencies
         run: |
@@ -48,6 +48,8 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           INSTAGRAM_USERNAME: ${{ secrets.INSTAGRAM_USERNAME }}
           INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
+          INSTAGRAM_SESSION_ID: ${{ secrets.INSTAGRAM_SESSION_ID }}
+          INSTAGRAM_SESSION_DATA: ${{ secrets.INSTAGRAM_SESSION_DATA }}
           VOICE_ENGINE: "edge_neural"
           VOICE_MODE: "smart"
           VOICE_GENDER: "male"
@@ -63,6 +65,6 @@ jobs:
           name: daily-reel-output-${{ github.run_id }}
           path: |
             insta content/
-            storage/daily_post_tracker.json
-            storage/trend_history.json
+            storage/
+          if-no-files-found: ignore
           retention-days: 7

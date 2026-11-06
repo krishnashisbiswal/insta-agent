@@ -89,14 +89,34 @@ class InstagramUploader:
         cl = Client()
         cl.delay_range = [1, 3]
 
+        # Check if full session data was passed via environment variable (e.g. GitHub Actions)
+        session_data_env = os.getenv("INSTAGRAM_SESSION_DATA", "").strip()
+        if session_data_env and not IG_SESSION_FILE.exists():
+            try:
+                IG_SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+                IG_SESSION_FILE.write_text(session_data_env, encoding="utf-8")
+                print(f"[INSTAGRAM DIRECT] Restored session file from INSTAGRAM_SESSION_DATA.")
+            except Exception as e:
+                logger.warning(f"Failed restoring session data: {e}")
+
         # Try to reuse saved session if available
         if IG_SESSION_FILE.exists():
             try:
                 print(f"[INSTAGRAM DIRECT] Loading saved session from {IG_SESSION_FILE.name}...")
                 cl.load_settings(str(IG_SESSION_FILE))
-                cl.login(self.username, self.password)
-                self._instagrapi_client = cl
-                return cl
+                # Validate if loaded session is still active
+                try:
+                    cl.get_timeline_feed()
+                    print(f"[INSTAGRAM DIRECT] Saved session is valid and active!")
+                    self._instagrapi_client = cl
+                    return cl
+                except Exception:
+                    print("[INSTAGRAM DIRECT] Cached session expired. Re-authenticating with credentials...")
+                    if self.username and self.password:
+                        cl.login(self.username, self.password)
+                        cl.dump_settings(str(IG_SESSION_FILE))
+                        self._instagrapi_client = cl
+                        return cl
             except Exception as exc:
                 logger.warning(f"Could not reuse session file: {exc}. Logging in fresh...")
 
@@ -108,7 +128,7 @@ class InstagramUploader:
             print(f"[INSTAGRAM DIRECT] Authenticating @{self.username}...")
             cl.login(self.username, self.password)
         else:
-            raise RuntimeError("Missing INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD in .env")
+            raise RuntimeError("Missing INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD in .env or GitHub Secrets")
 
         # Save session to avoid repeated logins
         try:
