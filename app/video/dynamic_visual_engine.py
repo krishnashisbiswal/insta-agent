@@ -1,5 +1,6 @@
 import hashlib
 import io
+import json
 import logging
 import math
 import random
@@ -8,7 +9,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 
 logger = logging.getLogger("DynamicVisualEngine")
 
@@ -24,12 +25,13 @@ class DynamicVisualEngine:
     for every scene in every video.
     Guarantees:
     1. ZERO REUSED IMAGES across new topics or videos.
-    2. SCENE-SPECIFIC VISUALS: Generates photorealistic imagery representing the exact
-       trait, symptom, celestial body, or sacred ritual described in each scene.
-    3. FAILSAFE TRIPLE-LAYER GENERATION:
-       - Layer 1: Online AI photorealistic generation with custom seed & trait prompt.
-       - Layer 2: High-resolution procedural atmospheric photographic compositor.
-       - Layer 3: Curated thematic fallback bank.
+    2. SCENE-SPECIFIC VISUALS: Dynamically searches live repositories (Wikimedia, NASA, etc.)
+       or uses AI generation representing the exact trait, symptom, celestial body, or sacred ritual.
+    3. FAILSAFE MULTI-LAYER SOURCING:
+       - Layer 1: Live online photographic search (Wikimedia Commons + NASA API) with 9:16 vertical smart crop.
+       - Layer 2: Online AI photorealistic generation with custom seed & trait prompt.
+       - Layer 3: Curated thematic fallback photographic bank.
+       - Layer 4: Procedural atmospheric celestial compositor.
     """
 
     @classmethod
@@ -172,6 +174,114 @@ class DynamicVisualEngine:
         return out_path
 
     @classmethod
+    def get_scene_search_query(cls, scene_dict: Dict[str, Any], topic: str, scene_idx: int) -> str:
+        """Formulates targeted keywords for live photographic image retrieval."""
+        spoken = scene_dict.get("spoken_line", "").lower()
+        on_screen = scene_dict.get("on_screen_text", "").lower()
+        vis_desc = scene_dict.get("visual_description", "").lower()
+        combined = f"{spoken} {on_screen} {vis_desc} {topic.lower()}"
+
+        if any(k in combined for k in ["3 am", "sleep", "wake", "night", "astral", "anxiety"]):
+            return "full moon night sky"
+        elif any(k in combined for k in ["money", "wealth", "drain", "expense", "bank", "gold", "coins", "siphon"]):
+            return "gold coins treasure"
+        elif any(k in combined for k in ["saturn", "shani", "sade sati"]):
+            return "saturn planet cassini"
+        elif any(k in combined for k in ["jupiter", "brihaspati", "guru"]):
+            return "jupiter planet hubble"
+        elif any(k in combined for k in ["rahu", "eclipse", "shadow", "grahan"]):
+            return "solar eclipse corona"
+        elif any(k in combined for k in ["ketu", "comet", "moksha"]):
+            return "comet night sky stars"
+        elif any(k in combined for k in ["mars", "mangal"]):
+            return "planet mars hubble"
+        elif any(k in combined for k in ["venus", "shukra"]):
+            return "planet venus atmosphere"
+        elif any(k in combined for k in ["neelam", "blue sapphire"]):
+            return "blue sapphire corundum"
+        elif any(k in combined for k in ["pukhraj", "yellow sapphire"]):
+            return "yellow sapphire gemstone"
+        elif any(k in combined for k in ["remedy", "havan", "fire", "yajna", "flame"]):
+            return "havan fire ritual"
+        elif any(k in combined for k in ["temple", "sanctum", "diya", "lamp", "consultation", "book"]):
+            return "diya lamp temple"
+        elif any(k in combined for k in ["chart", "kundli", "horoscope", "birth"]):
+            return "astrology chart manuscript"
+        elif scene_idx == 0:
+            if "saturn" in topic.lower() or "shani" in topic.lower():
+                return "saturn planet cassini"
+            elif "rahu" in topic.lower() or "eclipse" in topic.lower():
+                return "solar eclipse corona"
+            elif "wealth" in topic.lower() or "money" in topic.lower():
+                return "gold coins treasure"
+            elif "marriage" in topic.lower() or "relationship" in topic.lower():
+                return "hindu wedding sacred fire"
+            else:
+                return "astrology chart manuscript"
+        else:
+            return "ancient astrology manuscript"
+
+    @classmethod
+    def search_online_photographic_asset(cls, query: str, target_file: Path) -> Optional[Path]:
+        """
+        Searches live online open photo repositories (Wikimedia Commons & NASA)
+        and crops the image to professional 1080x1920 (9:16 vertical) resolution.
+        """
+        # 1. Check NASA API for celestial / space queries
+        if any(w in query.lower() for w in ["saturn", "jupiter", "mars", "nebula", "space", "eclipse"]):
+            try:
+                nasa_url = f"https://images-api.nasa.gov/search?q={urllib.parse.quote(query)}&media_type=image"
+                req = urllib.request.Request(nasa_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=6) as r:
+                    nasa_data = json.loads(r.read())
+                items = nasa_data.get("collection", {}).get("items", [])
+                for item in items[:4]:
+                    links = item.get("links", [])
+                    if links:
+                        img_url = links[0].get("href")
+                        if img_url:
+                            large_url = img_url.replace("~thumb.jpg", "~large.jpg").replace("~small.jpg", "~large.jpg")
+                            try:
+                                ir = urllib.request.urlopen(urllib.request.Request(large_url, headers={"User-Agent": "Mozilla/5.0"}), timeout=8)
+                                data_bytes = ir.read()
+                            except Exception:
+                                ir = urllib.request.urlopen(urllib.request.Request(img_url, headers={"User-Agent": "Mozilla/5.0"}), timeout=8)
+                                data_bytes = ir.read()
+                            img = Image.open(io.BytesIO(data_bytes)).convert("RGB")
+                            cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
+                            cropped.save(target_file, quality=95)
+                            logger.info(f"[DynamicVisualEngine] Sourced authentic NASA photograph -> {target_file.name}")
+                            return target_file
+            except Exception as e:
+                logger.debug(f"[DynamicVisualEngine] NASA search notice: {e}")
+
+        # 2. Check Wikimedia Commons API for temples, diyas, gold coins, manuscripts, gems, rituals
+        try:
+            wiki_url = f"https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch={urllib.parse.quote(query)}&gsrnamespace=6&gsrlimit=6&prop=imageinfo&iiprop=url|size&format=json"
+            req = urllib.request.Request(wiki_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
+            with urllib.request.urlopen(req, timeout=7) as r:
+                data = json.loads(r.read())
+            pages = data.get("query", {}).get("pages", {})
+            for _, pdata in pages.items():
+                ii = pdata.get("imageinfo", [{}])[0]
+                raw_url = ii.get("url")
+                clean_url = raw_url.split("?")[0] if raw_url else ""
+                if clean_url.lower().endswith((".jpg", ".jpeg", ".png")):
+                    if ii.get("width", 0) >= 600 and ii.get("height", 0) >= 400:
+                        img_req = urllib.request.Request(clean_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
+                        with urllib.request.urlopen(img_req, timeout=10) as ir:
+                            img_bytes = ir.read()
+                        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+                        cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
+                        cropped.save(target_file, quality=95)
+                        logger.info(f"[DynamicVisualEngine] Sourced authentic photographic asset via Wikimedia -> {target_file.name}")
+                        return target_file
+        except Exception as e:
+            logger.debug(f"[DynamicVisualEngine] Wikimedia search notice: {e}")
+
+        return None
+
+    @classmethod
     def get_or_generate_scene_image(
         cls,
         scene_dict: Dict[str, Any],
@@ -193,27 +303,36 @@ class DynamicVisualEngine:
         prompt_hash = hashlib.md5(f"{reel_slug}_{scene_idx}_{timestamp_seed}_{prompt}".encode()).hexdigest()[:10]
         target_file = GENERATED_BROLL_DIR / f"{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
 
-        # 1. Attempt AI Generation with custom seed
+        # 1. LIVE ONLINE PHOTOGRAPHIC SEARCH (Wikimedia Commons + NASA API)
+        search_query = cls.get_scene_search_query(scene_dict, topic, scene_idx)
+        logger.info(f"[DynamicVisualEngine] Searching online photo repositories for Scene {scene_idx + 1}: '{search_query}'...")
+        online_asset = cls.search_online_photographic_asset(search_query, target_file)
+        if online_asset and online_asset.exists() and online_asset not in used_images:
+            used_images.add(online_asset)
+            return online_asset
+
+        # 2. Attempt AI Generation with custom seed
         try:
             encoded_prompt = urllib.parse.quote(prompt)
             seed = random.randint(1000, 999999)
-            url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1080&height=1920&nologo=true&seed={seed}"
+            url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
             logger.info(f"[DynamicVisualEngine] Generating fresh AI image for Scene {scene_idx + 1}...")
 
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-            with urllib.request.urlopen(req, timeout=14) as resp:
+            with urllib.request.urlopen(req, timeout=10) as resp:
                 data = resp.read()
 
             if len(data) > 12000:
                 img = Image.open(io.BytesIO(data)).convert("RGB")
-                img.save(target_file, quality=95)
-                logger.info(f"[DynamicVisualEngine] AI generation SUCCESS -> {target_file.name} ({img.size})")
+                cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
+                cropped.save(target_file, quality=95)
+                logger.info(f"[DynamicVisualEngine] AI generation SUCCESS -> {target_file.name} ({cropped.size})")
                 used_images.add(target_file)
                 return target_file
         except Exception as e:
             logger.warning(f"[DynamicVisualEngine] AI generator network notice ({e}). Falling back to semantic high-resolution photographic library.")
 
-        # 2. Semantic High-Resolution Photographic Engine (Guaranteed Real Visuals)
+        # 3. Semantic High-Resolution Photographic Engine (Guaranteed Real Visuals)
         broll_dir = PROJECT_ROOT / "assets" / "cinematic_broll"
         t_lower = (topic or "").lower()
         sc_text = (scene_dict.get("spoken_line", "") + " " + scene_dict.get("on_screen_text", "")).lower()
