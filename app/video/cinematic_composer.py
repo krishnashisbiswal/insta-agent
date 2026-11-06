@@ -670,8 +670,10 @@ def create_cinematic_reel_video(
         else:
             active_voice = "en-IN-PrabhatNeural"
 
-    # 2. Dynamically resolve semantically matching visuals per-scene (Zero Mismatch, Zero Repetition)
+    # 2. Dynamically generate 100% brand-new, scene-tailored visuals (Zero Repetition Across Runs)
+    from app.video.dynamic_visual_engine import DynamicVisualEngine
     from app.video.semantic_visual_router import SemanticVisualRouter
+    reel_slug = re.sub(r"[^\w]", "_", topic.lower())[:24].strip("_")
     used_scene_images: Set[Path] = set()
 
     def get_scene_badge(sc_dict: Dict[str, Any], scene_idx: int, topic_str: str) -> str:
@@ -726,14 +728,20 @@ def create_cinematic_reel_video(
 
         print(f" -> Scene {scene_num}/{total_scenes}: {speech_dur:.2f}s speech -> {scene_dur:.2f}s clip | \"{screen_text}\"")
 
-        img_file = SemanticVisualRouter.resolve_scene_visual(
-            scene=sc,
+        # Dynamically generate or fetch a 100% brand-new, topic & scene tailored visual
+        img_file = DynamicVisualEngine.get_or_generate_scene_image(
+            scene_dict=sc,
             topic=topic,
             scene_idx=idx,
             total_scenes=total_scenes,
+            reel_slug=reel_slug,
             used_images=used_scene_images,
         )
         badge = get_scene_badge(sc, idx, topic)
+
+        # Dynamic zoom rates per scene for punchy, modern video pacing
+        zoom_rates = [0.15, 0.10, 0.12, 0.14, 0.08]
+        z_rate = zoom_rates[idx % len(zoom_rates)]
 
         clip = create_cinematic_scene_clip(
             image_path=img_file,
@@ -743,7 +751,7 @@ def create_cinematic_reel_video(
             scene_number=scene_num,
             total_scenes=total_scenes,
             badge_text=badge,
-            zoom_rate=0.10,
+            zoom_rate=z_rate,
         )
 
         # Attach this scene's vocal audio directly to the scene clip

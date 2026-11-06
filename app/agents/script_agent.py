@@ -336,26 +336,29 @@ WINNING ON-SCREEN HOOK: {selected_hook["on_screen"]}
 
 {algo_context}
 
-VIRAL RETENTION BLUEPRINT (5 DYNAMIC SCENES - UNIVERSAL MULTI-REASON / CHECKLIST FORMAT):
-1. SCENE 1 (0-3s) - THE HOOK & PATTERN INTERRUPT:
-   - Spoken: {selected_hook["spoken"]}
-   - On-Screen Text: Punchy 3-5 words in clean ALL CAPS matching the topic (e.g. "{selected_hook['on_screen']}").
-2. SCENE 2 (3-8s) - REASON 1 / FIRST PLACEMENT & LIFE SYMPTOM:
-   - Detail Placement #1 or Sign #1 for this topic with vivid, relatable real-life symptoms (e.g., if wealth: Rahu in 2nd/11th giving sudden money followed by mysterious expenses; if marriage: Ketu in 7th causing emotional detachment; if career: Shani in 10th testing perseverance; if gemstone: wearing stone of 6th/8th functional malefic).
-   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g., "1. RAHU IN 2ND HOUSE").
-3. SCENE 3 (8-14s) - REASON 2 / SECOND PLACEMENT & PLANETARY MECHANISM:
-   - Detail Placement #2 or Sign #2 with the exact planetary mechanism (e.g., if wealth: retrograde Saturn in 12th causing constant leakages; if marriage: Mars in 8th Manglik causing friction; if psychic: Jupiter aspect on 9th giving uncanny premonitions).
-   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g., "2. SATURN IN 12TH HOUSE").
-4. SCENE 4 (14-20s) - REASON 3 / THIRD PLACEMENT + REMEDY WARNING (STRICT NO-FREE-REMEDY RULE):
-   - Detail Placement #3 or Sign #3 with urgency.
-   - CRITICAL VIRAL RULE (NEVER PROVIDE REMEDIES IN THE REEL): NEVER give away free remedies or rituals in the video! Explicitly warn the viewer: generic online remedies can severely clash with their ascendant and cause heavier damage without checking degrees.
-   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "3. NEVER GUESS YOUR REMEDY" or "3. GENERIC REMEDIES BACKFIRE").
-5. SCENE 5 (20-25s) - THE DUAL COMMENT-MAGNET & 1-ON-1 CONSULTATION UPSELL:
-   - Strong interactive 2-step call-to-action:
-     1) Ask viewers to COMMENT their exact Date of Birth, Time, or placement below for a preliminary chart scan (forcing maximum comment volume to trigger the Instagram algorithm!).
-     2) Urge them to BOOK A 1-ON-1 CONSULTATION via the link in bio for a complete deep Kundli analysis and personalized remedies.
-     3) Seamless infinite grammatical loop back to Scene 1's opening hook word!
-   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "BOOK 1-ON-1 CONSULTATION" or "COMMENT BIRTH DATE TO CHECK").
+VIRAL RETENTION BLUEPRINT (5 DYNAMIC SCENES - 3 TO 4 RELATABLE TRAITS & PSYCHOLOGICAL MIRROR FORMAT):
+NEVER SOUND PREACHY OR USE NAG-STYLE COMMANDS ("Don't do this, Stop doing that"). Viewers swipe away from lectures.
+INSTEAD, USE THE "SELF-DISCOVERY TRAIT MIRROR": Reveal 3 to 4 hyper-relatable psychological, emotional, and life symptoms that viewers instantly recognize in themselves!
+
+1. SCENE 1 (0-3s) - THE TRAIT IDENTIFICATION HOOK:
+   - Spoken: Relatable curiosity hook inviting viewers to check how many traits they possess (e.g. "अगर आप इन 4 में से 2 भी लक्षण महसूस करते हैं, तो आपकी कुंडली में एक दुर्लभ ग्रह चक्र सक्रिय है...").
+   - On-Screen Text: Punchy 3-5 words in clean ALL CAPS (e.g. "DO YOU HAVE THESE 4 TRAITS?").
+2. SCENE 2 (3-8s) - TRAIT 1 (INTUITION & PSYCHOLOGICAL SENSE):
+   - Detail Trait #1 with vivid, relatable psychological precision (e.g. instantly sensing when someone is faking intentions, feeling unexplainable sudden gut shifts before events happen).
+   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "1. UNCANNY INTUITION").
+3. SCENE 3 (8-13s) - TRAIT 2 (LIFE, WEALTH OR EMOTIONAL PATTERN):
+   - Detail Trait #2 describing a tangible real-world pattern (e.g. money flowing in easily but draining through sudden unavoidable emergencies; or craving extreme solitude despite loving people).
+   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "2. SUDDEN WEALTH SIPHON").
+4. SCENE 4 (13-18s) - TRAIT 3 & ASTROLOGICAL ROOT CAUSE + REMEDY WARNING:
+   - Detail Trait #3 (e.g. waking up between 3:00 AM and 4:30 AM with a racing mind and sudden creative energy).
+   - Connect this trait to the governing astrological planet/house (e.g. Rahu in 8th house, Moon-Saturn Vish Yoga, Ketu in 12th).
+   - CRITICAL WARNING: Explicitly warn that generic online remedies backfire without checking degrees!
+   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "3. 3AM WAKEUP • RAHU IN 8TH").
+5. SCENE 5 (18-25s) - THE COMMENT-COUNTING MAGNET & 1-ON-1 CONSULTATION CONVERSION:
+   - Command viewers to comment their SCORE (1, 2, 3, or 4) and their Date of Birth below so our AI can analyze their placement!
+   - Urge them to share this with a friend who has these exact traits.
+   - Tell them to click the link in bio or DM 'KUNDLI' to Book a 1-on-1 Consultation for customized lifetime remedies!
+   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "COMMENT SCORE • BOOK 1-ON-1").
 
 CRITICAL JYOTISH ACCURACY RULES (100% SCRIPTURALLY CORRECT VEDIC ASTROLOGY):
 - PLANET & GEMSTONE ACCURACY: Only speak about the EXACT planet, house, and gemstone relevant to "{topic}".

@@ -119,11 +119,14 @@ class DailyAlgorithmPublisher:
         print("  AUTONOMOUS 1-A-DAY VIRAL REEL GENERATOR: INSTAGRAM ALGORITHM SYNC")
         print("=" * 75)
 
-        # 1. Self-Learning Brain Upgrade
-        print("\n[STEP 1/6] Running self-learning knowledge upgrade...")
-        playbook = self.learning_engine.run_daily_self_upgrade()
+        # 1. Autonomous Reinforcement Learning & Self-Evolution Upgrade
+        print("\n[STEP 1/6] Running autonomous reinforcement learning & policy upgrade...")
+        from app.analytics.reinforcement_engine import ReinforcementEvolutionEngine
+        rl_engine = ReinforcementEvolutionEngine()
+        rl_state = rl_engine.run_daily_autonomous_training_cycle()
         algo_state = self.algo_brain.get_algorithm_state()
-        print(f" -> Brain Level:      {playbook.get('evolution_level', 1.0):.1f}")
+        print(f" -> Brain Level:      {rl_state.get('evolution_level', 2.0):.1f}")
+        print(f" -> Active Policy:    {rl_state.get('policy', {}).get('trait_frameworks', [{}])[0].get('name', 'Relatable Traits Mirror')}")
         print(f" -> Active Phase:     {algo_state['active_phase']} (Velocity: {algo_state['algorithm_velocity_score']}/100)")
 
         # 2. Hot Trending Topic Discovery (Zero Repetition)
