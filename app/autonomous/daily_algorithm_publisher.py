@@ -25,6 +25,7 @@ if sys.platform == "win32":
         pass
 
 from app.agents.caption_agent import optimize_caption
+from app.agents.comment_agent import CommentAgent
 from app.agents.script_agent import generate_reel
 from app.analytics.instagram_algorithm_brain import InstagramAlgorithmBrain
 from app.analytics.self_learning_engine import SelfLearningEngine
@@ -266,6 +267,26 @@ class DailyAlgorithmPublisher:
                     res_info["instagram_upload_error"] = str(e)
             else:
                 print("\n[STEP 7/7] No live Instagram credentials in .env. Video saved ready for manual post or GitHub Actions.")
+
+        # 8. Autonomous Community Retention & AI Comment Consultation
+        print("\n[STEP 8/8] Running AI Comment Consultation & Community Retention Agent...")
+        try:
+            comment_agent = CommentAgent()
+            media_id = res_info.get("instagram_upload", {}).get("media_id")
+            uploader_inst = uploader if 'uploader' in locals() else InstagramUploader()
+            consultation_replies = comment_agent.process_reel_comments(
+                uploader=uploader_inst,
+                media_id=media_id,
+                topic=topic,
+                dry_run=dry_run,
+            )
+            res_info["comment_consultations"] = len(consultation_replies)
+            overview_data["comment_consultations_handled"] = len(consultation_replies)
+            with open(overview_dest, "w", encoding="utf-8") as f:
+                json.dump(overview_data, f, indent=2, ensure_ascii=False)
+            print(f" -> Comment Retention Agent handled {len(consultation_replies)} astrological consultations.")
+        except Exception as e:
+            logger.warning(f"Comment retention notice: {e}")
 
         print("\n" + "=" * 75)
         print("  DAILY VIRAL REEL PRODUCTION COMPLETE!")

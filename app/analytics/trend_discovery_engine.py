@@ -43,8 +43,48 @@ class TrendDiscoveryEngine:
 
     # Comprehensive Sub-Niche Categories & Themes
     TRENDING_CATEGORIES = {
+        "wealth_and_money": {
+            "name": "Sudden Wealth, Money Leakage & Rare Dhana Yogas",
+            "themes": [
+                "3 Kundli Placements That Drain Your Money No Matter How Much You Earn",
+                "3 Rare Wealth Yogas That Trigger Sudden Riches After Age 28",
+                "3 Signs Rahu in 2nd House Is Creating Mysterious Financial Losses",
+                "3 Kundli Signs You Will Gain Unexpected Wealth Through Inheritance or Trading",
+                "3 Placements That Block You From Buying Property or Building Savings",
+            ],
+        },
+        "marriage_and_relationships": {
+            "name": "Relationship Karma, Marriage Delays & Soulmate Bonds",
+            "themes": [
+                "3 Kundli Placements That Delay Marriage Until Age 30+",
+                "3 Signs You Have a Heavy Past-Life Karmic Debt With Your Partner",
+                "3 Kundli Placements Causing Constant Heartbreak and Misunderstandings",
+                "3 Signs of True Manglik Dosha That Astrologers Never Explain",
+                "The 7th House Ketu Trap: Why You Push Away Pure Love",
+            ],
+        },
+        "career_and_saturn": {
+            "name": "Career Breakthroughs, Sade Sati & Karmic Struggles",
+            "themes": [
+                "3 Signs Saturn (Shani) Is Preparing You For A Massive Career Jump",
+                "3 Placements That Cause Constant Career Blockages and Stagnation",
+                "3 Signs You Are Experiencing The Peak Phase of Shani Sade Sati",
+                "The 10th House Karmic Lesson: Why Hard Work Alone Never Brings Fame",
+                "Vipreet Raj Yoga: How 6th and 8th Houses Trigger Massive Power",
+            ],
+        },
+        "psychic_and_destiny": {
+            "name": "Psychic Intuition, 3 AM Wakeups & Divine Protection",
+            "themes": [
+                "3 Signs You Have Divine Protection (Deva Kripa) in Your Kundli",
+                "3 Hidden Meanings If You Wake Up Between 3:00 AM and 5:00 AM",
+                "3 Placements That Give Uncanny Psychic Dreams and 3rd Eye Intuition",
+                "The Rahu-Moon Eclipse Syndrome: Why Your Anxiety Spikes at Night",
+                "3 Kundli Signs You Have an Old Soul Paying Past-Life Debts",
+            ],
+        },
         "gemstone_energy": {
-            "name": "Gemstone Energy & Hidden Hazards",
+            "name": "Gemstone Energy Clashes & Hidden Dangers",
             "gemstones": [
                 {"name": "Yellow Sapphire (Pukhraj)", "gem_type": "yellow_sapphire", "graha": "jupiter", "danger_houses": [6, 8, 12], "safe_ascendants": ["Aries", "Cancer", "Leo", "Scorpio", "Sagittarius", "Pisces"]},
                 {"name": "Blue Sapphire (Neelam)", "gem_type": "blue_sapphire", "graha": "saturn", "danger_houses": [8, 12], "safe_ascendants": ["Taurus", "Gemini", "Virgo", "Libra", "Capricorn", "Aquarius"]},
@@ -54,52 +94,11 @@ class TrendDiscoveryEngine:
                 {"name": "Pearl (Moti)", "gem_type": "pearl", "graha": "moon", "danger_houses": [6, 8], "safe_ascendants": ["Cancer", "Aries", "Scorpio", "Pisces"]},
                 {"name": "Red Coral (Moonga)", "gem_type": "red_coral", "graha": "mars", "danger_houses": [8, 12], "safe_ascendants": ["Aries", "Scorpio", "Cancer", "Leo", "Sagittarius", "Pisces"]},
             ],
-            "angles": [
-                "The Pillow Test to check compatibility before wearing",
-                "Why wearing on the wrong finger creates financial blockage",
-                "Dangerous Ascendant clashes that trigger sudden debt",
-                "The Beej Mantra energization secret that 95% skip",
-            ],
-        },
-        "psychic_karma": {
-            "name": "Psychic Karma & Past-Life Debts",
             "themes": [
-                "The Rahu-Moon Eclipse Syndrome: Why your anxiety spikes at night",
-                "The 8th House Randhra Bhava: Why sudden transformations destroy comfortable illusions",
-                "The 12th House Secret: Past-life karmic debts you are paying right now",
-                "Brahma Muhurta (3:30 AM to 5:00 AM) Wakeup: What your Graha is trying to warn you",
-                "The Ketu Soul Detachment: Why you push away people who genuinely love you",
-                "Atmakaraka Soul Planet: The single toughest lesson your soul chose to master",
-            ],
-        },
-        "kundli_secrets": {
-            "name": "Shocking Kundali Secrets & Doshas",
-            "themes": [
-                "Kaal Sarp Dosh: The hidden serpentine curse that delays success until age 33",
-                "Kemdrum Dosh: When the Moon has no surrounding planets causing sudden loneliness",
-                "Manglik Dosha Myths: Why 80% of fearmongering astrologers are wrong",
-                "Guru Chandal Dosh: The Jupiter-Rahu clash that shatters spiritual discipline",
-                "Vipreet Raj Yoga: How your worst houses (6th, 8th, 12th) can make you extraordinarily wealthy",
-                "Shani Sade Sati 3 Phases: The rising, peak, and setting karmic tests",
-            ],
-        },
-        "spiritual_devotion": {
-            "name": "Spiritual Devotion & Miracle Remedies",
-            "themes": [
-                "Lord Shiva Maha Mrityunjaya: The exact frequency to dissolve death-like fears",
-                "Hanuman Chalisa Timings: Reciting 100 times on Tuesday vs Saturday night rules",
-                "The Peepal Tree Mustard Lamp: Shani Dev's most powerful zero-cost karmic shield",
-                "Bhairav Sadhana Secrets: Protecting your aura from psychic jealousy and evil eye",
-                "Rudraksha Combination Powers: 5 Mukhi with 7 Mukhi for sudden financial revival",
-            ],
-        },
-        "cosmic_transits": {
-            "name": "Planetary Transits & Auspicious Shifts",
-            "themes": [
-                "Saturn (Shani) Direct Motion: 3 Zodiac signs whose stagnation ends this month",
-                "Rahu-Ketu Karmic Axis Shift: The unexpected life area facing disruption",
-                "Jupiter (Guru) Golden Aspect: Which house receives divine protection right now",
-                "Amavasya Midnight Energy: Why negative astral vibrations peak during the new moon",
+                "3 Gemstone Mistakes That Trigger Sudden Financial Ruin",
+                "3 Signs You Are Wearing The Wrong Gemstone Right Now",
+                "3 Gemstones You Must Never Wear Together Under Any Circumstances",
+                "The Pillow Test: 3 Signs A Gemstone Rejects Your Aura Within 72 Hours",
             ],
         },
     }
@@ -172,8 +171,8 @@ class TrendDiscoveryEngine:
         recent_gems = recent["gemstones"]
         recent_houses = recent["houses"]
 
-        # Cycle category dynamically to ensure strict variety
-        category_keys = ["gemstone_energy", "psychic_karma", "kundli_secrets", "spiritual_devotion", "cosmic_transits"]
+        # Cycle category dynamically across all viral pillars to ensure explosive diversity
+        category_keys = ["wealth_and_money", "marriage_and_relationships", "career_and_saturn", "psychic_and_destiny", "gemstone_energy"]
         hist = self.load_history()
         last_category = hist[-1].get("category", "") if hist else ""
 
@@ -209,27 +208,33 @@ RECENT TOPICS ALREADY COVERED (DO NOT REPEAT OR CLOSELY MIMIC ANY OF THESE):
 RECENT GEMSTONES RECENTLY USED (COOLDOWN ACTIVE): {recent_gems[-3:]}
 RECENT HOUSES RECENTLY COVERED: {recent_houses[-3:]}
 
+CRITICAL VIRAL RULE - MULTI-REASON / CHECKLIST HOOK:
+People DO NOT watch or share single-issue or boring gemstone lectures.
+Instagram algorithm demands HIGH-STAKES, MULTI-REASON TOPICS (e.g. '3 Placements That...', '3 Signs Your Chart Has...', '3 Dangerous Mistakes That...').
+When a video presents 3 concrete placements or signs:
+1. Viewers watch till the very end to check if Sign #2 or #3 applies to them (100% completion rate).
+2. Viewers flood the comments asking: 'I have #1 and #3, what should I do?' (Highest comment velocity).
+3. Viewers share the reel with friends: 'Look at #2, that is literally you!' (Exponential share velocity).
+
 TASK:
-Create ONE single explosive, audience-capturing, trending viral Instagram Reel topic that is 100% DIFFERENT from past reels.
+Create ONE single explosive, audience-capturing, trending viral Instagram Reel topic in the '{chosen_category}' pillar.
 Requirements:
-1. Must trigger instant curiosity, urgent karmic danger, or shocking astrological truth.
-2. If Gemstone category: Choose a gemstone OTHER than {recent_gems[-2:] if recent_gems else 'recent ones'} (e.g. Yellow Sapphire Pukhraj, Ruby Manik, Emerald Panna, Diamond Heera, Red Coral Moonga).
-3. If Kundli category: Focus on Kaal Sarp Dosh, Kemdrum Dosh, Manglik, or Vipreet Raj Yoga.
-4. If Psychic Karma category: Focus on 3 AM wakeups, Rahu anxiety, 12th house hidden karma, or Ketu soul ties.
-5. If Spiritual Devotion category: Focus on Hanuman Chalisa night rules, Lord Shiva Mahamrityunjaya, or Peepal lamp remedies.
+1. Must be framed as a MULTI-REASON / 3-SIGNS hook (e.g., '3 Placements That Drain Your Money To Zero', '3 Kundli Signs That Delay Marriage', '3 Signs Saturn Is Preparing You For Wealth', '3 Gemstone Mistakes Destroying Your Peace').
+2. Highly relatable to universal life challenges (Money, Relationships, Career, Inner Awakening).
+3. Leaves space for viewers to comment their specific placement.
 
 Return ONLY valid JSON in this exact structure:
 {{
-  "topic": "Concise high-voltage topic title",
+  "topic": "Concise high-voltage topic title (e.g. 3 Kundli Placements That Drain Your Wealth)",
   "category": "{chosen_category}",
   "sub_niche": "Specific sub-niche name",
   "gemstone": "Optional gemstone name or null",
-  "graha": "Primary planetary deity involved (e.g. jupiter, saturn, mars, sun, moon, rahu, ketu)",
+  "graha": "Primary planetary deity involved (e.g. jupiter, saturn, mars, venus, rahu, ketu, mercury, moon, sun)",
   "house": 8,
-  "hook_angle": "Why this specific hook stops thumb scroll in 0.5 seconds",
-  "suggested_formula": "Nobody Tells You",
+  "hook_angle": "Why this specific 3-signs hook stops thumb scroll and forces comment engagement",
+  "suggested_formula": "Checklist / Negative Command",
   "target_duration_seconds": 25,
-  "recommended_3d_theme": "gemstone_3d or kundli_chart_3d or planet_3d or karmic_vortex_3d or sacred_yantra_3d"
+  "recommended_3d_theme": "kundli_chart_3d or planet_3d or gemstone_3d or sacred_yantra_3d"
 }}
 """
             res = generate_json(prompt)
@@ -239,67 +244,67 @@ Return ONLY valid JSON in this exact structure:
         except Exception as exc:
             logger.warning(f"Gemini trend discovery fallback triggered: {exc}")
 
-        # High-voltage curated fallback topic if Gemini is offline
+        # High-voltage curated fallback topics with 3-reasons viral structure
         curated_topics = [
             {
-                "topic": "Stop Wearing Yellow Sapphire (Pukhraj) Until You Check This One Placement",
-                "category": "gemstone_energy",
-                "sub_niche": "Gemstone Energy & Hazards",
-                "gemstone": "yellow_sapphire",
-                "graha": "jupiter",
-                "house": 6,
-                "hook_angle": "Counter-intuitive warning on Jupiter's stone causing sudden debts when ruling negative houses",
-                "suggested_formula": "Stop Doing X",
-                "target_duration_seconds": 25,
-                "recommended_3d_theme": "gemstone_3d",
-            },
-            {
-                "topic": "The Rahu-Moon Eclipse Syndrome: Why Your Anxiety Spikes Every Monday Night",
-                "category": "psychic_karma",
-                "sub_niche": "Psychic & Karma",
+                "topic": "3 Kundli Placements That Drain Your Wealth No Matter How Much You Earn",
+                "category": "wealth_and_money",
+                "sub_niche": "Sudden Wealth & Money Leakage",
                 "gemstone": None,
-                "graha": "moon",
-                "house": 8,
-                "hook_angle": "Relates recurring midnight anxiety attacks directly to natal Moon-Rahu afflicted axes",
-                "suggested_formula": "Karmic Symptoms",
-                "target_duration_seconds": 25,
-                "recommended_3d_theme": "karmic_vortex_3d",
-            },
-            {
-                "topic": "The 12th House Karmic Trap: Debts You Are Paying From Your Past Life",
-                "category": "psychic_karma",
-                "sub_niche": "Past Life Karma",
-                "gemstone": None,
-                "graha": "ketu",
-                "house": 12,
-                "hook_angle": "Reveals why unexplainable financial leakages and loneliness trace to 12th house soul debts",
-                "suggested_formula": "Nobody Tells You",
+                "graha": "rahu",
+                "house": 2,
+                "hook_angle": "Relatable financial pain: reveals the 3 exact astrological leaks draining bank accounts",
+                "suggested_formula": "Checklist Warning",
                 "target_duration_seconds": 25,
                 "recommended_3d_theme": "kundli_chart_3d",
             },
             {
-                "topic": "Lord Shiva Maha Mrityunjaya Secret: Why 90% Chants Give Zero Protection",
-                "category": "spiritual_devotion",
-                "sub_niche": "Spiritual Devotion",
+                "topic": "3 Kundli Placements That Delay Marriage and Test Your Soul",
+                "category": "marriage_and_relationships",
+                "sub_niche": "Relationship Karma & Delays",
+                "gemstone": None,
+                "graha": "ketu",
+                "house": 7,
+                "hook_angle": "Massive emotional resonance: explains why genuine souls struggle with marriage delays",
+                "suggested_formula": "Checklist Warning",
+                "target_duration_seconds": 25,
+                "recommended_3d_theme": "planet_3d",
+            },
+            {
+                "topic": "3 Signs Saturn (Shani) Is Preparing You For Massive Wealth and Fame",
+                "category": "career_and_saturn",
+                "sub_niche": "Career & Sade Sati Breakthroughs",
                 "gemstone": None,
                 "graha": "saturn",
-                "house": 8,
-                "hook_angle": "Reveals the ancient pronunciation & energized copper vessel frequency required for the mantra",
-                "suggested_formula": "The Secret Test",
+                "house": 10,
+                "hook_angle": "Hope and empowerment during extreme struggle: flipping Saturn fear into power",
+                "suggested_formula": "Contrarian Truth",
+                "target_duration_seconds": 25,
+                "recommended_3d_theme": "planet_3d",
+            },
+            {
+                "topic": "3 Signs You Have Divine Protection (Deva Kripa) in Your Birth Chart",
+                "category": "psychic_and_destiny",
+                "sub_niche": "Psychic Intuition & Old Souls",
+                "gemstone": None,
+                "graha": "jupiter",
+                "house": 9,
+                "hook_angle": "High curiosity and validation: people check their chart to verify spiritual guidance",
+                "suggested_formula": "The Secret Signs",
                 "target_duration_seconds": 25,
                 "recommended_3d_theme": "sacred_yantra_3d",
             },
             {
-                "topic": "Vipreet Raj Yoga Secret: How Your 6th and 8th Houses Can Make You Extraordinary Wealthy",
-                "category": "kundli_secrets",
-                "sub_niche": "Shocking Kundali Secrets",
-                "gemstone": None,
+                "topic": "3 Gemstone Mistakes That Trigger Sudden Financial Ruin",
+                "category": "gemstone_energy",
+                "sub_niche": "Gemstone Energy & Hazards",
+                "gemstone": "blue_sapphire",
                 "graha": "saturn",
                 "house": 8,
-                "hook_angle": "Explains how extreme struggle in early life flips into sudden massive authority and wealth",
-                "suggested_formula": "Contrarian Truth",
+                "hook_angle": "Shocking cautionary truth: why wearing without ascendant check destroys peace",
+                "suggested_formula": "Negative Command",
                 "target_duration_seconds": 25,
-                "recommended_3d_theme": "zodiac_wheel_3d",
+                "recommended_3d_theme": "gemstone_3d",
             },
         ]
 

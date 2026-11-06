@@ -195,11 +195,12 @@ class SelfLearningEngine:
 
         prompt = f"""
 You are the Meta-Learning & Algorithmic Optimization Brain for an Autonomous Instagram Reels Creator.
-The agent exclusively produces viral content in:
-- Vedic Astrology (Grahas, Kundli, Sade Sati, Transits)
-- Gemstone Energies & Dangers (Pukhraj, Neelam, Manik, Moti, Panna, Heera, Moonga, Gomed, Lehsunia)
-- Psychic Intuition & Karmic Destiny (Past life debts, 8th house awakenings, Brahma Muhurta signs)
-- Spiritual Devotion & Remedies (Lord Shiva, Hanuman, Durga, Vishnu, Ganesh, Beej Mantras, Peepal diya)
+The agent produces high-retention viral content across 5 core viral pillars:
+1. Sudden Wealth, Money Drain & Rare Dhana Yogas (Rahu in 2nd/11th, Kemdrum Moon, 8th house wealth)
+2. Relationship Karma, Marriage Delays & Toxic Soul Ties (7th house Ketu/Rahu, Venus affliction, Manglik)
+3. Career Breakthroughs, Sade Sati & Karmic Obstacles (10th house Saturn, Rahu Mahadasha, Vipreet Raj Yoga)
+4. Psychic Intuition, 3 AM Wakeups & Divine Protection (Deva Kripa, 8th house 3rd eye, old soul debts)
+5. Gemstone Energies & Dangers (Pukhraj, Neelam, Manik, Moti, Panna, Heera, Moonga)
 
 CURRENT PLAYBOOK RULES:
 {json.dumps(playbook.get("daily_golden_rules", []), ensure_ascii=False)}
@@ -207,10 +208,14 @@ CURRENT PLAYBOOK RULES:
 RECENT REELS GENERATED / PUBLISHED:
 {json.dumps(recent_samples, ensure_ascii=False)}
 
+CRITICAL ALGORITHM DIRECTIVES:
+- Multi-Reason/Checklist Dominance: Viewers prioritize reels providing 3 distinct signs or placements because it guarantees 100% video completion as they wait for their placement, and drives extreme comment velocity.
+- Comment Consultation Retention Loop: CTAs prompt viewers to comment their Date of Birth or placement, allowing our AI agent to reply directly with personalized Vedic remedies.
+
 TASK:
 Analyze recent content trends and synthesize a higher-intelligence upgrade for today's production:
-1. Formulate 4 upgraded "daily_golden_rules" for maximum watch-time, retention, and algorithm push.
-2. Formulate 3 NEW "winning_hooks" (with high pattern-interrupt tension, 7-12 spoken words).
+1. Formulate 4 upgraded "daily_golden_rules" for maximum watch-time, multi-reason retention, and comment engagement.
+2. Formulate 3 NEW "winning_hooks" using the multi-reason / 3-signs framework (7-12 spoken words).
 3. Identify 3 new "banned_low_retention_phrases" that weaken short-form retention.
 4. Highlight the TOP 3 highest-reach SEO keywords for today's Explore indexing.
 5. Provide a 2-sentence "evolution_summary" of what the agent learned today.

@@ -253,70 +253,70 @@ def generate_reel(
       "scene_num": 1,
       "spoken_line": "{selected_hook['spoken']}",
       "on_screen_text": "{selected_hook['on_screen']}",
-      "visual_description": "Cinematic dramatic zoom on the sacred gemstone or planetary symbol",
+      "visual_description": "Cinematic dramatic zoom on the sacred Vedic birth chart or planetary symbol",
       "estimated_seconds": 3
     }},
     {{
       "scene_num": 2,
-      "spoken_line": "कुंडली में यह ग्रह जब इस भाव में बैठता है, तो यह रत्न लाभ की जगह अनचाहे संकट और हानि बढ़ा देता है।",
-      "on_screen_text": "AMPLIFIES KARMIC LOSS",
+      "spoken_line": "पहला संकेत: जब यह ग्रह इस भाव में बैठता है, तो भारी मेहनत के बाद भी अनचाहे संकट और रुकावटें बढ़ जाती हैं।",
+      "on_screen_text": "1. PLACEMENT ONE SIGN",
       "visual_description": "Ancient Vedic parchment chart illuminated by sacred oil lamp",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 3,
-      "spoken_line": "अपनी लग्न ज़रूर जांचिए! इन विशिष्ट लग्नों के लिए यह ग्रह मारक होता है, इसलिए इसे कभी न पहनें।",
-      "on_screen_text": "CHECK YOUR LAGNA NOW",
+      "spoken_line": "दूसरा संकेत: इस ग्रह की वक्री दृष्टि आपके जीवन में ठीक सफलता के समय अप्रत्याशित अड़चनें पैदा करती है।",
+      "on_screen_text": "2. PLACEMENT TWO IMPACT",
       "visual_description": "Deep space cinematic planetary cosmos view",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 4,
-      "spoken_line": "हज़ारों रुपये बर्बाद करने के बजाय, यह शास्त्र सम्मत निःशुल्क वैदिक उपाय शनिवार को करें।",
-      "on_screen_text": "DO THIS FREE TEMPLE REMEDY",
+      "spoken_line": "तीसरा संकेत और उपाय: हज़ारों रुपये खर्च करने के बजाय, यह शास्त्र सम्मत निःशुल्क वैदिक उपाय शनिवार को करें।",
+      "on_screen_text": "3. FREE TEMPLE REMEDY",
       "visual_description": "Sacred Vedic Havan fire ritual with golden embers",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 5,
-      "spoken_line": "अपनी जन्मतिथि नीचे कमेंट करें, हम आपकी कुंडली देखकर बताएंगे। पर कोई भी रत्न पहनने से पहले...",
-      "on_screen_text": "COMMENT YOUR BIRTH DATE",
+      "spoken_line": "इन 3 में से आपकी कुंडली में क्या है? अपनी जन्मतिथि नीचे कमेंट करें, हम विश्लेषण करेंगे। पर कोई भी कदम उठाने से पहले...",
+      "on_screen_text": "COMMENT YOUR PLACEMENT",
       "visual_description": "Ancient temple sanctum at midnight with glowing diyas",
       "estimated_seconds": 4
     }}"""
     else:
-        scenes_format_example = f"""    {{
+      scenes_format_example = f"""    {{
       "scene_num": 1,
       "spoken_line": "{selected_hook['spoken']}",
       "on_screen_text": "{selected_hook['on_screen']}",
-      "visual_description": "Cinematic dramatic zoom on the gemstone or cosmic planetary chart",
+      "visual_description": "Cinematic dramatic zoom on the cosmic planetary chart",
       "estimated_seconds": 3
     }},
     {{
       "scene_num": 2,
-      "spoken_line": "When this planet occupies this house, wearing its stone amplifies hidden debts and disputes instead of wealth.",
-      "on_screen_text": "AMPLIFIES KARMIC DEBT",
+      "spoken_line": "Sign one: When this planet occupies this house, it drains your savings through sudden unexpected expenses.",
+      "on_screen_text": "1. PLACEMENT ONE SIGN",
       "visual_description": "Ancient Vedic parchment chart illuminated by sacred oil lamp",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 3,
-      "spoken_line": "Check your rising sign! For these specific ascendants, this planet is functional malefic and harmful.",
-      "on_screen_text": "CHECK YOUR LAGNA NOW",
+      "spoken_line": "Sign two: Retrograde aspect on this house creates frustrating roadblocks right before major breakthroughs.",
+      "on_screen_text": "2. PLACEMENT TWO IMPACT",
       "visual_description": "Deep space cinematic planetary cosmos view",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 4,
-      "spoken_line": "Instead of wasting thousands, do this authentic zero-cost scriptural remedy to balance the planetary energy.",
-      "on_screen_text": "DO THIS FREE REMEDY",
+      "spoken_line": "Sign three and remedy: Instead of buying expensive stones, perform this authentic zero-cost scriptural ritual.",
+      "on_screen_text": "3. FREE TEMPLE REMEDY",
       "visual_description": "Sacred Vedic Havan fire ritual with golden embers",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 5,
-      "spoken_line": "Drop your date of birth in the comments, and I will verify your chart. But before you wear any stone, always verify why...",
-      "on_screen_text": "COMMENT YOUR BIRTH DATE",
+      "spoken_line": "Which of these 3 placements is in your chart? Comment your Date of Birth below, and our agent will review it. But before you comment, always remember...",
+      "on_screen_text": "COMMENT YOUR PLACEMENT",
       "visual_description": "Ancient temple sanctum at midnight with glowing diyas",
       "estimated_seconds": 4
     }}"""
@@ -336,22 +336,23 @@ WINNING ON-SCREEN HOOK: {selected_hook["on_screen"]}
 
 {algo_context}
 
-VIRAL RETENTION BLUEPRINT (5 DYNAMIC SCENES - TAILORED SPECIFICALLY TO THIS TOPIC):
+VIRAL RETENTION BLUEPRINT (5 DYNAMIC SCENES - UNIVERSAL MULTI-REASON / CHECKLIST FORMAT):
 1. SCENE 1 (0-3s) - THE HOOK & PATTERN INTERRUPT:
    - Spoken: {selected_hook["spoken"]}
    - On-Screen Text: Punchy 3-5 words in clean ALL CAPS matching the topic (e.g. "{selected_hook['on_screen']}").
-2. SCENE 2 (3-8s) - THE HIDDEN ENERGETIC TRUTH / UNTOLD DANGER:
-   - Reveal the exact energetic Vedic truth for this specific topic: Why gemstones don't create luck, but amplify planetary house lordships. Explain the exact mechanism for THIS specific planet/house.
-   - On-Screen Text: Punchy 3-5 words (e.g., "AMPLIFIES KARMIC LOSS").
-3. SCENE 3 (8-14s) - THE CONCRETE CHART CHECK / COMPATIBILITY RULE:
-   - Give the viewer an exact, 100% scripturally accurate rule: Name the specific ascendants (Lagnas) where this planet is functional malefic or benefic, OR the classical compatibility test for this gemstone.
-   - On-Screen Text: Punchy 3-5 words (e.g., "CHECK YOUR LAGNA NOW").
-4. SCENE 4 (14-20s) - THE ZERO-COST AUTHENTIC VEDIC REMEDY:
-   - Reveal the authentic scriptural free spiritual fix (e.g., Peepal tree mustard lamp for Shani, Ganesha devotion/dog feeding for Ketu, cow feeding for Mercury, Vishnu devotion for Jupiter).
-   - On-Screen Text: Punchy 3-5 words (e.g., "FREE SCRIPTURAL REMEDY").
-5. SCENE 5 (20-25s) - THE INFINITE REPLAY LOOP & VIRAL COMMENT TRIGGER:
-   - Strong high-intent comment CTA that grammatically flows directly back into the opening hook word: "Comment your Date of Birth or Ascendant below, and I will check your chart. But before you do that, remember: always verify before you..." (Seamless loop back to Beat 1!).
-   - On-Screen Text: Punchy 3-5 words (e.g., "COMMENT YOUR BIRTH DATE").
+2. SCENE 2 (3-8s) - REASON 1 / FIRST PLACEMENT & LIFE SYMPTOM:
+   - Detail Placement #1 or Sign #1 for this topic with vivid, relatable real-life symptoms (e.g., if wealth: Rahu in 2nd/11th giving sudden money followed by mysterious expenses; if marriage: Ketu in 7th causing emotional detachment; if career: Shani in 10th testing perseverance; if gemstone: wearing stone of 6th/8th functional malefic).
+   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g., "1. RAHU IN 2ND HOUSE").
+3. SCENE 3 (8-14s) - REASON 2 / SECOND PLACEMENT & PLANETARY MECHANISM:
+   - Detail Placement #2 or Sign #2 with the exact planetary mechanism (e.g., if wealth: retrograde Saturn in 12th causing constant leakages; if marriage: Mars in 8th Manglik causing friction; if psychic: Jupiter aspect on 9th giving uncanny premonitions).
+   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g., "2. SATURN IN 12TH HOUSE").
+4. SCENE 4 (14-20s) - REASON 3 / THIRD PLACEMENT + ZERO-COST SCRIPTURAL REMEDY:
+   - Detail Placement #3 or Sign #3, and immediately provide the authentic, 100% free scriptural remedy to balance this energy (e.g., lighting a mustard oil diya under a Peepal tree on Saturdays, chanting Om Namah Shivaya 11 times, feeding street dogs, offering water to the rising Sun).
+   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g., "3. FREE TEMPLE REMEDY").
+5. SCENE 5 (20-25s) - THE INFINITE REPLAY LOOP & HIGH-RETENTION COMMENT TRIGGER:
+   - Strong interactive comment CTA asking which of the 3 placements they have, inviting them to comment their Date of Birth or Lagna so our AI agent can check their placement, and grammatically looping back into the opening hook word!
+   - (e.g. "Do you have any of these 3 placements? Comment your Date of Birth or Lagna below, and our agent will check your chart! But before you comment, remember to always verify before you..." -> Seamless loop back to Beat 1!).
+   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g., "COMMENT YOUR PLACEMENT").
 
 CRITICAL JYOTISH ACCURACY RULES (100% SCRIPTURALLY CORRECT VEDIC ASTROLOGY):
 - PLANET & GEMSTONE ACCURACY: Only speak about the EXACT planet, house, and gemstone relevant to "{topic}".
