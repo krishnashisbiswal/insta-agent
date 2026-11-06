@@ -4,7 +4,19 @@ on:
   schedule:
     # 13:15 UTC = 18:45 IST (Peak Instagram Algorithm Evening Velocity)
     - cron: '15 13 * * *'
-  workflow_dispatch: # Allows manual 1-click execution anytime from GitHub website
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force publish today (bypasses daily frequency limiter)'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+permissions:
+  contents: write
 
 jobs:
   build-and-publish:
