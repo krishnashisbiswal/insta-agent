@@ -1,5 +1,5 @@
 {
-  "topic": "The 'Red Coral Moonga' Blood-Debt Trap: Why your Mars placement is fueling hidden enemies",
+  "topic": "The Diamond (Heera) Debt Trap: Why Shukra in your 11th house is draining your luck",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "hi-IN-MadhurNeural",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
@@ -8,8 +8,8 @@
   "hook": {
     "formula_id": 2,
     "formula_name": "Negative Command",
-    "spoken": "लाल मूंगा पहनना बंद करें, जब तक मंगल इस भाव में न हो!",
-    "on_screen": "❌ STOP WEARING MOONGA! 🔴",
+    "spoken": "हीरा पहनना बंद करें! यदि ग्यारहवें भाव में शुक्र आपकी बर्बादी का कारण है।",
+    "on_screen": "⚠️ STOP WEARING DIAMONDS! 💎",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [
@@ -18,7 +18,7 @@
     "checks": {
       "LENGTH": {
         "score": 60,
-        "detail": "3 words, 24 chars, ~1.1s spoken (want 5-12 words)"
+        "detail": "3 words, 27 chars, ~1.1s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
         "score": 15.0,
@@ -48,7 +48,7 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "70 chars (Target: <=125)"
+        "detail": "82 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 70,
@@ -60,8 +60,8 @@
       }
     }
   },
-  "duration_seconds": 38.34,
-  "generated_at": "2026-11-06 21:16:26",
+  "duration_seconds": 32.85,
+  "generated_at": "2026-11-06 22:34:00",
   "algorithm_phase": "Late Night Subconscious & Gemstone Truth",
   "daily_post_enforced": true
 }

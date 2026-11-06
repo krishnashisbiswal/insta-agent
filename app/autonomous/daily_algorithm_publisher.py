@@ -103,6 +103,7 @@ class DailyAlgorithmPublisher:
         niche: str = CONTENT_NICHE,
         language: str = CONTENT_LANGUAGE,
         voice: Optional[str] = None,
+        dry_run: bool = False,
     ) -> Dict[str, Any]:
         """
         Executes complete production of a fresh trending viral reel:
@@ -237,22 +238,26 @@ class DailyAlgorithmPublisher:
         }
 
         # 7. Live Instagram Publishing
-        uploader = InstagramUploader()
-        if uploader.has_credentials():
-            print("\n[STEP 7/7] Publishing Reel to Instagram live account...")
-            try:
-                full_post_caption = final_caption + "\n\n" + " ".join(hashtags)
-                upload_res = uploader.upload_reel(
-                    video_path=final_video_dest,
-                    caption=full_post_caption,
-                )
-                print(f" -> Instagram Post Status: {upload_res.get('status', 'OK')} [ID: {upload_res.get('media_id', 'N/A')}]")
-                res_info["instagram_upload"] = upload_res
-            except Exception as e:
-                print(f" -> Instagram Upload Notice: {e}. Video safely delivered to insta content/.")
-                res_info["instagram_upload_error"] = str(e)
+        if dry_run:
+            print("\n[STEP 7/7] Dry run mode enabled. Video safely packaged into insta content/ ready for review.")
+            res_info["instagram_upload"] = {"status": "dry_run", "message": "Video generated ready for review in insta content/"}
         else:
-            print("\n[STEP 7/7] No live Instagram credentials in .env. Video saved ready for manual post or GitHub Actions.")
+            uploader = InstagramUploader()
+            if uploader.has_credentials():
+                print("\n[STEP 7/7] Publishing Reel to Instagram live account...")
+                try:
+                    full_post_caption = final_caption + "\n\n" + " ".join(hashtags)
+                    upload_res = uploader.upload_reel(
+                        video_path=final_video_dest,
+                        caption=full_post_caption,
+                    )
+                    print(f" -> Instagram Post Status: {upload_res.get('status', 'OK')} [ID: {upload_res.get('media_id', 'N/A')}]")
+                    res_info["instagram_upload"] = upload_res
+                except Exception as e:
+                    print(f" -> Instagram Upload Notice: {e}. Video safely delivered to insta content/.")
+                    res_info["instagram_upload_error"] = str(e)
+            else:
+                print("\n[STEP 7/7] No live Instagram credentials in .env. Video saved ready for manual post or GitHub Actions.")
 
         print("\n" + "=" * 75)
         print("  DAILY VIRAL REEL PRODUCTION COMPLETE!")
@@ -263,14 +268,14 @@ class DailyAlgorithmPublisher:
 
         return res_info
 
-    def run_daily_algorithm_cycle(self, force: bool = False, tz: str = TIMEZONE) -> Dict[str, Any]:
+    def run_daily_algorithm_cycle(self, force: bool = False, tz: str = TIMEZONE, dry_run: bool = False) -> Dict[str, Any]:
         """
         Executes today's single video generation and scheduling based on algorithm timing.
         """
         now = get_current_time(tz)
         today_str = now.strftime("%Y-%m-%d")
 
-        if not force and self.has_posted_today(tz=tz):
+        if not force and not dry_run and self.has_posted_today(tz=tz):
             secs, win_name, nxt = seconds_until_next_optimal(tz)
             print(f"[DAILY PUBLISHER] Today's video ({today_str}) has ALREADY been produced.")
             print(f"[DAILY PUBLISHER] Next optimal algorithm window: {nxt.strftime('%Y-%m-%d %H:%M')} ({win_name}) in {secs // 3600}h {(secs % 3600) // 60}m.")
@@ -281,10 +286,11 @@ class DailyAlgorithmPublisher:
         print(f"[DAILY PUBLISHER] Checking Instagram Algorithm State: {peak_name} ({'PEAK ALGORITHM WINDOW' if in_peak else 'PREPARATION WINDOW'})")
 
         # Produce today's high-retention reel
-        result = self.produce_trending_reel()
+        result = self.produce_trending_reel(dry_run=dry_run)
 
-        # Record in daily tracker
-        self.record_post_today(result, tz=tz)
+        # Record in daily tracker only if live published
+        if not dry_run:
+            self.record_post_today(result, tz=tz)
 
         return result
 
@@ -330,6 +336,7 @@ class DailyAlgorithmPublisher:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Autonomous 1-Video-Daily Algorithm Publisher")
     parser.add_argument("--force", action="store_true", help="Force production even if already posted today")
+    parser.add_argument("--dry-run", action="store_true", help="Generate and deliver full video package to insta content/ without uploading to Instagram")
     parser.add_argument("--daemon", action="store_true", help="Run 24/7 continuous autonomous server daemon")
     parser.add_argument("--voice-mode", choices=["smart", "hindi", "english"], default=None, help="Smart Voice Switch mode")
     parser.add_argument("--gender", choices=["male", "female"], default=None, help="Voice gender")
@@ -344,4 +351,4 @@ if __name__ == "__main__":
     if args.daemon:
         publisher.run_continuous_daemon()
     else:
-        publisher.run_daily_algorithm_cycle(force=args.force)
+        publisher.run_daily_algorithm_cycle(force=args.force, dry_run=args.dry_run)
