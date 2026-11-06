@@ -682,15 +682,15 @@ def create_cinematic_reel_video(
         topic_words = re.sub(r"[^\w\s]", "", topic_str).strip().upper().split()
         topic_short = " ".join(topic_words[:3]) if topic_words else "VEDIC WISDOM"
         if scene_idx == 0:
-            return f"⚠️ {topic_short} ALERT"
+            return f"⚠️ {topic_short} TRAITS"
         elif scene_idx == 1:
-            return "✦ KUNDLI PLACEMENT SECRET ✦"
+            return "✦ TRAIT ONE ✦"
         elif scene_idx == 2:
-            return "✦ GRAHA ENERGETIC TRUTH ✦"
+            return "✦ TRAIT TWO ✦"
         elif scene_idx == 3:
-            return "✦ CRITICAL REMEDY WARNING ✦"
+            return "✦ TRAIT THREE • ROOT CAUSE ✦"
         else:
-            return "✦ BOOK 1-ON-1 CONSULTATION ✦"
+            return "✦ COMMENT PLACEMENT • DM TO BOOK ✦"
 
     # 3. Generate Per-Scene Audio & Synchronized Video Clips
     video_clips = []

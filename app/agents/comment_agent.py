@@ -96,7 +96,7 @@ OBJECTIVES:
 1. Parse whatever birth details, zodiac sign, house, or placement they provided (e.g. DOB, Lagna, Rahu in 2nd, Saturn in 8th, etc.).
 2. Offer a genuine, accurate, 2-sentence personalized preliminary astrological reading explaining what is occurring karmically.
 3. Consultation Conversion (NO UNVERIFIED GENERIC REMEDIES): Explicitly explain that remedies must be customized based on their exact degrees, nakshatras, and Mahadasha to avoid energetic clashes.
-4. Retention Call: Urge them to DM 'KUNDLI' or click the link in bio to Book a 1-on-1 Deep Consultation for their customized lifetime remedies.
+4. Retention Call: Urge them to send a Direct Message (DM) to book a consultation for full deep chart analysis. NEVER mention 'link in bio' or 'bio mein link hai'! ONLY DM!
 5. Max length: 45 to 65 words (ideal for Instagram comment readability).
 6. Never be arrogant or fearmongering; be deeply reassuring, insightful, and spiritually elevating.
 
@@ -104,7 +104,7 @@ Return ONLY valid JSON:
 {{
   "detected_placement": "Brief summary of what placement or question was extracted",
   "reply_text": "Complete polished reply ready to post directly on Instagram",
-  "consultation_cta": "Clear booking prompt included in the reply"
+  "consultation_cta": "Clear booking prompt instructing them to DM"
 }}
 """
         try:
@@ -116,9 +116,9 @@ Return ONLY valid JSON:
 
         # Reassuring fallback reply
         if is_hindi:
-            reply = f"नमस्ते @{commenter_name}! आपकी कुंडली का यह प्रभाव महत्वपूर्ण संकेत दे रहा है। बिना सटीक डिग्री और महादशा जाने कोई भी सामान्य उपाय न करें। अपने संपूर्ण व्यक्तिगत उपाय और 1-on-1 कुंडली परामर्श के लिए हमें DM करें या बायो में लिंक देखें। 🙏✨"
+            reply = f"नमस्ते @{commenter_name}! आपकी कुंडली का यह प्रभाव महत्वपूर्ण संकेत दे रहा है। बिना सटीक डिग्री और महादशा जाने कोई भी सामान्य उपाय न करें। अपने संपूर्ण विश्लेषण और परामर्श बुक करने के लिए हमें तुरंत DM करें। 🙏✨"
         else:
-            reply = f"Hello @{commenter_name}! This planetary placement brings key karmic shifts. Because remedies vary by exact degrees and Mahadasha, avoid generic rituals. DM us 'KUNDLI' or check our bio link to book your 1-on-1 personalized consultation! 🙏✨"
+            reply = f"Hello @{commenter_name}! This planetary placement brings key karmic shifts. Because remedies vary by exact degrees and Mahadasha, avoid generic rituals. Send us a DM to book your consultation for full analysis! 🙏✨"
 
         return {
             "detected_placement": "General chart query",

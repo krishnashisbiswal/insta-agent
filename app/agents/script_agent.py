@@ -279,8 +279,8 @@ def generate_reel(
     }},
     {{
       "scene_num": 5,
-      "spoken_line": "अपनी जन्म तारीख और समय नीचे कमेंट करें, हम चेक करेंगे। और संपूर्ण कुंडली विश्लेषण के लिए बायो में कंसल्टेशन बुक करें। पर कोई भी कदम उठाने से पहले...",
-      "on_screen_text": "BOOK 1-ON-1 CONSULTATION",
+      "spoken_line": "अपनी कुंडली में इस ग्रह का भाव नीचे कमेंट करें, और संपूर्ण विश्लेषण के लिए हमें तुरंत DM करें।",
+      "on_screen_text": "COMMENT PLACEMENT • DM TO BOOK",
       "visual_description": "Ancient temple sanctum at midnight with glowing diyas",
       "estimated_seconds": 4
     }}"""
@@ -315,8 +315,8 @@ def generate_reel(
     }},
     {{
       "scene_num": 5,
-      "spoken_line": "Comment your Date of Birth and exact time below—we will check your chart! For complete customized remedies, book a 1-on-1 consultation in bio. But before you comment, always remember...",
-      "on_screen_text": "BOOK 1-ON-1 CONSULTATION",
+      "spoken_line": "Comment your planet placement below, and send us a direct message (DM) to book your consultation for full analysis!",
+      "on_screen_text": "COMMENT PLACEMENT • DM TO BOOK",
       "visual_description": "Ancient temple sanctum at midnight with glowing diyas",
       "estimated_seconds": 4
     }}"""
@@ -354,11 +354,11 @@ INSTEAD, USE THE "SELF-DISCOVERY TRAIT MIRROR": Reveal 3 to 4 hyper-relatable ps
    - Connect this trait to the governing astrological planet/house (e.g. Rahu in 8th house, Moon-Saturn Vish Yoga, Ketu in 12th).
    - CRITICAL WARNING: Explicitly warn that generic online remedies backfire without checking degrees!
    - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "3. 3AM WAKEUP • RAHU IN 8TH").
-5. SCENE 5 (18-25s) - THE COMMENT-COUNTING MAGNET & 1-ON-1 CONSULTATION CONVERSION:
-   - Command viewers to comment their SCORE (1, 2, 3, or 4) and their Date of Birth below so our AI can analyze their placement!
-   - Urge them to share this with a friend who has these exact traits.
-   - Tell them to click the link in bio or DM 'KUNDLI' to Book a 1-on-1 Consultation for customized lifetime remedies!
-   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "COMMENT SCORE • BOOK 1-ON-1").
+5. SCENE 5 (18-25s) - THE COMMENT PLACEMENT & DM CONSULTATION CALL-TO-ACTION:
+   - Command viewers to COMMENT their planet placement below (e.g. "अपनी कुंडली में इस ग्रह का भाव नीचे कमेंट करें...").
+   - Tell viewers to send a Direct Message (DM) to book their consultation for full analysis (e.g. "...और संपूर्ण विश्लेषण व परामर्श के लिए हमें तुरंत DM करें।").
+   - ABSOLUTE MANDATE: NEVER SAY 'LINK IN BIO' OR 'BIO MEIN LINK HAI'. ONLY INSTRUCT THEM TO SEND A DM!
+   - On-Screen Text: Punchy 3-5 words in clean ALL CAPS (e.g. "COMMENT PLACEMENT • DM TO BOOK").
 
 CRITICAL JYOTISH ACCURACY RULES (100% SCRIPTURALLY CORRECT VEDIC ASTROLOGY):
 - PLANET & GEMSTONE ACCURACY: Only speak about the EXACT planet, house, and gemstone relevant to "{topic}".

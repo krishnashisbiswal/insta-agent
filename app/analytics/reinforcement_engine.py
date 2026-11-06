@@ -85,16 +85,16 @@ class ReinforcementEvolutionEngine:
         ],
         "engagement_triggers": [
             {
-                "id": "ET_SCORE_COMMENT",
-                "cta": "How many of these 4 traits do you have? Drop your count (1, 2, 3, or 4) and Birth Date below to check your alignment! Share this with someone who has these exact traits, and book a 1-on-1 Consultation via bio.",
-                "q_value": 0.97,
-                "times_selected": 18,
+                "id": "ET_PLACEMENT_COMMENT",
+                "cta": "Comment your planet placement below, and send us a Direct Message (DM) to book your consultation for full analysis!",
+                "q_value": 0.98,
+                "times_selected": 20,
             },
             {
                 "id": "ET_SHARE_FRIEND",
-                "cta": "If you relate to trait #2 or #3, send this to your best friend—they already know this about you. Comment your placement below and book a 1-on-1 reading in bio.",
-                "q_value": 0.93,
-                "times_selected": 10,
+                "cta": "If you relate to these traits, share this video. Comment your planet placement below, and DM us to book your consultation!",
+                "q_value": 0.94,
+                "times_selected": 12,
             },
         ],
     }
@@ -219,8 +219,8 @@ class ReinforcementEvolutionEngine:
                 pb["daily_golden_rules"] = [
                     "Rule 1: The '3 to 4 Relatable Traits' Mirror - Frame topics around recognizable psychological & behavioral traits rather than preachy negative warnings.",
                     "Rule 2: STRICT NO-FREE-REMEDIES POLICY - Never give generic remedies in the reel; warn that unverified online rituals backfire without calculating exact degrees.",
-                    "Rule 3: Comment-Counting Trigger (1-4) - Command viewers to drop their trait score and Date of Birth to maximize comment velocity for the Instagram algorithm.",
-                    "Rule 4: 1-on-1 Consultation Booking Conversion - Urge viewers to DM 'KUNDLI' or click the link in bio to book a personalized reading for custom lifetime remedies.",
+                    "Rule 3: Comment Placement Trigger - Command viewers to comment their planet placement below to maximize algorithmic engagement.",
+                    "Rule 4: DM Consultation Booking - Instruct viewers to send a Direct Message (DM) to book their consultation for full analysis. (Zero mention of bio link).",
                     "Rule 5: Zero Reused Images - DynamicVisualEngine generates unique, dedicated photorealistic 9:16 visuals for each individual scene.",
                 ]
                 with open(PLAYBOOK_FILE, "w", encoding="utf-8") as f:

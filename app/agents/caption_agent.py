@@ -106,8 +106,8 @@ INSTAGRAM ALGORITHM & ENGAGEMENT RULES:
 2. The explanation must directly explain why this placement causes financial/karmic disruption according to Vedic Jyotish (Scenes 2 & 3).
 3. STRICT NO-GENERIC-REMEDIES WARNING: Explicitly state that generic internet remedies backfire without knowing exact degrees and ascendant (Lagna). Withholding remedies builds high curiosity and credibility!
 4. TWO-STEP VIRAL CALL TO ACTION (CTA):
-   - Step 1 (Comment Magnet): Command viewers to drop their exact Date of Birth, Time, and City in the comments so our AI can check their placement (driving comment volume to trigger the Instagram algorithm!).
-   - Step 2 (Consultation Booking): Tell them to DM 'KUNDLI' or click the link in bio to Book a 1-on-1 Consultation for their complete deep Kundli reading and custom remedies.
+   - Step 1 (Comment Placement): Command viewers to comment their planet placement below (e.g. "Comment your planet placement below to check your alignment").
+   - Step 2 (DM Consultation Booking): Tell them to send a Direct Message (DM) to book their consultation for full deep analysis. NEVER MENTION 'LINK IN BIO'! ONLY DM!
 5. Exactly 4 to 5 hyper-targeted hashtags (no hashtag spam).
 6. Clean formatting with double-spaced paragraphs and bullet points for mobile readability.
 
