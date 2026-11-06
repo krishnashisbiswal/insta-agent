@@ -211,9 +211,48 @@ class DynamicVisualEngine:
                 used_images.add(target_file)
                 return target_file
         except Exception as e:
-            logger.warning(f"[DynamicVisualEngine] AI generator network notice ({e}). Falling back to local procedural photographic engine.")
+            logger.warning(f"[DynamicVisualEngine] AI generator network notice ({e}). Falling back to semantic high-resolution photographic library.")
 
-        # 2. Procedural Photographic Engine (100% Unique, Zero Repetition)
+        # 2. Semantic High-Resolution Photographic Engine (Guaranteed Real Visuals)
+        broll_dir = PROJECT_ROOT / "assets" / "cinematic_broll"
+        t_lower = (topic or "").lower()
+        sc_text = (scene_dict.get("spoken_line", "") + " " + scene_dict.get("on_screen_text", "")).lower()
+
+        # Check for specific gem topic
+        if "neelam" in t_lower or "blue sapphire" in t_lower:
+            candidates = [
+                broll_dir / "gemstone_blue_sapphire.jpg",
+                broll_dir / "2_kundli_chart.jpg",
+                broll_dir / "planet_saturn.jpg",
+                broll_dir / "4_sacred_havan.jpg",
+                broll_dir / "5_temple_sanctum.jpg",
+            ]
+        elif "pukhraj" in t_lower or "yellow sapphire" in t_lower:
+            candidates = [
+                broll_dir / "gemstone_yellow_sapphire.jpg",
+                broll_dir / "2_kundli_chart.jpg",
+                broll_dir / "planet_jupiter.jpg",
+                broll_dir / "4_sacred_havan.jpg",
+                broll_dir / "5_temple_sanctum.jpg",
+            ]
+        else:
+            # Trait / Kundli Placement / Planetary Life Symptoms
+            candidates = [
+                broll_dir / "2_kundli_chart.jpg",
+                broll_dir / "planet_rahu.jpg",
+                broll_dir / "planet_saturn.jpg",
+                broll_dir / "4_sacred_havan.jpg",
+                broll_dir / "5_temple_sanctum.jpg",
+            ]
+
+        # Pick candidate for this scene index
+        chosen_img = candidates[min(scene_idx, len(candidates) - 1)]
+        if chosen_img.exists():
+            used_images.add(chosen_img)
+            logger.info(f"[DynamicVisualEngine] Using semantic photographic asset for Scene {scene_idx + 1} -> {chosen_img.name}")
+            return chosen_img
+
+        # 3. Procedural Fallback if asset file missing
         theme_map = {
             0: "cosmic",
             1: "night",

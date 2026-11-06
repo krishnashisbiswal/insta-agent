@@ -1,50 +1,55 @@
 {
   "topic": "4 Unexplainable Traits If Your Kundli Has An Active Rahu Or Saturn Placement",
   "framework": "3 to 4 Traits Identification + Comment Planet Placement + DM to Book Consultation",
-  "evolution_level": 2.3,
-  "duration_seconds": 29.13,
+  "evolution_level": 2.5,
+  "duration_seconds": 34.75,
   "scenes": [
     {
       "scene_num": 1,
-      "spoken_line": "शनि की ढैया में नीलम पहनने की गलती कभी मत करना!",
-      "on_screen_text": "❌ STOP WEARING NEELAM NOW! 🪐",
-      "visual_description": "Cinematic dramatic zoom on a glowing Blue Sapphire gemstone resting on a sacred Vedic scroll",
-      "estimated_seconds": 3
+      "badge": "",
+      "spoken_line": "क्या आपके साथ भी बिना वजह यह 3 चीजें हो रही हैं? ध्यान से सुनें।",
+      "on_screen_text": "⚠️ 3 UNEXPLAINABLE SIGNS 🪐",
+      "visual_description": "Ancient Vedic parchment Kundli birth chart illuminated by sacred brass oil lamp",
+      "estimated_seconds": 4
     },
     {
       "scene_num": 2,
-      "spoken_line": "पहला: अचानक बिना कारण घबराहट और रात के 3 बजे उठने की आदत।",
-      "on_screen_text": "1. UNCANNY 3AM WAKEUP",
-      "visual_description": "Close-up of a person waking up in a dim, mystical room with soft golden light",
+      "badge": "1. UNCANNY 3AM WAKEUP",
+      "spoken_line": "पहला: अचानक बिना कारण घबराहट और रात के 3 बजे नींद खुल जाना।",
+      "on_screen_text": "RACING THOUGHTS AT NIGHT",
+      "visual_description": "Cosmic Rahu eclipse vortex with celestial corona rays",
       "estimated_seconds": 5
     },
     {
       "scene_num": 3,
+      "badge": "2. SUDDEN WEALTH SIPHON",
       "spoken_line": "दूसरा: पैसा आता है, पर अचानक खर्चों का अंबार लग जाता है।",
-      "on_screen_text": "2. SUDDEN WEALTH SIPHON",
-      "visual_description": "Time-lapse of golden sand slipping through fingers in a dark, ethereal environment",
+      "on_screen_text": "MONEY SLIPS AWAY UNEXPECTEDLY",
+      "visual_description": "Cinematic deep space planet Saturn governing karma and financial blockages",
       "estimated_seconds": 5
     },
     {
       "scene_num": 4,
-      "spoken_line": "तीसरा: बिना डिग्री जांचे कोई भी उपाय करना, आपके कर्मों को और बिगाड़ सकता है।",
-      "on_screen_text": "3. DANGER: UNVERIFIED REMEDIES",
-      "visual_description": "Abstract visual of a planetary chart shifting degrees with warning energy pulses",
-      "estimated_seconds": 5
+      "badge": "3. UNVERIFIED REMEDIES DANGER",
+      "spoken_line": "तीसरा: बिना डिग्री और लग्न की जांच किए कोई भी उपाय करना, भारी नुकसान करा सकता है।",
+      "on_screen_text": "WRONG RITUALS DISRUPT KARMA",
+      "visual_description": "Sacred Vedic havan fire ritual with holy offerings and amber sparks",
+      "estimated_seconds": 6
     },
     {
       "scene_num": 5,
+      "badge": "COMMENT YOUR PLACEMENT",
       "spoken_line": "अपनी कुंडली में इस ग्रह का भाव नीचे कमेंट करें, और संपूर्ण विश्लेषण के लिए हमें तुरंत DM करें।",
-      "on_screen_text": "COMMENT PLACEMENT • DM TO BOOK",
-      "visual_description": "A meditative, ancient temple setting with a burning diya flame reflecting in the camera",
-      "estimated_seconds": 5
+      "on_screen_text": "DM US FOR FULL KUNDLI ANALYSIS",
+      "visual_description": "Midnight sacred temple sanctum with glowing earthen lamps and divine aura",
+      "estimated_seconds": 6
     }
   ],
-  "caption_hook": "शनि की ढैया में नीलम (Blue Sapphire) पहनने की गलती कभी मत करना! 🚫",
+  "caption_hook": "क्या आपके साथ भी बिना वजह ये 3 चीजें हो रही हैं? ध्यान से सुनें। ⚠️",
   "hashtags": [
     "#VedicAstrology",
-    "#ShaniDev",
     "#RahuEffects",
+    "#SaturnTransit",
     "#KundliAnalysis",
     "#NeoDivine"
   ]

@@ -68,44 +68,48 @@ def generate_hooks(
     algo_context = algo_brain.generate_prompt_boost_snippet()
 
     is_hindi = language.lower() in ["hindi", "hi"]
+    is_gem_topic = any(k in (topic or "").lower() for k in ["gemstone", "ratna", "neelam", "pukhraj", "manik", "panna", "heera", "moti", "sapphire", "ruby", "emerald", "diamond"])
 
     if is_hindi:
-        lang_rule = """
+        ex_spoken = "रुकिए! पुखराज पहनने से पहले अपनी कुंडली का यह भाव ज़रूर देख लें!" if is_gem_topic else "रुकिए! क्या आपकी कुंडली में भी यह 3 लक्षण दिख रहे हैं?"
+        ex_card = "⚠️ STOP WEARING PUKHRAJ!" if is_gem_topic else "⚠️ 3 UNEXPLAINABLE SIGNS 🪐"
+        lang_rule = f"""
 LANGUAGE & PRONUNCIATION MANDATE (100% PURE DEVANAGARI HINDI):
 - "spoken": MUST be written strictly in pure, natural, respectful HINDI in Devanagari script (हिंदी लिपि).
-  Example Spoken: "रुकिए! पुखराज पहनने से पहले अपनी कुंडली का यह भाव ज़रूर देख लें!"
   DO NOT write spoken lines in Roman English or Hinglish! Pure Devanagari guarantees native Indian voice models pronounce every Vedic Sanskrit term (शनि, राहु, केतु, नीलम, पन्ना, कुंडली, उपाय) with 100% human-grade studio perfection.
 - "on_screen": MUST be written in clean, bold ALL CAPS ENGLISH (3 to 6 words) with a relevant emoji.
-  Example On-Screen: "⚠️ STOP WEARING PUKHRAJ!"
+  Example On-Screen: "{ex_card}"
 """
-        example_json = """{
+        example_json = f"""{{
   "hooks": [
-    {
+    {{
       "formula_id": 2,
-      "formula_name": "Negative Command",
-      "spoken": "रुकिए! पुखराज पहनने से पहले अपनी कुंडली का यह भाव ज़रूर देख लें!",
-      "on_screen": "⚠️ STOP WEARING PUKHRAJ!"
-    }
+      "formula_name": "Pattern Interrupt",
+      "spoken": "{ex_spoken}",
+      "on_screen": "{ex_card}"
+    }}
   ]
-}"""
+}}"""
     else:
-        lang_rule = """
+        ex_spoken = "Stop wearing Yellow Sapphire right now until you check this placement!" if is_gem_topic else "Stop scrolling if you experience these 3 unexplainable signs!"
+        ex_card = "⚠️ STOP WEARING PUKHRAJ!" if is_gem_topic else "⚠️ 3 UNEXPLAINABLE SIGNS 🪐"
+        lang_rule = f"""
 LANGUAGE & PRONUNCIATION MANDATE (CLEAN FLUENT ENGLISH):
 - "spoken": MUST be written in clean, fluent, grammatical English.
-  Example Spoken: "Stop wearing Yellow Sapphire right now until you check this placement!"
+  Example Spoken: "{ex_spoken}"
 - "on_screen": MUST be in bold ALL CAPS ENGLISH (3 to 6 words) with a relevant emoji.
-  Example On-Screen: "⚠️ STOP WEARING PUKHRAJ!"
+  Example On-Screen: "{ex_card}"
 """
-        example_json = """{
+        example_json = f"""{{
   "hooks": [
-    {
+    {{
       "formula_id": 2,
-      "formula_name": "Negative Command",
-      "spoken": "Stop wearing Yellow Sapphire right now until you check this placement!",
-      "on_screen": "⚠️ STOP WEARING PUKHRAJ!"
-    }
+      "formula_name": "Pattern Interrupt",
+      "spoken": "{ex_spoken}",
+      "on_screen": "{ex_card}"
+    }}
   ]
-}"""
+}}"""
 
     prompt = f"""
 You are the #1 viral Instagram Reels strategist who has scripted dozens of 10M+ view Reels in the personal growth, psychology, and Vedic wisdom niche.

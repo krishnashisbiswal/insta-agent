@@ -103,21 +103,25 @@ def resolve_topic_visuals(topic_str: str) -> List[Path]:
         return [kundli_img, CINEMATIC_BROLL_DIR / "planet_saturn.jpg", CINEMATIC_BROLL_DIR / "planet_jupiter.jpg", havan_img, temple_img]
 
 
-def get_font(size: int, bold: bool = True) -> ImageFont.FreeTypeFont:
-    """Prioritize high-impact viral fonts: Bundled Impact -> Windows -> Linux."""
-    paths = [
-        str(PROJECT_ROOT / "assets" / "fonts" / "Impact.ttf"),
-        str(PROJECT_ROOT / "assets" / "fonts" / "ArialBold.ttf"),
-        IMPACT_FONT_PATH,
-        "C:/Windows/Fonts/impact.ttf",
-        "C:/Windows/Fonts/segoeuib.ttf",
-        "C:/Windows/Fonts/trebucbd.ttf",
-        "/usr/share/fonts/truetype/msttcorefonts/Impact.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
-        DEFAULT_FONT_PATH,
-        FALLBACK_FONT_PATH,
-    ]
+def get_font(size: int, bold: bool = True, family: str = "impact") -> ImageFont.FreeTypeFont:
+    """Prioritize high-impact viral fonts with family selection."""
+    if family in ["arial", "badge", "wm"]:
+        paths = [
+            str(PROJECT_ROOT / "assets" / "fonts" / "ArialBold.ttf"),
+            "C:/Windows/Fonts/arialbd.ttf",
+            "C:/Windows/Fonts/segoeuib.ttf",
+            DEFAULT_FONT_PATH,
+            FALLBACK_FONT_PATH,
+        ]
+    else:
+        paths = [
+            str(PROJECT_ROOT / "assets" / "fonts" / "Impact.ttf"),
+            IMPACT_FONT_PATH,
+            "C:/Windows/Fonts/impact.ttf",
+            str(PROJECT_ROOT / "assets" / "fonts" / "ArialBold.ttf"),
+            "C:/Windows/Fonts/segoeuib.ttf",
+            DEFAULT_FONT_PATH,
+        ]
     for p in paths:
         try:
             return ImageFont.truetype(p, size)
@@ -303,147 +307,148 @@ def render_kinetic_caption_layer(
     text: str,
     scene_number: int,
     total_scenes: int,
-    badge_text: str = "VEDIC ASTROLOGY",
+    badge_text: str = "",
 ) -> Image.Image:
     """
-    Renders clean, modern, high-contrast kinetic subtitles in the lower-chest third:
-    - Impact font (56pt) with 4-pixel deep black stroke outline for text.
-    - Native Segoe UI Emoji / Noto Color Emoji font for full-color vibrant emojis.
-    - Electric yellow/gold highlights on key words.
-    - Clean word spacing and centered lines.
-    - No ugly black opaque box!
+    Renders clean, modern, high-contrast typography designed for viral Instagram Reels:
+    - Top Center: Single high-visibility creator watermark pill (✨ @neodivinestore.in ✨)
+      in 32pt Arial Bold with native emoji sparkles. Zero stacked pills, zero overwriting.
+    - Scene 1: Prominent Hero Hook Card (Centered, gold-bordered glass pill, zero redundant badges).
+    - Scenes 2-5: Clean Trait/Topic Badge chip (34pt Arial Bold) + complementary kinetic subtitle.
+    - Bottom: Elegant golden scene progress dashes.
     """
     overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
 
-    # 1. Sleek Top Frosted Pill Badge (Preserves emojis)
-    badge_font = get_font(22, bold=True)
-    emoji_badge_font = get_emoji_font(22)
-    b_text = badge_text.strip()
-    if not b_text.startswith("✦"):
-        b_text = f"✦  {b_text}  ✦"
-    b_bbox = draw.textbbox((0, 0), b_text, font=badge_font)
-    b_w = b_bbox[2] - b_bbox[0]
-    bx = (width - b_w) // 2
-    by = int(height * 0.08)
+    # 1. TOP CREATOR WATERMARK (High Visibility, Sleek Glass Pill, 32pt)
+    wm_font = get_font(32, bold=True, family="arial")
+    emoji_font_wm = get_emoji_font(26)
+    wm_handle = BRAND_WATERMARK.strip() if BRAND_WATERMARK else "@neodivinestore.in"
+    bbox_wm = draw.textbbox((0, 0), wm_handle, font=wm_font)
+    wm_w = bbox_wm[2] - bbox_wm[0]
+    wm_h = bbox_wm[3] - bbox_wm[1]
 
-    pad_x, pad_y = 22, 8
+    sparkle_w = 36 if emoji_font_wm else 0
+    pill_w = wm_w + (sparkle_w * 2) + 44
+    pill_x = (width - pill_w) // 2
+    pill_y = 100
+    pill_h = wm_h + 24
+
     draw.rounded_rectangle(
-        [bx - pad_x, by - pad_y, bx + b_w + pad_x, by + (b_bbox[3] - b_bbox[1]) + pad_y],
-        radius=18,
-        fill=(8, 6, 14, 195),
-        outline=(255, 215, 0, 180),
-        width=1,
+        [pill_x, pill_y, pill_x + pill_w, pill_y + pill_h],
+        radius=20,
+        fill=(10, 8, 16, 215),
+        outline=(255, 215, 0, 220),
+        width=2,
     )
-    # Draw badge text with emoji fallback
-    cur_bx = bx
-    for bw in b_text.split():
-        if is_emoji_word(bw) and emoji_badge_font:
-            try:
-                draw.text((cur_bx, by), bw, font=emoji_badge_font, embedded_color=True)
-                cur_bx += draw.textbbox((0, 0), bw, font=emoji_badge_font, embedded_color=True)[2] - draw.textbbox((0, 0), bw, font=emoji_badge_font, embedded_color=True)[0] + 8
-                continue
-            except Exception:
-                pass
-        draw.text((cur_bx, by), bw, font=badge_font, fill=(255, 225, 90, 245))
-        cur_bx += draw.textbbox((0, 0), bw, font=badge_font)[2] - draw.textbbox((0, 0), bw, font=badge_font)[0] + 8
 
-    # 1B. Creator / Brand Watermark (@neovibestore.in)
-    if BRAND_WATERMARK:
-        wm_font = get_font(21, bold=True)
-        wm_text = BRAND_WATERMARK.strip()
-        wm_bbox = draw.textbbox((0, 0), wm_text, font=wm_font)
-        wm_w = wm_bbox[2] - wm_bbox[0]
-        wm_h = wm_bbox[3] - wm_bbox[1]
-        wm_x = (width - wm_w) // 2
-        wm_y = by + (b_bbox[3] - b_bbox[1]) + pad_y + 14
+    if emoji_font_wm:
+        try:
+            draw.text((pill_x + 14, pill_y + 8), "✨", font=emoji_font_wm, embedded_color=True)
+        except Exception:
+            pass
+        draw.text((pill_x + 14 + sparkle_w + 8, pill_y + 11), wm_handle, font=wm_font, fill=(255, 255, 255, 255))
+        try:
+            draw.text((pill_x + pill_w - sparkle_w - 10, pill_y + 8), "✨", font=emoji_font_wm, embedded_color=True)
+        except Exception:
+            pass
+    else:
+        draw.text(((width - wm_w) // 2, pill_y + 11), wm_handle, font=wm_font, fill=(255, 255, 255, 255))
 
-        wm_px, wm_py = 18, 6
-        draw.rounded_rectangle(
-            [wm_x - wm_px, wm_y - wm_py, wm_x + wm_w + wm_px, wm_y + wm_h + wm_py],
-            radius=12,
-            fill=(10, 8, 16, 175),
-            outline=(255, 255, 255, 100),
-            width=1,
-        )
-        draw.text((wm_x, wm_y), wm_text, font=wm_font, fill=(255, 255, 255, 235))
+    f_badge = get_font(34, bold=True, family="arial")
+    cap_font = get_font(56, bold=True, family="impact")
+    emoji_font = get_emoji_font(48)
 
-    # 2. Kinetic Lower-Chest Subtitles (y ~ 73%)
-    cap_font = get_font(56, bold=True)
-    emoji_font = get_emoji_font(50)
-
-    # Clean text: keep words and emojis intact
-    raw_words = [w.strip(".,;:\"'") for w in text.strip().split() if w.strip()]
-
-    # Wrap into 1 or 2 lines max
-    lines = []
-    curr_line = []
-    gap = 14
-    for w in raw_words:
-        curr_line.append(w)
-        test_str = " ".join(curr_line)
-        bbox = draw.textbbox((0, 0), test_str, font=cap_font)
-        if (bbox[2] - bbox[0]) > (width - 140):
-            curr_line.pop()
-            if curr_line:
-                lines.append(curr_line)
-            curr_line = [w]
-    if curr_line:
-        lines.append(curr_line)
-
-    HIGHLIGHT_WORDS = {
-        "STOP", "NEELAM", "PUKHRAJ", "MANIK", "PANNA", "HEERA", "MOTI",
-        "8TH", "HOUSE", "KARMA", "DEBT", "DANGER", "SHANI", "GURU", "RAHU", "KETU",
-        "WRONG", "POISON", "LUCK", "ENEMY", "FREE", "REMEDY", "TEST", "AWAKENING",
-        "PILLOW", "SILK", "COMMENT", "CHART", "BIRTH", "DATE", "VERIFY", "3AM", "3 AM"
-    }
-
-    line_h = 70
-    total_h = len(lines) * line_h
-    start_y = int(height * 0.74) - (total_h // 2)
-
-    for i, line_words in enumerate(lines):
+    # 2. SCENE 1: HERO HOOK CARD (Single high-impact centered card, NO stacked redundant pill)
+    if scene_number == 1:
+        hook_text = text.strip() if text else "⚠️ 3 UNEXPLAINABLE SIGNS 🪐"
+        words = hook_text.split()
         word_widths = []
-        for wd in line_words:
+        for wd in words:
             if is_emoji_word(wd) and emoji_font:
                 try:
                     bbox = draw.textbbox((0, 0), wd, font=emoji_font, embedded_color=True)
                     word_widths.append(bbox[2] - bbox[0])
+                    continue
                 except Exception:
-                    bbox = draw.textbbox((0, 0), wd, font=cap_font)
-                    word_widths.append(bbox[2] - bbox[0])
-            else:
-                bbox = draw.textbbox((0, 0), wd, font=cap_font)
-                word_widths.append(bbox[2] - bbox[0])
+                    pass
+            bbox = draw.textbbox((0, 0), wd, font=cap_font)
+            word_widths.append(bbox[2] - bbox[0])
 
-        line_w = sum(word_widths) + (len(line_words) - 1) * gap
-        cur_x = (width - line_w) // 2
-        cur_y = start_y + (i * line_h)
+        total_w = sum(word_widths) + (len(words) - 1) * 16
+        cur_x = (width - total_w) // 2
+        cur_y = 1420
+        pad_x, pad_y = 36, 18
 
-        for wd, ww in zip(line_words, word_widths):
+        draw.rounded_rectangle(
+            [cur_x - pad_x, cur_y - pad_y, cur_x + total_w + pad_x, cur_y + 70 + pad_y],
+            radius=20,
+            fill=(12, 10, 22, 225),
+            outline=(255, 215, 0, 240),
+            width=2,
+        )
+
+        for wd, ww in zip(words, word_widths):
             if is_emoji_word(wd) and emoji_font:
                 try:
-                    draw.text((cur_x, cur_y + 4), wd, font=emoji_font, embedded_color=True)
+                    draw.text((cur_x, cur_y + 6), wd, font=emoji_font, embedded_color=True)
                 except Exception:
                     draw.text((cur_x, cur_y), wd, font=cap_font, fill=(255, 230, 0, 255))
             else:
-                wd_upper = wd.upper()
-                wd_clean = "".join(c for c in wd if c.isalnum()).upper()
-                is_highlight = wd_clean in HIGHLIGHT_WORDS
-
-                text_color = (255, 230, 0, 255) if is_highlight else (255, 255, 255, 255)
-
-                # Deep 4-way stroke outline for 100% readability
                 for ox in [-3, 0, 3]:
                     for oy in [-3, 0, 3]:
                         if ox != 0 or oy != 0:
-                            draw.text((cur_x + ox, cur_y + oy), wd_upper, font=cap_font, fill=(0, 0, 0, 255))
+                            draw.text((cur_x + ox, cur_y + oy), wd, font=cap_font, fill=(0, 0, 0, 255))
+                col = (255, 230, 0) if any(c.isdigit() for c in wd) or wd in ["SIGNS", "WARNING", "MISTAKE", "STOP"] else (255, 255, 255)
+                draw.text((cur_x, cur_y), wd, font=cap_font, fill=col)
+            cur_x += ww + 16
 
-                draw.text((cur_x, cur_y), wd_upper, font=cap_font, fill=text_color)
-            cur_x += ww + gap
+    else:
+        # 3. SCENES 2-5: TRAIT PILL BADGE (Above) + COMPLEMENTARY SUBTITLE (Below)
+        # Strip emojis from badge to prevent broken boxes
+        clean_badge = re.sub(r"[^\w\s\.\:\-•]", "", badge_text.replace("✦", "")).strip()
+        if clean_badge:
+            b_bbox = draw.textbbox((0, 0), clean_badge, font=f_badge)
+            bw = b_bbox[2] - b_bbox[0]
+            bh = b_bbox[3] - b_bbox[1]
+            bx = (width - bw) // 2
+            by = 1370
+            pad_x, pad_y = 30, 12
 
-    # 3. Bottom Progress Bar (Elegant Gold Dashes)
-    dash_w = 44
+            draw.rounded_rectangle(
+                [bx - pad_x, by - pad_y, bx + bw + pad_x, by + bh + pad_y],
+                radius=16,
+                fill=(14, 10, 24, 225),
+                outline=(255, 215, 0, 240),
+                width=2,
+            )
+            draw.text((bx, by), clean_badge, font=f_badge, fill=(255, 230, 90, 255))
+
+        # Subtitle below trait badge
+        sub_text = text.strip()
+        # If subtitle would duplicate badge words, use a clean complementary symptom line
+        if clean_badge and (clean_badge in sub_text or sub_text in clean_badge):
+            fallbacks = {
+                2: "RACING THOUGHTS AT NIGHT",
+                3: "MONEY SLIPS AWAY UNEXPECTEDLY",
+                4: "WRONG RITUALS DISRUPT KARMA",
+                5: "DM US FOR FULL KUNDLI ANALYSIS",
+            }
+            sub_text = fallbacks.get(scene_number, sub_text)
+
+        s_bbox = draw.textbbox((0, 0), sub_text, font=cap_font)
+        sw = s_bbox[2] - s_bbox[0]
+        sx = (width - sw) // 2
+        sy = 1465
+
+        for ox in [-3, 0, 3]:
+            for oy in [-3, 0, 3]:
+                if ox != 0 or oy != 0:
+                    draw.text((sx + ox, sy + oy), sub_text, font=cap_font, fill=(0, 0, 0, 255))
+        draw.text((sx, sy), sub_text, font=cap_font, fill=(255, 255, 255, 255))
+
+    # 4. Bottom Progress Bar (Elegant Gold Dashes)
+    dash_w = 48
     dash_gap = 14
     total_dash_w = (total_scenes * dash_w) + ((total_scenes - 1) * dash_gap)
     start_dx = (width - total_dash_w) // 2
@@ -455,6 +460,8 @@ def render_kinetic_caption_layer(
             draw.rounded_rectangle([dx, dash_y, dx + dash_w, dash_y + 6], radius=3, fill=(255, 215, 0, 255))
         else:
             draw.rounded_rectangle([dx, dash_y + 1, dx + dash_w, dash_y + 5], radius=2, fill=(140, 140, 150, 100))
+
+    return overlay
 
     return overlay
 
@@ -679,18 +686,19 @@ def create_cinematic_reel_video(
     def get_scene_badge(sc_dict: Dict[str, Any], scene_idx: int, topic_str: str) -> str:
         if sc_dict.get("badge"):
             return sc_dict["badge"].strip().upper()
-        topic_words = re.sub(r"[^\w\s]", "", topic_str).strip().upper().split()
-        topic_short = " ".join(topic_words[:3]) if topic_words else "VEDIC WISDOM"
+        t_clean = re.sub(r"[^\w\s]", "", topic_str).strip().upper()
+        t_words = [w for w in t_clean.split() if w != "TRAITS"]
+        topic_short = " ".join(t_words[:3]) if t_words else "VEDIC WISDOM"
         if scene_idx == 0:
             return f"⚠️ {topic_short} TRAITS"
         elif scene_idx == 1:
-            return "✦ TRAIT ONE ✦"
+            return "1. UNCANNY 3AM WAKEUP"
         elif scene_idx == 2:
-            return "✦ TRAIT TWO ✦"
+            return "2. SUDDEN WEALTH SIPHON"
         elif scene_idx == 3:
-            return "✦ TRAIT THREE • ROOT CAUSE ✦"
+            return "3. UNVERIFIED REMEDIES BACKFIRE"
         else:
-            return "✦ COMMENT PLACEMENT • DM TO BOOK ✦"
+            return "💬 1-ON-1 KUNDLI ANALYSIS"
 
     # 3. Generate Per-Scene Audio & Synchronized Video Clips
     video_clips = []
