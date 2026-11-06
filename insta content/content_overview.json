@@ -1,26 +1,28 @@
 {
-  "topic": "The 'Emerald Panna' Financial Leak in 6th House Rahu",
+  "topic": "The 'Red Coral Moonga' Blood-Debt Trap: Why your Mars placement is fueling hidden enemies",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
-  "voice": null,
+  "voice": "hi-IN-MadhurNeural",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
   "agent_evolution_level": 1.2,
   "hook": {
     "formula_id": 2,
     "formula_name": "Negative Command",
-    "spoken": "Stop wearing Emerald if your Rahu is in the 6th house, fast!",
-    "on_screen": "⚠️ STOP WEARING EMERALD!",
-    "score": 84.4,
+    "spoken": "लाल मूंगा पहनना बंद करें, जब तक मंगल इस भाव में न हो!",
+    "on_screen": "❌ STOP WEARING MOONGA! 🔴",
+    "score": 85.0,
     "verdict": "STRONG",
-    "flags": [],
+    "flags": [
+      "Emoji in the hook. On-screen text at hook size has room for words or for an emoji, not both."
+    ],
     "checks": {
       "LENGTH": {
-        "score": 100.0,
-        "detail": "12 words, 60 chars, ~4.4s spoken (want 5-12 words)"
+        "score": 60,
+        "detail": "3 words, 24 chars, ~1.1s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 100.0,
-        "detail": "3 concrete marker(s): 6, Emerald, Rahu"
+        "score": 15.0,
+        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
       },
       "STAKES": {
         "score": 70.0,
@@ -31,8 +33,8 @@
         "detail": "payload at word 1"
       },
       "ADDRESS": {
-        "score": 100.0,
-        "detail": "speaks to the viewer"
+        "score": 90.0,
+        "detail": "imperative opener (\"stop\")"
       }
     }
   },
@@ -46,7 +48,7 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "89 chars (Target: <=125)"
+        "detail": "70 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 70,
@@ -58,8 +60,8 @@
       }
     }
   },
-  "duration_seconds": 54.324,
-  "generated_at": "2026-11-06 00:17:52",
-  "algorithm_phase": "Algorithmic Indexing & Quiet Hours",
+  "duration_seconds": 38.34,
+  "generated_at": "2026-11-06 21:16:26",
+  "algorithm_phase": "Late Night Subconscious & Gemstone Truth",
   "daily_post_enforced": true
 }
