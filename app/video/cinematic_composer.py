@@ -9,6 +9,15 @@ import wave
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 import numpy as np
 from moviepy import (
     AudioFileClip,
@@ -677,9 +686,9 @@ def create_cinematic_reel_video(
         elif scene_idx == 2:
             return "✦ GRAHA ENERGETIC TRUTH ✦"
         elif scene_idx == 3:
-            return "✦ FREE VEDIC REMEDY ✦"
+            return "✦ CRITICAL REMEDY WARNING ✦"
         else:
-            return "✦ VERIFY YOUR CHART ✦"
+            return "✦ BOOK 1-ON-1 CONSULTATION ✦"
 
     # 3. Generate Per-Scene Audio & Synchronized Video Clips
     video_clips = []

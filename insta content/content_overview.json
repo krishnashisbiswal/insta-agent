@@ -1,68 +1,53 @@
 {
   "topic": "3 Kundli Placements That Are Secretly Leaking Your Bank Balance",
-  "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
+  "framework": "No Free Remedies + Comment Magnet + 1-on-1 Consultation Conversion",
+  "evolution_level": 1.4,
+  "duration_seconds": 37.12,
   "voice": "hi-IN-MadhurNeural",
-  "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
-  "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 1.3,
-  "hook": {
-    "formula_id": 2,
-    "formula_name": "Negative Command",
-    "spoken": "सावधान! अपनी कुंडली में यह भाव देखे बिना नीलम कभी मत पहनना।",
-    "on_screen": "❌ DANGER: STOP WEARING NEELAM! ⚠️",
-    "score": 85.0,
-    "verdict": "STRONG",
-    "flags": [
-      "Emoji in the hook. On-screen text at hook size has room for words or for an emoji, not both."
-    ],
-    "checks": {
-      "LENGTH": {
-        "score": 80,
-        "detail": "4 words, 33 chars, ~1.5s spoken (want 5-12 words)"
-      },
-      "SPECIFICITY": {
-        "score": 15.0,
-        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
-      },
-      "STAKES": {
-        "score": 100.0,
-        "detail": "2 tension marker(s): danger, stop"
-      },
-      "FRONTLOAD": {
-        "score": 100.0,
-        "detail": "payload at word 1"
-      },
-      "ADDRESS": {
-        "score": 35.0,
-        "detail": "third person, nobody in the room"
-      }
+  "scenes": [
+    {
+      "scene_num": 1,
+      "spoken_line": "नीलम पहनने से पहले अपनी कुंडली के ये तीन भाव चेक करें वरना कंगाल हो जाएंगे!",
+      "on_screen_text": "❌ STOP WEARING NEELAM NOW! ⚠️",
+      "visual_description": "Cinematic dramatic zoom on the sacred Vedic birth chart or planetary symbol",
+      "estimated_seconds": 3
+    },
+    {
+      "scene_num": 2,
+      "spoken_line": "पहला: शनि का अष्टम भाव में होना, अचानक धन हानि और गुप्त शत्रुओं का मुख्य कारण है।",
+      "on_screen_text": "1. SATURN IN 8TH HOUSE",
+      "visual_description": "Ancient Vedic parchment chart illuminated by sacred oil lamp",
+      "estimated_seconds": 5
+    },
+    {
+      "scene_num": 3,
+      "spoken_line": "दूसरा: शनि का द्वादश भाव में होना, आपकी मेहनत का फल किसी और की जेब में डाल देता है।",
+      "on_screen_text": "2. SATURN IN 12TH HOUSE",
+      "visual_description": "Deep space cinematic planetary cosmos view",
+      "estimated_seconds": 5
+    },
+    {
+      "scene_num": 4,
+      "spoken_line": "तीसरा: बिना डिग्री चेक किए उपाय करना, क्योंकि गलत रत्न आपकी ऊर्जा को पूरी तरह नष्ट कर सकता है।",
+      "on_screen_text": "3. NEVER GUESS YOUR REMEDY",
+      "visual_description": "Mystical ancient Vedic parchment chart illuminated by cosmic starlight",
+      "estimated_seconds": 5
+    },
+    {
+      "scene_num": 5,
+      "spoken_line": "अपनी जन्म तारीख और समय नीचे कमेंट करें। संपूर्ण विश्लेषण के लिए बायो में कंसल्टेशन बुक करें। क्योंकि...",
+      "on_screen_text": "BOOK 1-ON-1 CONSULTATION",
+      "visual_description": "Ancient temple sanctum at midnight with glowing diyas",
+      "estimated_seconds": 4
     }
-  },
-  "seo_audit": {
-    "overall_seo_score": 80.0,
-    "verdict": "GOOD",
-    "checks": {
-      "hashtag_count_valid": {
-        "score": 100,
-        "detail": "5 tags (Target: 3-5)"
-      },
-      "caption_hook_visible": {
-        "score": 100,
-        "detail": "59 chars (Target: <=125)"
-      },
-      "visual_pacing_valid": {
-        "score": 70,
-        "detail": "5 visual scenes with high pacing"
-      },
-      "high_value_cta": {
-        "score": 50,
-        "detail": "Includes Save/Share/Comment trigger"
-      }
-    }
-  },
-  "duration_seconds": 39.36,
-  "generated_at": "2026-11-06 23:50:14",
-  "algorithm_phase": "Late Night Subconscious & Gemstone Truth",
-  "daily_post_enforced": true,
-  "comment_consultations_handled": 0
+  ],
+  "cta_strategy": "Drop Birth Date & Time in comments for scan; DM KUNDLI or click bio to Book Consultation",
+  "first_line": "नीलम (Blue Sapphire) पहनने से पहले अपनी कुंडली के ये 3 भाव चेक करें, वरना कंगाल हो सकते हैं! ⚠️",
+  "hashtags": [
+    "#VedicAstrology",
+    "#NeelamStone",
+    "#ShaniDev",
+    "#KundliAnalysis",
+    "#NeoDivine"
+  ]
 }

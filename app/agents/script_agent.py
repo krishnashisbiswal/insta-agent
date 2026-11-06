@@ -272,15 +272,15 @@ def generate_reel(
     }},
     {{
       "scene_num": 4,
-      "spoken_line": "तीसरा संकेत और उपाय: हज़ारों रुपये खर्च करने के बजाय, यह शास्त्र सम्मत निःशुल्क वैदिक उपाय शनिवार को करें।",
-      "on_screen_text": "3. FREE TEMPLE REMEDY",
-      "visual_description": "Sacred Vedic Havan fire ritual with golden embers",
+      "spoken_line": "तीसरा संकेत: अगर यह ग्रह पीड़ित है, तो बिना सटीक डिग्री जाने कोई भी सामान्य उपाय भारी नुकसान करा सकता है।",
+      "on_screen_text": "3. NEVER GUESS YOUR REMEDY",
+      "visual_description": "Mystical ancient Vedic parchment chart illuminated by cosmic starlight",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 5,
-      "spoken_line": "इन 3 में से आपकी कुंडली में क्या है? अपनी जन्मतिथि नीचे कमेंट करें, हम विश्लेषण करेंगे। पर कोई भी कदम उठाने से पहले...",
-      "on_screen_text": "COMMENT YOUR PLACEMENT",
+      "spoken_line": "अपनी जन्म तारीख और समय नीचे कमेंट करें, हम चेक करेंगे। और संपूर्ण कुंडली विश्लेषण के लिए बायो में कंसल्टेशन बुक करें। पर कोई भी कदम उठाने से पहले...",
+      "on_screen_text": "BOOK 1-ON-1 CONSULTATION",
       "visual_description": "Ancient temple sanctum at midnight with glowing diyas",
       "estimated_seconds": 4
     }}"""
@@ -308,15 +308,15 @@ def generate_reel(
     }},
     {{
       "scene_num": 4,
-      "spoken_line": "Sign three and remedy: Instead of buying expensive stones, perform this authentic zero-cost scriptural ritual.",
-      "on_screen_text": "3. FREE TEMPLE REMEDY",
-      "visual_description": "Sacred Vedic Havan fire ritual with golden embers",
+      "spoken_line": "Sign three: If this planet is afflicted, performing random generic remedies can backfire severely without checking degrees.",
+      "on_screen_text": "3. NEVER GUESS YOUR REMEDY",
+      "visual_description": "Mystical ancient Vedic parchment chart illuminated by cosmic starlight",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 5,
-      "spoken_line": "Which of these 3 placements is in your chart? Comment your Date of Birth below, and our agent will review it. But before you comment, always remember...",
-      "on_screen_text": "COMMENT YOUR PLACEMENT",
+      "spoken_line": "Comment your Date of Birth and exact time below—we will check your chart! For complete customized remedies, book a 1-on-1 consultation in bio. But before you comment, always remember...",
+      "on_screen_text": "BOOK 1-ON-1 CONSULTATION",
       "visual_description": "Ancient temple sanctum at midnight with glowing diyas",
       "estimated_seconds": 4
     }}"""
@@ -346,13 +346,16 @@ VIRAL RETENTION BLUEPRINT (5 DYNAMIC SCENES - UNIVERSAL MULTI-REASON / CHECKLIST
 3. SCENE 3 (8-14s) - REASON 2 / SECOND PLACEMENT & PLANETARY MECHANISM:
    - Detail Placement #2 or Sign #2 with the exact planetary mechanism (e.g., if wealth: retrograde Saturn in 12th causing constant leakages; if marriage: Mars in 8th Manglik causing friction; if psychic: Jupiter aspect on 9th giving uncanny premonitions).
    - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g., "2. SATURN IN 12TH HOUSE").
-4. SCENE 4 (14-20s) - REASON 3 / THIRD PLACEMENT + ZERO-COST SCRIPTURAL REMEDY:
-   - Detail Placement #3 or Sign #3, and immediately provide the authentic, 100% free scriptural remedy to balance this energy (e.g., lighting a mustard oil diya under a Peepal tree on Saturdays, chanting Om Namah Shivaya 11 times, feeding street dogs, offering water to the rising Sun).
-   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g., "3. FREE TEMPLE REMEDY").
-5. SCENE 5 (20-25s) - THE INFINITE REPLAY LOOP & HIGH-RETENTION COMMENT TRIGGER:
-   - Strong interactive comment CTA asking which of the 3 placements they have, inviting them to comment their Date of Birth or Lagna so our AI agent can check their placement, and grammatically looping back into the opening hook word!
-   - (e.g. "Do you have any of these 3 placements? Comment your Date of Birth or Lagna below, and our agent will check your chart! But before you comment, remember to always verify before you..." -> Seamless loop back to Beat 1!).
-   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g., "COMMENT YOUR PLACEMENT").
+4. SCENE 4 (14-20s) - REASON 3 / THIRD PLACEMENT + REMEDY WARNING (STRICT NO-FREE-REMEDY RULE):
+   - Detail Placement #3 or Sign #3 with urgency.
+   - CRITICAL VIRAL RULE (NEVER PROVIDE REMEDIES IN THE REEL): NEVER give away free remedies or rituals in the video! Explicitly warn the viewer: generic online remedies can severely clash with their ascendant and cause heavier damage without checking degrees.
+   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "3. NEVER GUESS YOUR REMEDY" or "3. GENERIC REMEDIES BACKFIRE").
+5. SCENE 5 (20-25s) - THE DUAL COMMENT-MAGNET & 1-ON-1 CONSULTATION UPSELL:
+   - Strong interactive 2-step call-to-action:
+     1) Ask viewers to COMMENT their exact Date of Birth, Time, or placement below for a preliminary chart scan (forcing maximum comment volume to trigger the Instagram algorithm!).
+     2) Urge them to BOOK A 1-ON-1 CONSULTATION via the link in bio for a complete deep Kundli analysis and personalized remedies.
+     3) Seamless infinite grammatical loop back to Scene 1's opening hook word!
+   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "BOOK 1-ON-1 CONSULTATION" or "COMMENT BIRTH DATE TO CHECK").
 
 CRITICAL JYOTISH ACCURACY RULES (100% SCRIPTURALLY CORRECT VEDIC ASTROLOGY):
 - PLANET & GEMSTONE ACCURACY: Only speak about the EXACT planet, house, and gemstone relevant to "{topic}".

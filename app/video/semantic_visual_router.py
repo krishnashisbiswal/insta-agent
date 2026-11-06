@@ -52,7 +52,7 @@ class SemanticVisualRouter:
     RITUAL_KEYWORDS = {
         "havan": ["havan", "yagya", "fire", "sacred fire", "homa", "remedy", "upay", "burning", "offering", "flame"],
         "copper": ["copper", "tamba", "तांबे", "water remedy", "pot", "vessel"],
-        "temple": ["temple", "sanctum", "mandir", "deva", "puja", "worship", "shrine", "blessing", "idol"],
+        "temple": ["temple", "sanctum", "mandir", "deva", "puja", "worship", "shrine", "blessing", "idol", "consultation", "consult", "1-on-1"],
         "kundli": ["kundli", "chart", "birth chart", "horoscope", "bhav", "house", "lagna", "ascendant", "placement"],
     }
 

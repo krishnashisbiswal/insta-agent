@@ -94,17 +94,17 @@ VIEWER'S COMMENT: "{comment_text}"
 
 OBJECTIVES:
 1. Parse whatever birth details, zodiac sign, house, or placement they provided (e.g. DOB, Lagna, Rahu in 2nd, Saturn in 8th, etc.).
-2. Offer a genuine, accurate, 2-3 sentence personalized astrological reading.
-3. Provide a practical zero-cost spiritual remedy (e.g., Peepal diya on Saturday, Shiva water offering, Hanuman Chalisa, feeding birds/dogs).
-4. Retention call: Tell them to save this remedy or send a direct message (DM) for a free deeper chart analysis.
+2. Offer a genuine, accurate, 2-sentence personalized preliminary astrological reading explaining what is occurring karmically.
+3. Consultation Conversion (NO UNVERIFIED GENERIC REMEDIES): Explicitly explain that remedies must be customized based on their exact degrees, nakshatras, and Mahadasha to avoid energetic clashes.
+4. Retention Call: Urge them to DM 'KUNDLI' or click the link in bio to Book a 1-on-1 Deep Consultation for their customized lifetime remedies.
 5. Max length: 45 to 65 words (ideal for Instagram comment readability).
-6. Never be arrogant or fearmongering; be deeply reassuring and spiritually elevating.
+6. Never be arrogant or fearmongering; be deeply reassuring, insightful, and spiritually elevating.
 
 Return ONLY valid JSON:
 {{
   "detected_placement": "Brief summary of what placement or question was extracted",
   "reply_text": "Complete polished reply ready to post directly on Instagram",
-  "recommended_remedy": "Specific free remedy mentioned"
+  "consultation_cta": "Clear booking prompt included in the reply"
 }}
 """
         try:
@@ -116,9 +116,9 @@ Return ONLY valid JSON:
 
         # Reassuring fallback reply
         if is_hindi:
-            reply = f"नमस्ते @{commenter_name}! आपकी कुंडली का यह प्रभाव अस्थायी है। प्रतिदिन 11 बार 'ॐ नमः शिवाय' का जाप करें और शनिवार को पीपल के नीचे सरसों के तेल का दीपक जलाएं। अधिक जानकारी के लिए हमें DM करें। 🙏✨"
+            reply = f"नमस्ते @{commenter_name}! आपकी कुंडली का यह प्रभाव महत्वपूर्ण संकेत दे रहा है। बिना सटीक डिग्री और महादशा जाने कोई भी सामान्य उपाय न करें। अपने संपूर्ण व्यक्तिगत उपाय और 1-on-1 कुंडली परामर्श के लिए हमें DM करें या बायो में लिंक देखें। 🙏✨"
         else:
-            reply = f"Hello @{commenter_name}! This planetary placement brings transformation. Chant 'Om Namah Shivaya' daily and offer water to the Sun at sunrise. Send us a DM with your exact birth time for a deep chart analysis! 🙏✨"
+            reply = f"Hello @{commenter_name}! This planetary placement brings key karmic shifts. Because remedies vary by exact degrees and Mahadasha, avoid generic rituals. DM us 'KUNDLI' or check our bio link to book your 1-on-1 personalized consultation! 🙏✨"
 
         return {
             "detected_placement": "General chart query",

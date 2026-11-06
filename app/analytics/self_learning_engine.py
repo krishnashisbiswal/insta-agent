@@ -38,10 +38,10 @@ DEFAULT_PLAYBOOK: Dict[str, Any] = {
     "total_training_cycles": 1,
     "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
     "daily_golden_rules": [
-        "RULE 1: Lead with a shocking negative command or warning within the first 1.5 seconds (e.g. 'Never wear Neelam on a Saturday without checking your 8th house').",
+        "RULE 1: Lead with a shocking negative command or high-stakes warning within the first 1.5 seconds (e.g. 'Never wear Neelam on a Saturday without checking your 8th house').",
         "RULE 2: Anchor every astrological or psychic claim to a concrete life symptom (e.g. sudden financial loss, unexplainable relationship detachment, 3 AM wakeups).",
-        "RULE 3: Always provide a zero-cost spiritual or devotional remedy (mantra, diya under Peepal tree, feeding birds) before suggesting any gemstone.",
-        "RULE 4: End with a high-curiosity loop comment trigger (e.g. 'Comment your Lagna or birth date, and I will reveal your dangerous planet').",
+        "RULE 3: STRICT NO-FREE-REMEDIES MANDATE IN REELS. Never give away remedies in the video. Generic online rituals backfire without knowing exact degrees and ascendant. This withholds the resolution and drives curiosity.",
+        "RULE 4: ALGORITHM BOOST VIA COMMENT MAGNET + 1-ON-1 CONSULTATION BOOKING. Command viewers to drop their exact Birth Date + Time below for a preliminary chart scan, and DM 'KUNDLI' or click the bio link to Book a 1-on-1 Consultation for customized remedies.",
     ],
     "winning_hooks_bank": [
         {
