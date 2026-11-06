@@ -584,126 +584,160 @@ class Engine3D:
         gem_type: str = "blue_sapphire",
     ) -> Image.Image:
         """
-        Renders an authentic 3D multi-faceted rotating crystal gemstone with
-        specular reflections, internal facet depth, and radiating cosmic aura.
+        Renders a hyper-realistic brilliant-cut 3D crystal gemstone:
+        - 3D Floating levitation with Euler pitch, yaw, and roll
+        - Realistic multi-faceted crown, star, kite, and pavilion geometry
+        - Deep crystal refraction with back-facet light transmission and internal caustics
+        - Specular light glints and micro-edge refraction seams (no harsh cartoon wireframe)
+        - Soft volumetric atmospheric aura glow
+        - Dynamic anamorphic horizontal optical lens flare sweeps
         """
         canvas = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(canvas)
         cx, cy = center or (width // 2, int(height * 0.42))
 
+        # 3D Floating levitation
+        float_y = math.sin(t * 2.0) * 12
+        cy += int(float_y)
+
+        # 3D Euler angles
+        rot_y = t * 1.5
+        rot_x = math.radians(22.0 + 5.0 * math.cos(t * 1.8))
+        rot_z = math.radians(4.0 * math.sin(t * 1.2))
+
+        # Luxury Gemstone Photorealistic Palettes
         gem_palettes = {
             "blue_sapphire": {
-                "base": (15, 45, 175),
-                "mid": (35, 95, 235),
-                "light": (120, 200, 255),
-                "glint": (220, 245, 255),
-                "glow": (30, 80, 255, 90),
-                "aura_beams": (80, 140, 255, 120),
+                "deep": (5, 18, 85),
+                "base": (12, 42, 165),
+                "mid": (28, 92, 235),
+                "high": (95, 185, 255),
+                "glint": (235, 248, 255),
+                "glow": (30, 85, 255, 75),
             },
             "yellow_sapphire": {
-                "base": (180, 120, 10),
-                "mid": (245, 185, 25),
-                "light": (255, 230, 120),
+                "deep": (90, 50, 5),
+                "base": (180, 115, 10),
+                "mid": (245, 180, 25),
+                "high": (255, 225, 100),
                 "glint": (255, 255, 220),
-                "glow": (255, 190, 30, 90),
-                "aura_beams": (255, 210, 60, 120),
+                "glow": (255, 190, 30, 75),
             },
             "ruby": {
+                "deep": (80, 8, 20),
                 "base": (160, 15, 45),
                 "mid": (230, 35, 75),
-                "light": (255, 110, 150),
+                "high": (255, 110, 150),
                 "glint": (255, 220, 235),
-                "glow": (255, 30, 70, 90),
-                "aura_beams": (255, 70, 100, 120),
+                "glow": (255, 30, 70, 75),
             },
             "emerald": {
-                "base": (10, 110, 60),
-                "mid": (20, 190, 110),
-                "light": (80, 245, 170),
-                "glint": (210, 255, 235),
-                "glow": (20, 230, 130, 90),
-                "aura_beams": (40, 245, 150, 120),
+                "deep": (5, 60, 30),
+                "base": (12, 120, 65),
+                "mid": (25, 195, 115),
+                "high": (85, 250, 175),
+                "glint": (215, 255, 235),
+                "glow": (20, 230, 130, 75),
             },
             "diamond": {
-                "base": (130, 150, 190),
-                "mid": (195, 215, 245),
-                "light": (240, 250, 255),
+                "deep": (90, 110, 140),
+                "base": (140, 165, 200),
+                "mid": (205, 225, 250),
+                "high": (245, 252, 255),
                 "glint": (255, 255, 255),
-                "glow": (180, 220, 255, 90),
-                "aura_beams": (200, 230, 255, 120),
+                "glow": (190, 225, 255, 75),
+            },
+            "red_coral": {
+                "deep": (95, 15, 10),
+                "base": (185, 30, 20),
+                "mid": (235, 60, 45),
+                "high": (255, 120, 105),
+                "glint": (255, 220, 215),
+                "glow": (235, 50, 35, 75),
+            },
+            "pearl": {
+                "deep": (120, 120, 145),
+                "base": (195, 195, 215),
+                "mid": (235, 235, 248),
+                "high": (250, 250, 255),
+                "glint": (255, 255, 255),
+                "glow": (210, 215, 245, 75),
             },
         }
         palette = gem_palettes.get(gem_type, gem_palettes["blue_sapphire"])
 
-        n_facets = 8
-        r_table = radius * 0.52
-        r_girdle = radius * 0.95
-        h_table = -radius * 0.50
-        h_girdle = -radius * 0.05
-        h_culet = radius * 0.90
+        # 1. Soft Volumetric Atmospheric Aura Glow behind the gem
+        glow_img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        g_draw = ImageDraw.Draw(glow_img)
+        gr = int(radius * 1.45)
+        g_draw.ellipse([cx - gr, cy - gr, cx + gr, cy + gr], fill=palette["glow"])
+        glow_img = glow_img.filter(ImageFilter.GaussianBlur(44))
+        canvas.paste(glow_img, (0, 0), glow_img)
 
-        rot_y = t * 1.2
-        rot_x = math.radians(24.0 + 4.0 * math.sin(t * 1.5))
+        # 2. Brilliant-Cut Multi-Faceted Crystal Geometry (12-sided crown)
+        n_facets = 12
+        r_table = radius * 0.54
+        r_crown = radius * 0.82
+        r_girdle = radius * 1.00
+        h_table = -radius * 0.44
+        h_crown = -radius * 0.22
+        h_girdle = 0.0
+        h_pavilion = radius * 0.85
 
         cos_y, sin_y = math.cos(rot_y), math.sin(rot_y)
         cos_x, sin_x = math.cos(rot_x), math.sin(rot_x)
+        cos_z, sin_z = math.cos(rot_z), math.sin(rot_z)
 
-        def transform_point(x, y, z):
+        def rot3d(x, y, z):
             x1 = x * cos_y + z * sin_y
             z1 = -x * sin_y + z * cos_y
             y2 = y * cos_x - z1 * sin_x
             z2 = y * sin_x + z1 * cos_x
-            fov = 1000.0
+            x3 = x1 * cos_z - y2 * sin_z
+            y3 = x1 * sin_z + y2 * cos_z
+            fov = 1200.0
             scale = fov / (fov - z2)
-            px = cx + x1 * scale
-            py = cy + y2 * scale
-            return (px, py, z2)
+            return (cx + x3 * scale, cy + y3 * scale, z2)
 
-        table_pts = [(r_table * math.cos(2 * math.pi * i / n_facets), h_table, r_table * math.sin(2 * math.pi * i / n_facets)) for i in range(n_facets)]
-        girdle_pts = [(r_girdle * math.cos(2 * math.pi * i / (n_facets * 2)), h_girdle, r_girdle * math.sin(2 * math.pi * i / (n_facets * 2))) for i in range(n_facets * 2)]
-        culet_pt = (0.0, h_culet, 0.0)
-
-        t_table = [transform_point(*p) for p in table_pts]
-        t_girdle = [transform_point(*p) for p in girdle_pts]
-        t_culet = transform_point(*culet_pt)
+        table_pts = [rot3d(r_table * math.cos(2*math.pi*i/n_facets), h_table, r_table * math.sin(2*math.pi*i/n_facets)) for i in range(n_facets)]
+        crown_pts = [rot3d(r_crown * math.cos(2*math.pi*(i+0.5)/n_facets), h_crown, r_crown * math.sin(2*math.pi*(i+0.5)/n_facets)) for i in range(n_facets)]
+        girdle_pts = [rot3d(r_girdle * math.cos(2*math.pi*i/(n_facets*2)), h_girdle, r_girdle * math.sin(2*math.pi*i/(n_facets*2))) for i in range(n_facets*2)]
+        culet = rot3d(0, h_pavilion, 0)
 
         facets = []
-        facets.append({"pts": t_table, "type": "table"})
+        # Front table facet
+        facets.append({"pts": table_pts, "type": "table"})
+        # Crown star & kite facets
         for i in range(n_facets):
             i_next = (i + 1) % n_facets
-            g_mid = i * 2 + 1
-            g_left = i * 2
-            g_right = (i * 2 + 2) % (n_facets * 2)
-            facets.append({"pts": [t_table[i], t_table[i_next], t_girdle[g_mid]], "type": "crown_star"})
-            facets.append({"pts": [t_table[i], t_girdle[g_mid], t_girdle[g_left]], "type": "crown_kite"})
-            facets.append({"pts": [t_table[i_next], t_girdle[g_right], t_girdle[g_mid]], "type": "crown_kite"})
+            facets.append({"pts": [table_pts[i], table_pts[i_next], crown_pts[i]], "type": "star"})
+            g1 = i * 2
+            g2 = (i * 2 + 1) % (n_facets * 2)
+            g3 = (i * 2 + 2) % (n_facets * 2)
+            facets.append({"pts": [table_pts[i], crown_pts[i], girdle_pts[g1]], "type": "kite"})
+            facets.append({"pts": [crown_pts[i], girdle_pts[g2], girdle_pts[g1]], "type": "upper_girdle"})
+            facets.append({"pts": [crown_pts[i], girdle_pts[g3], girdle_pts[g2]], "type": "upper_girdle"})
 
+        # Lower pavilion facets
         for i in range(n_facets * 2):
             i_next = (i + 1) % (n_facets * 2)
-            facets.append({"pts": [t_girdle[i], t_girdle[i_next], t_culet], "type": "pavilion"})
+            facets.append({"pts": [girdle_pts[i], girdle_pts[i_next], culet], "type": "pavilion"})
 
+        # Painter's depth sorting: back to front
         facets.sort(key=lambda f: sum(p[2] for p in f["pts"]) / len(f["pts"]))
 
-        # Radiant aura rays
-        for beam_idx in range(12):
-            beam_ang = (2 * math.pi * beam_idx / 12) + (t * 0.6)
-            beam_len = radius * 2.2 + 20 * math.sin(t * 3.0 + beam_idx)
-            bx = cx + beam_len * math.cos(beam_ang)
-            by = cy + beam_len * math.sin(beam_ang)
-            draw.line([(cx, cy), (bx, by)], fill=palette["aura_beams"], width=2)
+        # Dynamic Light Vector (Key Light + Specular Glint Vector)
+        lx, ly, lz = -0.55, -0.65, 0.75
+        l_len = math.sqrt(lx**2 + ly**2 + lz**2)
+        lx, ly, lz = lx / l_len, ly / l_len, lz / l_len
 
-        # Glow sphere
-        glow_img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        glow_draw = ImageDraw.Draw(glow_img)
-        gr = int(radius * 1.35)
-        glow_draw.ellipse([cx - gr, cy - gr, cx + gr, cy + gr], fill=palette["glow"])
-        glow_img = glow_img.filter(ImageFilter.GaussianBlur(36))
-        canvas = Image.alpha_composite(canvas, glow_img)
-        draw = ImageDraw.Draw(canvas)
+        gem_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(gem_layer)
 
-        lx, ly, lz = -0.5, -0.6, 0.8
-        l_mag = math.sqrt(lx**2 + ly**2 + lz**2)
-        lx, ly, lz = lx / l_mag, ly / l_mag, lz / l_mag
+        dp = palette["deep"]
+        bp = palette["base"]
+        mp = palette["mid"]
+        hp = palette["high"]
+        gp = palette["glint"]
 
         for f in facets:
             pts = f["pts"]
@@ -712,45 +746,69 @@ class Engine3D:
             v0, v1, v2 = pts[0], pts[1], pts[2]
             ax, ay, az = v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]
             bx, by, bz = v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]
-            cross_z = ax * by - ay * bx
-            is_front = cross_z < 0
 
             nx = ay * bz - az * by
             ny = az * bx - ax * bz
             nz = ax * by - ay * bx
-            n_mag = math.sqrt(nx**2 + ny**2 + nz**2)
-            if n_mag > 0.001:
-                nx, ny, nz = nx / n_mag, ny / n_mag, nz / n_mag
+            n_len = math.sqrt(nx**2 + ny**2 + nz**2)
+            if n_len > 0.001:
+                nx, ny, nz = nx / n_len, ny / n_len, nz / n_len
             else:
                 nx, ny, nz = 0.0, 0.0, 1.0
 
-            diffuse = max(0.12, abs(nx * lx + ny * ly + nz * lz))
-            dot_nl = nx * lx + ny * ly + nz * lz
-            rz = 2 * dot_nl * nz - lz
-            specular = max(0.0, rz) ** 14
+            is_front = nz > 0
 
-            base_c, mid_c, glint_c = palette["base"], palette["mid"], palette["glint"]
-            alpha = 240 if is_front else 110
+            # Diffuse lighting calculation
+            dot = max(0.0, nx * lx + ny * ly + nz * lz)
 
-            r_col = int(min(255, base_c[0] * (1 - diffuse) + mid_c[0] * diffuse + glint_c[0] * specular * 1.2))
-            g_col = int(min(255, base_c[1] * (1 - diffuse) + mid_c[1] * diffuse + glint_c[1] * specular * 1.2))
-            b_col = int(min(255, base_c[2] * (1 - diffuse) + mid_c[2] * diffuse + glint_c[2] * specular * 1.2))
+            # Crystal refraction internal caustics
+            caustic = 0.5 + 0.5 * math.sin(pts[0][2] * 0.03 + rot_y * 3.0)
 
-            poly_2d = [(p[0], p[1]) for p in pts]
-            draw.polygon(poly_2d, fill=(r_col, g_col, b_col, alpha))
-            edge_alpha = 255 if is_front else 120
-            draw.line(poly_2d + [poly_2d[0]], fill=(min(255, r_col + 50), min(255, g_col + 50), min(255, b_col + 50), edge_alpha), width=2)
+            # High-order specular glint
+            rz = 2 * (nx * lx + ny * ly + nz * lz) * nz - lz
+            spec = max(0.0, rz) ** 18
 
-        # Sparkle star
-        glint_time = (t * 2.5) % (math.pi * 2)
-        if math.sin(glint_time) > 0.8:
-            gp = t_table[0]
-            gx, gy = gp[0], gp[1]
-            g_sz = int(18 + 12 * math.sin(glint_time * 4))
-            draw.polygon([(gx, gy - g_sz), (gx + 3, gy), (gx, gy + g_sz), (gx - 3, gy)], fill=(255, 255, 255, 240))
-            draw.polygon([(gx - g_sz, gy), (gx, gy + 3), (gx + g_sz, gy), (gx, gy - 3)], fill=(255, 255, 255, 240))
-            draw.ellipse([gx - 4, gy - 4, gx + 4, gy + 4], fill=(255, 255, 255, 255))
+            if is_front:
+                r = int(min(255, bp[0] * (1 - dot) + mp[0] * dot * 0.8 + hp[0] * caustic * 0.3 + gp[0] * spec))
+                g = int(min(255, bp[1] * (1 - dot) + mp[1] * dot * 0.8 + hp[1] * caustic * 0.3 + gp[1] * spec))
+                b = int(min(255, bp[2] * (1 - dot) + mp[2] * dot * 0.8 + hp[2] * caustic * 0.3 + gp[2] * spec))
+                alpha = 245
+            else:
+                # Translucent back-facet crystal transmission
+                r = int(min(255, dp[0] * 0.7 + bp[0] * 0.3 + hp[0] * caustic * 0.2))
+                g = int(min(255, dp[1] * 0.7 + bp[1] * 0.3 + hp[1] * caustic * 0.2))
+                b = int(min(255, dp[2] * 0.7 + bp[2] * 0.3 + hp[2] * caustic * 0.2))
+                alpha = 140
 
+            poly2d = [(p[0], p[1]) for p in pts]
+            draw.polygon(poly2d, fill=(r, g, b, alpha))
+
+            # Subtle micro-facet edge highlights (NOT cartoon wireframe lines!)
+            if is_front:
+                edge_r = min(255, r + 45)
+                edge_g = min(255, g + 55)
+                edge_b = min(255, b + 65)
+                draw.line(poly2d + [poly2d[0]], fill=(edge_r, edge_g, edge_b, 110), width=1)
+
+        # 3. Anamorphic Horizontal Optical Lens Flare Sweep
+        flare_time = (t * 2.2) % (math.pi * 2)
+        flare_intensity = max(0.0, math.sin(flare_time)) ** 6
+        if flare_intensity > 0.05:
+            fx, fy = table_pts[0][0], table_pts[0][1]
+            flare_w = int(240 * flare_intensity)
+            flare_h = int(14 * flare_intensity)
+            flare_img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            f_draw = ImageDraw.Draw(flare_img)
+            # Horizontal optical beam
+            f_draw.ellipse([fx - flare_w, fy - flare_h, fx + flare_w, fy + flare_h], fill=(220, 245, 255, int(185 * flare_intensity)))
+            f_draw.ellipse([fx - flare_h * 2, fy - flare_w // 2, fx + flare_h * 2, fy + flare_w // 2], fill=(190, 230, 255, int(120 * flare_intensity)))
+            # Brilliant white core
+            core_r = int(16 * flare_intensity)
+            f_draw.ellipse([fx - core_r, fy - core_r, fx + core_r, fy + core_r], fill=(255, 255, 255, int(245 * flare_intensity)))
+            flare_img = flare_img.filter(ImageFilter.GaussianBlur(3))
+            gem_layer = Image.alpha_composite(gem_layer, flare_img)
+
+        canvas = Image.alpha_composite(canvas, gem_layer)
         return canvas
 
     @classmethod

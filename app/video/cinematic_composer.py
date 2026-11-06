@@ -457,6 +457,7 @@ def load_scene_3d_overlay_cache(
     topic: str,
     scene_idx: int,
     scene_text: str = "",
+    bg_image_name: str = "",
     width: int = VIDEO_WIDTH,
     height: int = VIDEO_HEIGHT,
 ) -> Optional[List[Image.Image]]:
@@ -478,6 +479,11 @@ def load_scene_3d_overlay_cache(
         )
         obj_type = theme.get("type")
         cx, cy = width // 2, int(height * 0.42)
+
+        # If background is already a photorealistic gemstone photo, show the 3D Kundli chart halo
+        # so we never obscure the luxury natural jewel!
+        if bg_image_name.startswith("gemstone_") and obj_type == "gemstone_3d":
+            obj_type = "kundli_chart_3d"
 
         if obj_type == "gemstone_3d":
             gem_t = theme.get("gem_type", "blue_sapphire")
@@ -577,6 +583,7 @@ def create_cinematic_scene_clip(
             topic=on_screen_fallback,
             scene_idx=scene_number - 1,
             scene_text=spoken_line,
+            bg_image_name=image_path.name,
             width=width,
             height=height,
         )
