@@ -1,5 +1,5 @@
 {
-  "topic": "3 Kundli Signs That Trigger 3 AM Spiritual Awakening",
+  "topic": "3 Kundli Placements That Are Secretly Blocking Your Soulmate",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "hi-IN-MadhurNeural",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
@@ -8,8 +8,8 @@
   "hook": {
     "formula_id": 2,
     "formula_name": "Negative Command",
-    "spoken": "रात तीन बजे नींद खुलना इत्तेफाक नहीं, आपकी कुंडली का यह संकेत है!",
-    "on_screen": "🚨 STOP IGNORING 3AM AWAKENING 🌙",
+    "spoken": "नीलम पहनने से पहले अपनी कुंडली के ये तीन दोष जाँच लें!",
+    "on_screen": "❌ STOP WEARING NEELAM!",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [
@@ -17,12 +17,12 @@
     ],
     "checks": {
       "LENGTH": {
-        "score": 80,
-        "detail": "4 words, 31 chars, ~1.5s spoken (want 5-12 words)"
+        "score": 60,
+        "detail": "3 words, 22 chars, ~1.1s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 75,
-        "detail": "1 concrete marker(s): 3"
+        "score": 15.0,
+        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
       },
       "STAKES": {
         "score": 70.0,
@@ -48,7 +48,7 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "67 chars (Target: <=125)"
+        "detail": "76 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 70,
@@ -60,9 +60,9 @@
       }
     }
   },
-  "duration_seconds": 34.43,
-  "generated_at": "2026-11-06 23:20:16",
+  "duration_seconds": 37.12,
+  "generated_at": "2026-11-06 23:38:50",
   "algorithm_phase": "Late Night Subconscious & Gemstone Truth",
   "daily_post_enforced": true,
-  "comment_consultations_handled": 3
+  "comment_consultations_handled": 0
 }

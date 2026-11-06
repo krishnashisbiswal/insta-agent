@@ -1090,8 +1090,12 @@ class Engine3D:
             if has_gem:
                 accent = (35, 95, 235) if gem_type == "blue_sapphire" else (255, 215, 0)
                 return {"type": "gemstone_3d", "gem_type": gem_type, "accent": accent, "badge": "GEMSTONE ENERGY"}
+            elif any(k in combined for k in ["kundli", "chart", "house", "awakening", "placement", "signs", "3 am", "wealth", "drain", "money", "ruin"]):
+                return {"type": "kundli_chart_3d", "highlight_house": house_num, "accent": (239, 68, 68), "badge": "KUNDLI SECRET"}
+            elif any(k in combined for k in ["saturn", "shani", "jupiter", "guru", "mars", "mangal", "venus", "shukra", "sun", "surya", "moon", "rahu", "ketu"]):
+                return {"type": "planet_3d", "planet_type": primary_planet, "accent": (255, 215, 0), "badge": "PLANETARY IMPACT"}
             else:
-                return {"type": "zodiac_wheel_3d", "accent": (255, 215, 0), "badge": "VEDIC ASTROLOGY"}
+                return {"type": "kundli_chart_3d", "highlight_house": 8, "accent": (255, 215, 0), "badge": "VEDIC ASTROLOGY"}
 
         elif scene_idx == 1:
             return {"type": "kundli_chart_3d", "highlight_house": house_num, "accent": (239, 68, 68), "badge": f"HOUSE {house_num} SECRET"}

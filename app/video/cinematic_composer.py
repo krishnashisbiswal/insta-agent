@@ -100,6 +100,7 @@ def get_font(size: int, bold: bool = True) -> ImageFont.FreeTypeFont:
         str(PROJECT_ROOT / "assets" / "fonts" / "Impact.ttf"),
         str(PROJECT_ROOT / "assets" / "fonts" / "ArialBold.ttf"),
         IMPACT_FONT_PATH,
+        "C:/Windows/Fonts/impact.ttf",
         "C:/Windows/Fonts/segoeuib.ttf",
         "C:/Windows/Fonts/trebucbd.ttf",
         "/usr/share/fonts/truetype/msttcorefonts/Impact.ttf",
@@ -114,6 +115,39 @@ def get_font(size: int, bold: bool = True) -> ImageFont.FreeTypeFont:
         except Exception:
             continue
     return ImageFont.load_default()
+
+
+def get_emoji_font(size: int = 50) -> Optional[ImageFont.FreeTypeFont]:
+    """Load system color emoji font for full-color native emoji rendering in captions."""
+    paths = [
+        "C:/Windows/Fonts/seguiemj.ttf",
+        "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf",
+        "/usr/share/fonts/truetype/ancient-scripts/Symbola.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    ]
+    for p in paths:
+        if os.path.exists(p):
+            try:
+                return ImageFont.truetype(p, size)
+            except Exception:
+                continue
+    return None
+
+
+def is_emoji_char(ch: str) -> bool:
+    """Check if character is an emoji glyph."""
+    c = ord(ch)
+    return (
+        0x1F300 <= c <= 0x1FAFF or  # Miscellaneous Symbols, Pictographs, Emoticons, Supplemental
+        0x2600 <= c <= 0x27BF or    # Miscellaneous Symbols, Dingbats
+        0xFE00 <= c <= 0xFE0F or    # Variation Selectors
+        c in (0x200D, 0x26A0, 0x2728, 0x26A1, 0x1F6A8, 0x1F48E, 0x1F319, 0x1FA90, 0x1F52E, 0x1F4B8)
+    )
+
+
+def is_emoji_word(wd: str) -> bool:
+    """Check if a word contains or represents an emoji."""
+    return any(is_emoji_char(c) for c in wd)
 
 
 # =====================================================================
@@ -234,24 +268,23 @@ def split_scene_into_beats(spoken_line: str, fallback_title: str) -> List[str]:
     """
     Split subtitle text into 1 or 2 punchy kinetic subtitle beats
     that synchronize with voiceover pacing.
-    If spoken_line contains Devanagari Hindi characters, fallback_title (clean English)
-    is used so standard typography fonts (Impact) render without glyph errors.
+    Preserves all native emojis (🚨, 🌙, 💎, ⚠️, 🪐, 💸, 🛑, ✨).
     """
     has_devanagari = bool(re.search(r"[\u0900-\u097F]", spoken_line or ""))
     source_text = fallback_title if (has_devanagari or not spoken_line) else spoken_line
 
-    cleaned = re.sub(r"[^\x00-\x7F]+", " ", source_text).strip()
-    words = [w.strip(".,;:!?\"'()") for w in cleaned.split() if w.strip()]
+    # Split preserving words and native emojis (do NOT strip with [^\x00-\x7F])
+    words = [w.strip(".,;:\"'()") for w in (source_text or "").split() if w.strip()]
 
     if not words:
         return [fallback_title.upper() if fallback_title else "VEDIC WISDOM"]
 
     if len(words) <= 5:
-        return [" ".join(words).upper()]
+        return [" ".join(words)]
 
     mid = len(words) // 2
-    beat1 = " ".join(words[:mid]).upper()
-    beat2 = " ".join(words[mid:]).upper()
+    beat1 = " ".join(words[:mid])
+    beat2 = " ".join(words[mid:])
     return [beat1, beat2]
 
 
@@ -265,7 +298,8 @@ def render_kinetic_caption_layer(
 ) -> Image.Image:
     """
     Renders clean, modern, high-contrast kinetic subtitles in the lower-chest third:
-    - Impact font (56pt) with 4-pixel deep black stroke outline.
+    - Impact font (56pt) with 4-pixel deep black stroke outline for text.
+    - Native Segoe UI Emoji / Noto Color Emoji font for full-color vibrant emojis.
     - Electric yellow/gold highlights on key words.
     - Clean word spacing and centered lines.
     - No ugly black opaque box!
@@ -273,10 +307,12 @@ def render_kinetic_caption_layer(
     overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
 
-    # 1. Sleek Top Frosted Pill Badge
+    # 1. Sleek Top Frosted Pill Badge (Preserves emojis)
     badge_font = get_font(22, bold=True)
-    b_clean = re.sub(r"[^\x00-\x7F]+", "", badge_text).strip().upper()
-    b_text = f"✦  {b_clean}  ✦"
+    emoji_badge_font = get_emoji_font(22)
+    b_text = badge_text.strip()
+    if not b_text.startswith("✦"):
+        b_text = f"✦  {b_text}  ✦"
     b_bbox = draw.textbbox((0, 0), b_text, font=badge_font)
     b_w = b_bbox[2] - b_bbox[0]
     bx = (width - b_w) // 2
@@ -290,7 +326,18 @@ def render_kinetic_caption_layer(
         outline=(255, 215, 0, 180),
         width=1,
     )
-    draw.text((bx, by), b_text, font=badge_font, fill=(255, 225, 90, 245))
+    # Draw badge text with emoji fallback
+    cur_bx = bx
+    for bw in b_text.split():
+        if is_emoji_word(bw) and emoji_badge_font:
+            try:
+                draw.text((cur_bx, by), bw, font=emoji_badge_font, embedded_color=True)
+                cur_bx += draw.textbbox((0, 0), bw, font=emoji_badge_font, embedded_color=True)[2] - draw.textbbox((0, 0), bw, font=emoji_badge_font, embedded_color=True)[0] + 8
+                continue
+            except Exception:
+                pass
+        draw.text((cur_bx, by), bw, font=badge_font, fill=(255, 225, 90, 245))
+        cur_bx += draw.textbbox((0, 0), bw, font=badge_font)[2] - draw.textbbox((0, 0), bw, font=badge_font)[0] + 8
 
     # 1B. Creator / Brand Watermark (@neovibestore.in)
     if BRAND_WATERMARK:
@@ -314,9 +361,10 @@ def render_kinetic_caption_layer(
 
     # 2. Kinetic Lower-Chest Subtitles (y ~ 73%)
     cap_font = get_font(56, bold=True)
+    emoji_font = get_emoji_font(50)
 
-    # Clean text: remove emojis and punctuation artifacts
-    raw_words = [w.strip(".,;:!?\"'") for w in text.strip().split() if w.strip()]
+    # Clean text: keep words and emojis intact
+    raw_words = [w.strip(".,;:\"'") for w in text.strip().split() if w.strip()]
 
     # Wrap into 1 or 2 lines max
     lines = []
@@ -336,9 +384,9 @@ def render_kinetic_caption_layer(
 
     HIGHLIGHT_WORDS = {
         "STOP", "NEELAM", "PUKHRAJ", "MANIK", "PANNA", "HEERA", "MOTI",
-        "8TH", "HOUSE", "KARMA", "DEBT", "DANGER", "SHANI", "GURU",
-        "WRONG", "POISON", "LUCK", "ENEMY", "FREE", "REMEDY", "TEST",
-        "PILLOW", "SILK", "COMMENT", "CHART", "BIRTH", "DATE", "VERIFY"
+        "8TH", "HOUSE", "KARMA", "DEBT", "DANGER", "SHANI", "GURU", "RAHU", "KETU",
+        "WRONG", "POISON", "LUCK", "ENEMY", "FREE", "REMEDY", "TEST", "AWAKENING",
+        "PILLOW", "SILK", "COMMENT", "CHART", "BIRTH", "DATE", "VERIFY", "3AM", "3 AM"
     }
 
     line_h = 70
@@ -346,26 +394,43 @@ def render_kinetic_caption_layer(
     start_y = int(height * 0.74) - (total_h // 2)
 
     for i, line_words in enumerate(lines):
-        # Calculate exact width of this line
-        word_widths = [draw.textbbox((0, 0), wd, font=cap_font)[2] - draw.textbbox((0, 0), wd, font=cap_font)[0] for wd in line_words]
+        word_widths = []
+        for wd in line_words:
+            if is_emoji_word(wd) and emoji_font:
+                try:
+                    bbox = draw.textbbox((0, 0), wd, font=emoji_font, embedded_color=True)
+                    word_widths.append(bbox[2] - bbox[0])
+                except Exception:
+                    bbox = draw.textbbox((0, 0), wd, font=cap_font)
+                    word_widths.append(bbox[2] - bbox[0])
+            else:
+                bbox = draw.textbbox((0, 0), wd, font=cap_font)
+                word_widths.append(bbox[2] - bbox[0])
+
         line_w = sum(word_widths) + (len(line_words) - 1) * gap
         cur_x = (width - line_w) // 2
         cur_y = start_y + (i * line_h)
 
         for wd, ww in zip(line_words, word_widths):
-            wd_clean = "".join(c for c in wd if c.isalnum()).upper()
-            is_highlight = wd_clean in HIGHLIGHT_WORDS
+            if is_emoji_word(wd) and emoji_font:
+                try:
+                    draw.text((cur_x, cur_y + 4), wd, font=emoji_font, embedded_color=True)
+                except Exception:
+                    draw.text((cur_x, cur_y), wd, font=cap_font, fill=(255, 230, 0, 255))
+            else:
+                wd_upper = wd.upper()
+                wd_clean = "".join(c for c in wd if c.isalnum()).upper()
+                is_highlight = wd_clean in HIGHLIGHT_WORDS
 
-            text_color = (255, 230, 0, 255) if is_highlight else (255, 255, 255, 255)
+                text_color = (255, 230, 0, 255) if is_highlight else (255, 255, 255, 255)
 
-            # Deep 4-way stroke outline for 100% readability
-            for ox in [-3, 0, 3]:
-                for oy in [-3, 0, 3]:
-                    if ox != 0 or oy != 0:
-                        draw.text((cur_x + ox, cur_y + oy), wd, font=cap_font, fill=(0, 0, 0, 255))
+                # Deep 4-way stroke outline for 100% readability
+                for ox in [-3, 0, 3]:
+                    for oy in [-3, 0, 3]:
+                        if ox != 0 or oy != 0:
+                            draw.text((cur_x + ox, cur_y + oy), wd_upper, font=cap_font, fill=(0, 0, 0, 255))
 
-            # Main text
-            draw.text((cur_x, cur_y), wd, font=cap_font, fill=text_color)
+                draw.text((cur_x, cur_y), wd_upper, font=cap_font, fill=text_color)
             cur_x += ww + gap
 
     # 3. Bottom Progress Bar (Elegant Gold Dashes)
@@ -386,7 +451,81 @@ def render_kinetic_caption_layer(
 
 
 # =====================================================================
-# 4. KEN BURNS CAMERA MOTION + DYNAMIC SUBTITLE BEATS
+# 4. 3D PROCEDURAL CELESTIAL & GEMSTONE MODEL OVERLAYS
+# =====================================================================
+def load_scene_3d_overlay_cache(
+    topic: str,
+    scene_idx: int,
+    scene_text: str = "",
+    width: int = VIDEO_WIDTH,
+    height: int = VIDEO_HEIGHT,
+) -> Optional[List[Image.Image]]:
+    """
+    Loads pre-rendered 3D rotating model frames for the scene.
+    Scene 1 (Hook / 1st frame) and Scene 2 ALWAYS showcase the 3D model:
+    - 3D Faceted Crystal Gemstone with specular glints & radiating aura
+    - 3D North Indian Kundali Birth Chart with golden glowing diamond grid
+    - 3D Shaded Rotating Planet Sphere
+    - 3D Sacred Sri Yantra / Devotional Mandala
+    """
+    try:
+        from app.video.engine_3d import Engine3D
+        theme = Engine3D.detect_scene_theme_3d(
+            scene_idx=scene_idx,
+            total_scenes=5,
+            scene_text=scene_text,
+            topic=topic,
+        )
+        obj_type = theme.get("type")
+        cx, cy = width // 2, int(height * 0.42)
+
+        if obj_type == "gemstone_3d":
+            gem_t = theme.get("gem_type", "blue_sapphire")
+            return Engine3D.preload_gemstone_cache(gem_type=gem_t, steps=24, radius=240)
+
+        elif obj_type == "kundli_chart_3d":
+            h_num = theme.get("highlight_house", 8)
+            return Engine3D.preload_kundli_cache(highlight_house=h_num, steps=24, size=480)
+
+        elif obj_type == "sacred_yantra_3d":
+            return Engine3D.preload_yantra_cache(steps=24, radius=260)
+
+        elif obj_type == "zodiac_wheel_3d":
+            return Engine3D.preload_zodiac_cache(steps=24, radius=270)
+
+        elif obj_type == "karmic_vortex_3d":
+            return Engine3D.preload_vortex_cache(steps=24, radius=280)
+
+        elif obj_type == "planet_3d":
+            p_type = theme.get("planet_type", "saturn")
+            sphere_frames = Engine3D.preload_3d_rotation_cache(planet_type=p_type, steps=24, radius=220)
+            full_frames = []
+            for s_img in sphere_frames:
+                full_canvas = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+                sw, sh = s_img.size
+                full_canvas.paste(s_img, (cx - sw // 2, cy - sh // 2), s_img)
+                if p_type == "saturn":
+                    rings = Engine3D.render_saturn_rings(
+                        outer_width=width,
+                        outer_height=height,
+                        tilt_deg=26.0,
+                        inner_r=int(220 * 1.25),
+                        outer_r=int(220 * 2.1),
+                        center=(cx, cy),
+                        back_only=False,
+                    )
+                    full_canvas.paste(rings, (0, 0), rings)
+                full_frames.append(full_canvas)
+            return full_frames
+    except Exception as e:
+        logger.warning(f"Failed to load 3D scene overlay: {e}")
+        return None
+
+    return None
+
+
+# =====================================================================
+# 5. KEN BURNS CAMERA MOTION + DYNAMIC SUBTITLE BEATS
 # =====================================================================
 def create_cinematic_scene_clip(
     image_path: Path,
@@ -402,9 +541,10 @@ def create_cinematic_scene_clip(
 ) -> VideoClip:
     """
     Renders a true cinematic shot with:
+    - Prominent 3D Model composited onto the cinematic background in the 1st frame and scenes
     - Continuous Ken Burns camera push-in zoom (1.0x -> 1.12x)
     - Perimeter vignette & golden lens leak blend
-    - Dynamic 2-beat kinetic subtitles that advance in sync with speech
+    - Dynamic 2-beat kinetic subtitles with full native color emojis
     """
     # 1. Load and prep source image
     src_img = Image.open(image_path).convert("RGB")
@@ -426,9 +566,20 @@ def create_cinematic_scene_clip(
     bw, bh = base_canvas.size
     bcx, bcy = bw // 2, bh // 2
 
-    # 2. Split spoken dialogue into 2 progressive subtitle beats
+    # 2. Split spoken dialogue into 2 progressive subtitle beats (preserving emojis)
     sub_beats = split_scene_into_beats(spoken_line=spoken_line, fallback_title=on_screen_fallback)
     split_time = duration / len(sub_beats) if len(sub_beats) > 1 else duration
+
+    # 2B. 3D Procedural Model Overlay (Scene 1 & Scene 2)
+    model_3d_frames = None
+    if scene_number in (1, 2):
+        model_3d_frames = load_scene_3d_overlay_cache(
+            topic=on_screen_fallback,
+            scene_idx=scene_number - 1,
+            scene_text=spoken_line,
+            width=width,
+            height=height,
+        )
 
     # Pre-render overlays for each beat
     beat_overlays = [
@@ -452,7 +603,7 @@ def create_cinematic_scene_clip(
         for b_ov in beat_overlays
     ]
 
-    # 4. Frame generator with Ken Burns zoom & dynamic subtitle switching
+    # 4. Frame generator with Ken Burns zoom, 3D model rotation & dynamic subtitles
     def make_frame(t):
         frac = t / duration if duration > 0 else 0.0
         scale = 1.0 + zoom_rate * (frac ** 0.95)
@@ -469,7 +620,13 @@ def create_cinematic_scene_clip(
         cropped = base_canvas.crop((c_left, c_top, c_right, c_bottom))
         frame_img = cropped.resize((width, height), Image.Resampling.BILINEAR)
 
-        # High-performance in-place alpha paste (2.3x faster than alpha_composite)
+        # 3D Model compositing on Scene 1 (1st frame) and Scene 2
+        if model_3d_frames:
+            m_idx = int((t * 18) % len(model_3d_frames))
+            m_fr = model_3d_frames[m_idx]
+            frame_img.paste(m_fr, (0, 0), m_fr)
+
+        # High-performance in-place alpha paste for kinetic subtitles
         beat_idx = min(int(t / split_time), len(combined_beat_overlays) - 1)
         active_ov = combined_beat_overlays[beat_idx]
         frame_img.paste(active_ov, (0, 0), active_ov)
