@@ -460,15 +460,14 @@ def load_scene_3d_overlay_cache(
     bg_image_name: str = "",
     width: int = VIDEO_WIDTH,
     height: int = VIDEO_HEIGHT,
+    enable_3d: bool = False,
 ) -> Optional[List[Image.Image]]:
     """
-    Loads pre-rendered 3D rotating model frames for the scene.
-    Scene 1 (Hook / 1st frame) and Scene 2 ALWAYS showcase the 3D model:
-    - 3D Faceted Crystal Gemstone with specular glints & radiating aura
-    - 3D North Indian Kundali Birth Chart with golden glowing diamond grid
-    - 3D Shaded Rotating Planet Sphere
-    - 3D Sacred Sri Yantra / Devotional Mandala
+    3D procedural models are disabled by default (enable_3d=False) for a clean,
+    authentic, photorealistic cinematic aesthetic with zero artificial CGI overlays.
     """
+    if not enable_3d:
+        return None
     try:
         from app.video.engine_3d import Engine3D
         theme = Engine3D.detect_scene_theme_3d(
@@ -576,18 +575,6 @@ def create_cinematic_scene_clip(
     sub_beats = split_scene_into_beats(spoken_line=spoken_line, fallback_title=on_screen_fallback)
     split_time = duration / len(sub_beats) if len(sub_beats) > 1 else duration
 
-    # 2B. 3D Procedural Model Overlay (Scene 1 & Scene 2)
-    model_3d_frames = None
-    if scene_number in (1, 2):
-        model_3d_frames = load_scene_3d_overlay_cache(
-            topic=on_screen_fallback,
-            scene_idx=scene_number - 1,
-            scene_text=spoken_line,
-            bg_image_name=image_path.name,
-            width=width,
-            height=height,
-        )
-
     # Pre-render overlays for each beat
     beat_overlays = [
         render_kinetic_caption_layer(
@@ -626,12 +613,6 @@ def create_cinematic_scene_clip(
 
         cropped = base_canvas.crop((c_left, c_top, c_right, c_bottom))
         frame_img = cropped.resize((width, height), Image.Resampling.BILINEAR)
-
-        # 3D Model compositing on Scene 1 (1st frame) and Scene 2
-        if model_3d_frames:
-            m_idx = int((t * 18) % len(model_3d_frames))
-            m_fr = model_3d_frames[m_idx]
-            frame_img.paste(m_fr, (0, 0), m_fr)
 
         # High-performance in-place alpha paste for kinetic subtitles
         beat_idx = min(int(t / split_time), len(combined_beat_overlays) - 1)
