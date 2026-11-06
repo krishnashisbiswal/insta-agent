@@ -375,7 +375,7 @@ WRITING QUALITY & HUMAN CREATOR VOICE:
     - ALL 5 SCENES "spoken_line": MUST be written in clean, fluent, grammatical English without broken hybrid slang.
     - ALL 5 SCENES "on_screen_text": Clean, bold ALL CAPS ENGLISH.
 - Use natural ellipses (`...`) for dramatic breath pauses so the voice pauses naturally like a real human.
-- STRICT TOTAL WORD COUNT: 50 TO 70 WORDS TOTAL across all 5 scenes combined.
+- STRICT TOTAL WORD COUNT: 35 TO 45 WORDS TOTAL across all 5 scenes combined (approx 20-22 seconds total). Each scene MUST be 6 to 9 words maximum for rapid, scroll-stopping retention.
 - Fast, conversational, confident creator cadence (160 words per minute).
 - Keep on-screen text 100% clean plain ASCII letters (no raw emoji symbols that break font rendering).
 
