@@ -33,10 +33,16 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install FFmpeg & System Fonts
+      - name: Verify FFmpeg
         run: |
-          sudo apt-get update || true
-          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu fonts-freefont-ttf
+          if ! command -v ffmpeg &> /dev/null; then
+            echo "Installing ffmpeg..."
+            sudo apt-get update -o Acquire::http::Timeout="10" -o Acquire::Retries="2" || true
+            sudo apt-get install -y --no-install-recommends -o Acquire::http::Timeout="10" ffmpeg || true
+          else
+            echo "FFmpeg is already pre-installed on runner:"
+            ffmpeg -version | head -n 1
+          fi
 
       - name: Install Python Dependencies
         run: |
