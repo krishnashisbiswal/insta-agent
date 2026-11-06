@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import re
 import sys
 from pathlib import Path
@@ -12,10 +13,10 @@ if str(PROJECT_ROOT) not in sys.path:
 from config.settings import (
     AUDIO_DIR,
     DEFAULT_VOICE,
-    VOICE_MAP,
-    VOICE_ENGINE,
     ELEVENLABS_API_KEY,
     ELEVENLABS_VOICE_ID,
+    VOICE_ENGINE,
+    VOICE_MAP,
 )
 
 import edge_tts
@@ -23,13 +24,31 @@ import edge_tts
 logger = logging.getLogger(__name__)
 
 
+def clean_speech_text(text: str) -> str:
+    """
+    Removes visual formatting, emojis, markdown asterisks, and stage directions
+    so AI voice engines (ElevenLabs & Neural) speak only clean, natural words.
+    """
+    if not text:
+        return ""
+    # Strip bracketed/parenthetical stage notes like [Pause] or (dramatic tone)
+    text = re.sub(r"\[.*?\]", "", text)
+    text = re.sub(r"\((?:pause|whisper|beat|dramatic|tone|sound)[^)]*\)", "", text, flags=re.IGNORECASE)
+    # Strip markdown symbols
+    text = re.sub(r"[*_~`#]", "", text)
+    # Strip emojis
+    text = re.sub(r"[\U00010000-\U0010ffff]", "", text)
+    text = re.sub(r"[\u2600-\u27BF]", "", text)
+    # Normalize whitespace
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
 def detect_language(text: str) -> str:
     """Detect if text has Devanagari Hindi or Hinglish vs pure English."""
-    # Check for Devanagari script characters
     if re.search(r"[\u0900-\u097F]", text):
         return "hindi"
 
-    # Common Hinglish markers
     hinglish_words = {
         "kare", "karna", "hoti", "hote", "hota", "hai", "hain", "shani", "graha",
         "kundli", "aap", "aapko", "lekin", "isliye", "sabse", "bhi", "yeh", "woh",
@@ -50,24 +69,34 @@ def get_recommended_voice(text: str, gender: str = "male") -> str:
     return VOICE_MAP.get(key, DEFAULT_VOICE)
 
 
+def is_valid_elevenlabs_voice_id(v: Optional[str]) -> bool:
+    """Validate if string matches ElevenLabs voice ID format (alphanumeric, ~20 chars, no hyphens or Neural suffix)."""
+    if not v:
+        return False
+    if "Neural" in v or "-" in v or " " in v:
+        return False
+    return len(v) >= 15 and v.isalnum()
+
+
 async def generate_speech_async(
     text: str,
     output_path: Path,
     voice: Optional[str] = None,
-    rate: str = "-2%",
-    pitch: str = "-1Hz",
+    rate: str = "-5%",
+    pitch: str = "+0Hz",
 ) -> Tuple[Path, float, List[Dict[str, Any]]]:
     """
-    Generate audio using edge-tts and extract SentenceBoundary timestamps.
+    Generate audio using edge-tts with smooth, unhurried pacing.
     Returns:
     - Path to saved mp3
     - Total estimated audio duration in seconds
     - List of timestamped sentences: [{"text": ..., "start": float, "duration": float}]
     """
-    chosen_voice = voice or get_recommended_voice(text)
-    logger.info(f"Generating TTS using voice '{chosen_voice}' -> {output_path.name}")
+    clean_text = clean_speech_text(text)
+    chosen_voice = voice or get_recommended_voice(clean_text)
+    logger.info(f"Generating smooth neural TTS ('{chosen_voice}', rate={rate}) -> {output_path.name}")
 
-    tts = edge_tts.Communicate(text, voice=chosen_voice, rate=rate, pitch=pitch)
+    tts = edge_tts.Communicate(clean_text, voice=chosen_voice, rate=rate, pitch=pitch)
 
     sentences = []
     audio_chunks = []
@@ -77,7 +106,6 @@ async def generate_speech_async(
         if chunk_type == "audio":
             audio_chunks.append(chunk["data"])
         elif chunk_type == "SentenceBoundary":
-            # Offset and duration are in 100-nanosecond units (10,000,000 units = 1 second)
             start_sec = chunk["offset"] / 10_000_000.0
             dur_sec = chunk["duration"] / 10_000_000.0
             sentences.append({
@@ -92,7 +120,6 @@ async def generate_speech_async(
         for b in audio_chunks:
             f.write(b)
 
-    # Calculate total duration
     total_dur = sentences[-1]["end"] if sentences else 0.0
 
     return output_path, total_dur, sentences
@@ -103,24 +130,41 @@ def generate_elevenlabs_speech(
     output_path: Path,
     voice_id: Optional[str] = None,
 ) -> Tuple[Path, float, List[Dict[str, Any]]]:
-    """Generate audio using ElevenLabs API for human-indistinguishable quality."""
+    """
+    Generate studio-master human speech using ElevenLabs API (eleven_multilingual_v2).
+    Provides fluent, natural inflection with zero robotic slurring.
+    """
     import httpx
     from moviepy import AudioFileClip
 
-    target_voice = voice_id or ELEVENLABS_VOICE_ID or "pNInz6obpgDQGcFmaJgB"
+    clean_text = clean_speech_text(text)
+    api_key = os.getenv("ELEVENLABS_API_KEY", ELEVENLABS_API_KEY).strip()
+    if not api_key:
+        raise ValueError("ELEVENLABS_API_KEY is not configured")
+
+    # Select valid ElevenLabs voice ID (default: 'pNInz6obpgDQGcFmaJgB' -> Adam / Deep Narrative)
+    target_voice = "pNInz6obpgDQGcFmaJgB"
+    if is_valid_elevenlabs_voice_id(voice_id):
+        target_voice = voice_id
+    elif is_valid_elevenlabs_voice_id(ELEVENLABS_VOICE_ID):
+        target_voice = ELEVENLABS_VOICE_ID
+
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{target_voice}"
     headers = {
-        "xi-api-key": ELEVENLABS_API_KEY,
+        "xi-api-key": api_key,
         "Content-Type": "application/json",
     }
     payload = {
-        "text": text,
+        "text": clean_text,
         "model_id": "eleven_multilingual_v2",
         "voice_settings": {
-            "stability": 0.45,
-            "similarity_boost": 0.85,
+            "stability": 0.50,          # Calm, natural stability with human intonation
+            "similarity_boost": 0.85,   # High clarity and timbre richness
+            "style": 0.15,              # Expressive cadence without slurring
+            "use_speaker_boost": True,  # Crisp studio punch
         },
     }
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with httpx.Client(timeout=45.0) as client:
         resp = client.post(url, json=payload, headers=headers)
@@ -138,39 +182,47 @@ def generate_speech(
     text: str,
     output_filename: Optional[str] = None,
     voice: Optional[str] = None,
-    rate: str = "-2%",
-    pitch: str = "-1Hz",
+    rate: str = "-5%",
+    pitch: str = "+0Hz",
 ) -> Dict[str, Any]:
     """
-    Synchronous wrapper for generating speech and timing metadata.
-    Automatically uses ElevenLabs if ELEVENLABS_API_KEY is configured in .env,
-    otherwise uses high-fidelity Microsoft Multilingual/Expressive Neural voices.
+    Unified voice synthesizer with smart priority routing:
+    1. ElevenLabs Multilingual V2 (if key is present and engine is 'elevenlabs', 'auto', or 'smart')
+    2. Seamless fallback to Microsoft Multilingual / Expressive Neural voice pack (rate=-5%, pitch=+0Hz)
     """
+    clean_text = clean_speech_text(text)
     if not output_filename:
-        safe_name = re.sub(r"[^\w\-]", "_", text[:25].lower()).strip("_")
+        safe_name = re.sub(r"[^\w\-]", "_", clean_text[:25].lower()).strip("_")
         output_filename = f"voice_{safe_name}.mp3"
 
     output_path = AUDIO_DIR / output_filename
 
-    # Use ElevenLabs only if explicitly enabled via VOICE_ENGINE == "elevenlabs"
-    if VOICE_ENGINE == "elevenlabs" and ELEVENLABS_API_KEY:
+    # Check if ElevenLabs is configured and eligible
+    active_engine = os.getenv("VOICE_ENGINE", VOICE_ENGINE).strip().lower()
+    active_key = os.getenv("ELEVENLABS_API_KEY", ELEVENLABS_API_KEY).strip()
+
+    can_use_elevenlabs = bool(active_key) and active_engine in ["elevenlabs", "auto", "smart", ""]
+
+    if can_use_elevenlabs:
         try:
-            logger.info("Generating studio human voice via ElevenLabs...")
-            out_p, dur, sents = generate_elevenlabs_speech(text, output_path, voice_id=voice)
+            logger.info("Synthesizing studio voice with ElevenLabs Multilingual V2...")
+            out_p, dur, sents = generate_elevenlabs_speech(clean_text, output_path, voice_id=voice)
+            target_v_id = voice if is_valid_elevenlabs_voice_id(voice) else (ELEVENLABS_VOICE_ID or "Adam (pNInz6obpgDQGcFmaJgB)")
             return {
                 "audio_path": str(out_p),
                 "duration": dur,
                 "sentences": sents,
-                "voice": f"ElevenLabs ({voice or ELEVENLABS_VOICE_ID})",
+                "voice": f"ElevenLabs ({target_v_id})",
                 "engine": "elevenlabs",
             }
         except Exception as exc:
-            logger.warning(f"ElevenLabs error ({exc}), falling back to Expressive Neural voice...")
+            logger.warning(f"ElevenLabs synthesis notice ({exc}). Falling back to Expressive Neural voice...")
 
-    chosen_voice = voice or get_recommended_voice(text)
+    # High-Fidelity Edge Neural Voice Fallback
+    chosen_voice = voice if (voice and "Neural" in voice) else get_recommended_voice(clean_text)
     output_path, total_duration, sentences = asyncio.run(
         generate_speech_async(
-            text=text,
+            text=clean_text,
             output_path=output_path,
             voice=chosen_voice,
             rate=rate,
@@ -193,4 +245,5 @@ if __name__ == "__main__":
     res = generate_speech(test_text)
     print("Saved audio to:", res["audio_path"])
     print("Duration:", res["duration"], "seconds")
-    print("Sentences:", res["sentences"])
+    print("Engine:", res["engine"])
+    print("Voice:", res["voice"])

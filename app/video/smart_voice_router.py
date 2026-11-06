@@ -104,11 +104,22 @@ ASTRO_DEVNAGARI_MAP = {
 def clean_pronunciation_for_hindi(text: str) -> str:
     """
     Substitutes Roman / English astrological keywords with precise Devanagari phonemes
-    to guarantee zero slurring or pronunciation distortion in hi-IN-MadhurNeural.
+    and cleans formatting symbols to guarantee zero slurring or pronunciation distortion.
     """
-    res = text
+    if not text:
+        return ""
+    # Strip bracketed notes e.g. [Pause], (beat)
+    res = re.sub(r"\[.*?\]", "", text)
+    res = re.sub(r"\((?:pause|whisper|beat|dramatic|tone|sound)[^)]*\)", "", res, flags=re.IGNORECASE)
+    # Strip markdown symbols and emojis
+    res = re.sub(r"[*_~`#]", "", res)
+    res = re.sub(r"[\U00010000-\U0010ffff]", "", res)
+    res = re.sub(r"[\u2600-\u27BF]", "", res)
+
     for pattern, dewa in ASTRO_DEVNAGARI_MAP.items():
         res = re.sub(pattern, dewa, res, flags=re.IGNORECASE)
+
+    res = re.sub(r"\s+", " ", res).strip()
     return res
 
 

@@ -94,18 +94,18 @@ VOICE_MAP = {
     "hindi": "hi-IN-MadhurNeural",              # Deep, authoritative, native Indian Vedic male voice
     "hindi_male": "hi-IN-MadhurNeural",
     "hindi_female": "hi-IN-SwaraNeural",
-    "english": "en-IN-PrabhatNeural",           # Native Indian English male (perfect Indian pronunciation)
-    "english_male": "en-IN-PrabhatNeural",
-    "english_female": "en-IN-NeerjaNeural",
+    "english": "en-US-BrianMultilingualNeural", # Deep, warm, smooth natural documentary narrator
+    "english_male": "en-US-BrianMultilingualNeural",
+    "english_female": "en-IN-NeerjaExpressiveNeural",
     "indian_english_male": "en-IN-PrabhatNeural",
-    "indian_english_female": "en-IN-NeerjaNeural",
+    "indian_english_female": "en-IN-NeerjaExpressiveNeural",
     "hinglish": "hi-IN-MadhurNeural",            # Native Indian male with spiritual gravitas
-    "cinematic_documentary": "hi-IN-MadhurNeural",
+    "cinematic_documentary": "en-US-BrianMultilingualNeural",
 }
 DEFAULT_VOICE = os.getenv("DEFAULT_VOICE", "hi-IN-MadhurNeural")
 
-# Voice engine selector: "edge_neural" (100% Free native Indian voices) or "elevenlabs"
-VOICE_ENGINE = os.getenv("VOICE_ENGINE", "edge_neural").strip().lower()
+# Voice engine selector: "elevenlabs" (Studio quality) with automatic fallback to "edge_neural"
+VOICE_ENGINE = os.getenv("VOICE_ENGINE", "elevenlabs").strip().lower()
 
 # Optional ElevenLabs ultra-realistic human voice API
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "").strip()

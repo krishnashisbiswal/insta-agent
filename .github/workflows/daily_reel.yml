@@ -51,7 +51,9 @@ jobs:
           INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
           INSTAGRAM_SESSION_ID: ${{ secrets.INSTAGRAM_SESSION_ID }}
           INSTAGRAM_SESSION_DATA: ${{ secrets.INSTAGRAM_SESSION_DATA }}
-          VOICE_ENGINE: "edge_neural"
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          VOICE_ENGINE: "elevenlabs"
           VOICE_MODE: "smart"
           VOICE_GENDER: "male"
           BRAND_WATERMARK: "@neodivinestore.in"

@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+.pytest_cache/
 
 # Secrets
 .env
@@ -13,6 +14,7 @@ venv/
 output/*
 storage/*
 *TEMP_MPY_*
+*.mp4.jpg
 !output/.gitkeep
 !storage/.gitkeep
 
