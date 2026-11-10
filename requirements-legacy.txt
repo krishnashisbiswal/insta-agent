@@ -1,0 +1,9 @@
+# Optional / Legacy Unofficial Scraping Dependencies
+# Warning: Unofficial private API scraping is subject to Meta account challenges, IP blocks, and dependency version pinning.
+# Use Official Meta Graph API (requirements.txt) for commercial production.
+
+-r requirements.txt
+instagrapi>=3.2.0; python_version < '3.14'
+curl-cffi>=0.7.0
+pycryptodomex>=3.20.0
+PySocks>=1.7.1

@@ -31,12 +31,10 @@ for path in (OUTPUT_DIR, REELS_DIR, AUDIO_DIR, SCRIPTS_DIR, FRAMES_DIR, LOGS_DIR
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 
 # Primary and fallback Gemini models
-# gemini-3.1-flash-lite and gemini-3-flash-preview are ultra-fast with fresh quota
-DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite").strip()
+DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "models/gemini-3.5-flash-lite").strip()
 GEMINI_FALLBACK_MODELS = [
-    "gemini-3-flash-preview",
-    "gemini-3.5-flash-lite",
-    "gemini-3.5-flash",
+    "models/gemini-3.5-flash",
+    "models/gemini-3-flash-preview",
 ]
 
 # Generation parameters

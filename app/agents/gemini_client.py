@@ -6,7 +6,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from google import genai
-from google.genai import errors
+from google.genai import errors, types
 
 import sys
 from pathlib import Path
@@ -38,7 +38,10 @@ _client: Optional[genai.Client] = None
 def get_client() -> genai.Client:
     global _client
     if _client is None:
-        _client = genai.Client(api_key=GEMINI_API_KEY)
+        _client = genai.Client(
+            api_key=GEMINI_API_KEY,
+            http_options=types.HttpOptions(timeout=20000),
+        )
     return _client
 
 
@@ -76,14 +79,20 @@ def generate_text(
 
     client = get_client()
 
-    models_to_try = []
+    raw_models = []
     if model:
-        models_to_try.append(model)
-    if DEFAULT_GEMINI_MODEL not in models_to_try:
-        models_to_try.append(DEFAULT_GEMINI_MODEL)
+        raw_models.append(model)
+    if DEFAULT_GEMINI_MODEL not in raw_models:
+        raw_models.append(DEFAULT_GEMINI_MODEL)
     for fb in GEMINI_FALLBACK_MODELS:
-        if fb not in models_to_try:
-            models_to_try.append(fb)
+        if fb not in raw_models:
+            raw_models.append(fb)
+
+    models_to_try = []
+    for m in raw_models:
+        norm = m if m.startswith("models/") else f"models/{m}"
+        if norm not in models_to_try:
+            models_to_try.append(norm)
 
     last_error = None
 

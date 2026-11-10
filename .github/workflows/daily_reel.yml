@@ -1,9 +1,6 @@
 name: Daily Autonomous Instagram Reel Publisher
 
 on:
-  push:
-    branches:
-      - main
   schedule:
     # 13:15 UTC = 18:45 IST (Peak Instagram Algorithm Evening Velocity)
     - cron: '15 13 * * *'
@@ -12,7 +9,7 @@ on:
       force:
         description: 'Force publish today (bypasses daily frequency limiter)'
         required: true
-        default: 'true'
+        default: 'false'
         type: choice
         options:
           - 'true'

@@ -220,6 +220,7 @@ class DailyAlgorithmPublisher:
         with VideoFileClip(str(final_video_dest)) as v_chk:
             final_duration = round(v_chk.duration, 2)
 
+        playbook = self.learning_engine.load_playbook() if hasattr(self, "learning_engine") else {}
         overview_dest = dest_dir / "content_overview.json"
         overview_data = {
             "topic": topic,
@@ -227,12 +228,12 @@ class DailyAlgorithmPublisher:
             "voice": active_voice,
             "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
             "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-            "agent_evolution_level": playbook.get("evolution_level", 1.0),
+            "agent_evolution_level": playbook.get("evolution_level", 1.0) if isinstance(playbook, dict) else 1.0,
             "hook": hook,
             "seo_audit": seo_audit,
             "duration_seconds": final_duration,
             "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "algorithm_phase": algo_state["active_phase"],
+            "algorithm_phase": algo_state.get("active_phase", "EXPLORE") if isinstance(algo_state, dict) else "EXPLORE",
             "daily_post_enforced": True,
         }
         with open(overview_dest, "w", encoding="utf-8") as f:

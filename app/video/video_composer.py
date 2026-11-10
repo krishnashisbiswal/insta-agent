@@ -87,6 +87,7 @@ def render_card_overlay_layer(
     total_scenes: int,
     accent_color: Tuple[int, int, int] = (255, 215, 0),
     topic_badge: Optional[str] = None,
+    brand_watermark: Optional[str] = None,
 ) -> Image.Image:
     """
     Render transparent RGBA layer containing high-conversion on-screen card, badges, and progress indicators.
@@ -105,61 +106,66 @@ def render_card_overlay_layer(
         5: ("✦ COMMENT YOUR SIGN ✦", (147, 92, 255)),# Algorithmic CTA purple
     }
 
-    if scene_number in SCENE_BADGES:
-        badge_text, badge_color = SCENE_BADGES[scene_number]
-    elif topic_badge:
-        badge_text, badge_color = f"✦ {topic_badge.upper()} ✦", accent_color
-    else:
-        badge_text, badge_color = "✦ VEDIC ASTROLOGY ✦", accent_color
+    # 1. Top Creator Watermark (Cleanly anchored at top safe zone)
+    brand_handle = (brand_watermark or BRAND_WATERMARK or "").strip()
+    wm_h = 0
+    wm_y = int(h * 0.07)  # Top safe zone (~135px)
 
-    badge_font = get_font(32, bold=True)
-    badge_bbox = draw.textbbox((0, 0), badge_text, font=badge_font)
-    bw = badge_bbox[2] - badge_bbox[0] + 52
-    bh = badge_bbox[3] - badge_bbox[1] + 26
-    bx = (w - bw) // 2
-    by = int(h * 0.16)
-
-    # Glowing outer badge pill
-    draw.rounded_rectangle(
-        [bx - 3, by - 3, bx + bw + 3, by + bh + 3],
-        radius=20,
-        fill=(0, 0, 0, 0),
-        outline=badge_color + (90,),
-        width=2,
-    )
-    draw.rounded_rectangle(
-        [bx, by, bx + bw, by + bh],
-        radius=18,
-        fill=(10, 10, 18, 230),
-        outline=badge_color + (240,),
-        width=2,
-    )
-    draw.text(
-        ((w - (badge_bbox[2] - badge_bbox[0])) // 2, by + 12),
-        badge_text,
-        font=badge_font,
-        fill=badge_color + (255,),
-    )
-
-    # 1B. Brand / Creator Watermark (@neovibestore.in)
-    if BRAND_WATERMARK:
-        wm_font = get_font(24, bold=True)
-        wm_text = BRAND_WATERMARK.strip()
-        wm_bbox = draw.textbbox((0, 0), wm_text, font=wm_font)
+    if brand_handle:
+        wm_font = get_font(26, bold=True)
+        wm_bbox = draw.textbbox((0, 0), brand_handle, font=wm_font)
         wm_w = wm_bbox[2] - wm_bbox[0]
         wm_h = wm_bbox[3] - wm_bbox[1]
         wm_x = (w - wm_w) // 2
-        wm_y = by + bh + 16
 
-        wm_px, wm_py = 20, 6
+        wm_px, wm_py = 24, 8
         draw.rounded_rectangle(
             [wm_x - wm_px, wm_y - wm_py, wm_x + wm_w + wm_px, wm_y + wm_h + wm_py],
-            radius=14,
-            fill=(10, 8, 16, 175),
-            outline=(255, 255, 255, 100),
+            radius=16,
+            fill=(10, 8, 16, 200),
+            outline=(255, 255, 255, 120),
             width=1,
         )
-        draw.text((wm_x, wm_y), wm_text, font=wm_font, fill=(255, 255, 255, 235))
+        draw.text((wm_x, wm_y), brand_handle, font=wm_font, fill=(255, 255, 255, 245))
+
+    # 2. Scene Category/Insight Badge (Positioned with guaranteed clearance below watermark)
+    badge_text = ""
+    badge_color = accent_color
+    if topic_badge:
+        badge_text = topic_badge.strip().upper()
+    elif scene_number in SCENE_BADGES:
+        badge_text, badge_color = SCENE_BADGES[scene_number]
+
+    if badge_text:
+        badge_font = get_font(30, bold=True)
+        badge_bbox = draw.textbbox((0, 0), badge_text, font=badge_font)
+        bw = badge_bbox[2] - badge_bbox[0] + 48
+        bh = badge_bbox[3] - badge_bbox[1] + 22
+        bx = (w - bw) // 2
+        # Minimum 35px separation below watermark pill to prevent ANY overlap
+        by = max(int(h * 0.15), wm_y + wm_h + 35) if brand_handle else int(h * 0.12)
+
+        # Outer glow
+        draw.rounded_rectangle(
+            [bx - 2, by - 2, bx + bw + 2, by + bh + 2],
+            radius=18,
+            fill=(0, 0, 0, 0),
+            outline=badge_color + (80,),
+            width=2,
+        )
+        draw.rounded_rectangle(
+            [bx, by, bx + bw, by + bh],
+            radius=16,
+            fill=(12, 10, 20, 235),
+            outline=badge_color + (230,),
+            width=2,
+        )
+        draw.text(
+            ((w - (badge_bbox[2] - badge_bbox[0])) // 2, by + 10),
+            badge_text,
+            font=badge_font,
+            fill=badge_color + (255,),
+        )
 
     # 2. Main On-Screen Card in Safe Zone (Center)
     card_font = get_font(64, bold=True)

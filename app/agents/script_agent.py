@@ -17,6 +17,7 @@ from config.settings import (
 from app.agents.gemini_client import generate_json, generate_text
 from app.analytics.self_learning_engine import SelfLearningEngine
 from app.analytics.instagram_algorithm_brain import InstagramAlgorithmBrain
+from app.niche.niche_profile import NicheProfile, get_default_niche
 
 # Import tools from vendor skills
 REEL_TOOLS = VENDOR_SKILLS_DIR / "ig-reel"
@@ -45,12 +46,14 @@ def load_hook_formulas() -> List[Dict[str, Any]]:
 
 def generate_hooks(
     topic: str,
-    niche: str = "Vedic astrology",
-    language: str = "Hindi mixed with English",
+    niche: str = "tech_ai",
+    language: str = "English",
+    niche_profile: Optional[NicheProfile] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Generate three distinct hooks for a topic using the 26 repository hook formulas.
+    Generate three distinct hooks for a topic using proven hook formulas and niche context.
     """
+    profile = niche_profile or get_default_niche(niche)
     formulas = load_hook_formulas()
     formula_summary = [
         {
@@ -59,87 +62,51 @@ def generate_hooks(
             "template": item["template"],
             "trap": item["trap"],
         }
-        for item in formulas
+        for item in formulas[:12]
     ]
 
-    learning_engine = SelfLearningEngine()
-    playbook_context = learning_engine.get_prompt_injection()
-    algo_brain = InstagramAlgorithmBrain()
-    algo_context = algo_brain.generate_prompt_boost_snippet()
-
-    is_hindi = language.lower() in ["hindi", "hi"]
-    is_gem_topic = any(k in (topic or "").lower() for k in ["gemstone", "ratna", "neelam", "pukhraj", "manik", "panna", "heera", "moti", "sapphire", "ruby", "emerald", "diamond"])
-
-    if is_hindi:
-        ex_spoken = "रुकिए! पुखराज पहनने से पहले अपनी कुंडली का यह भाव ज़रूर देख लें!" if is_gem_topic else "रुकिए! क्या आपकी कुंडली में भी यह 3 लक्षण दिख रहे हैं?"
-        ex_card = "⚠️ STOP WEARING PUKHRAJ!" if is_gem_topic else "⚠️ 3 UNEXPLAINABLE SIGNS 🪐"
-        lang_rule = f"""
-LANGUAGE & PRONUNCIATION MANDATE (100% PURE DEVANAGARI HINDI):
-- "spoken": MUST be written strictly in pure, natural, respectful HINDI in Devanagari script (हिंदी लिपि).
-  DO NOT write spoken lines in Roman English or Hinglish! Pure Devanagari guarantees native Indian voice models pronounce every Vedic Sanskrit term (शनि, राहु, केतु, नीलम, पन्ना, कुंडली, उपाय) with 100% human-grade studio perfection.
-- "on_screen": MUST be written in clean, bold ALL CAPS ENGLISH (3 to 6 words) with a relevant emoji.
-  Example On-Screen: "{ex_card}"
-"""
-        example_json = f"""{{
+    example_json = """{
   "hooks": [
-    {{
-      "formula_id": 2,
-      "formula_name": "Pattern Interrupt",
-      "spoken": "{ex_spoken}",
-      "on_screen": "{ex_card}"
-    }}
+    {
+      "id": "contrarian",
+      "name": "Contrarian Truth",
+      "spoken": "Stop doing X if you want Y result.",
+      "on_screen": "STOP DOING THIS",
+      "why_it_works": "Disrupts conventional assumption"
+    },
+    {
+      "id": "relatable_curiosity",
+      "name": "Relatable Curiosity",
+      "spoken": "If you notice this one subtle habit, your strategy is working.",
+      "on_screen": "NOTICE THIS HABIT?",
+      "why_it_works": "Hyper-relatable self-identification"
+    },
+    {
+      "id": "bold_warning",
+      "name": "Urgent Warning",
+      "spoken": "90% of people make this mistake before they ever see results.",
+      "on_screen": "90% DO THIS WRONG",
+      "why_it_works": "Fear of missing out and loss aversion"
+    }
   ]
-}}"""
-    else:
-        ex_spoken = "Stop wearing Yellow Sapphire right now until you check this placement!" if is_gem_topic else "Stop scrolling if you experience these 3 unexplainable signs!"
-        ex_card = "⚠️ STOP WEARING PUKHRAJ!" if is_gem_topic else "⚠️ 3 UNEXPLAINABLE SIGNS 🪐"
-        lang_rule = f"""
-LANGUAGE & PRONUNCIATION MANDATE (CLEAN FLUENT ENGLISH):
-- "spoken": MUST be written in clean, fluent, grammatical English.
-  Example Spoken: "{ex_spoken}"
-- "on_screen": MUST be in bold ALL CAPS ENGLISH (3 to 6 words) with a relevant emoji.
-  Example On-Screen: "{ex_card}"
-"""
-        example_json = f"""{{
-  "hooks": [
-    {{
-      "formula_id": 2,
-      "formula_name": "Pattern Interrupt",
-      "spoken": "{ex_spoken}",
-      "on_screen": "{ex_card}"
-    }}
-  ]
-}}"""
+}"""
 
     prompt = f"""
-You are the #1 viral Instagram Reels strategist who has scripted dozens of 10M+ view Reels in the personal growth, psychology, and Vedic wisdom niche.
-
-Create THREE explosive, scroll-stopping viral hooks for an Instagram Reel.
-
-NICHE: {niche}
+You are an elite short-form video copywriter specializing in viral hooks for {profile.name}.
+TARGET AUDIENCE: {profile.target_audience}
+TONE: {profile.tone}
 TOPIC: {topic}
 LANGUAGE: {language}
 
-{lang_rule}
+Review these proven hook formulas:
+{json.dumps(formula_summary, indent=2)}
 
-{playbook_context}
-
-{algo_context}
-
-AVAILABLE HOOK FORMULAS:
-{json.dumps(formula_summary, ensure_ascii=False)}
-
-CRITICAL VIRAL HOOK PRINCIPLES:
-1. PATTERN INTERRUPT: The first 1-2 seconds MUST stop the thumb cold. Use urgency, an aggressive warning, a counter-intuitive taboo, or a direct callout.
-2. ON-SCREEN TEXT CARD:
-   - Must be 3 to 6 words MAXIMUM.
-   - High visual impact, aggressive uppercase, includes a relevant emoji (⚠️, ❌, 🚨, 🪐, ⚡, 💎).
-   - Must be instantly readable in 0.5 seconds at arm's length on a mobile screen.
-3. SPOKEN VOICE & LENGTH:
-   - CRITICAL: The spoken line MUST be between 7 and 12 WORDS MAXIMUM (approx 2.5 seconds).
-   - If a hook is more than 12 words, it FAILS the viral algorithm!
-   - Urgent, authoritative, relatable.
-4. Select 3 completely different formulas.
+Task:
+Generate 3 distinct, high-retention hooks for a short Instagram Reel about "{topic}".
+Rules:
+1. Spoken hook: Under 12 words. Punchy, scroll-stopping, tailored to {profile.name}.
+2. On-screen text: 3 to 6 words maximum in ALL CAPS.
+3. Natural delivery without clickbait traps or fluff.
 
 Return ONLY valid JSON in this exact structure:
 {example_json}
@@ -165,13 +132,12 @@ Return ONLY valid JSON in this exact structure:
 def score_hooks(hooks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Score hooks using the repository's hookscore.py heuristic engine.
-    Handles both pure English and Devanagari Hindi gracefully.
     """
     ranked = []
     for item in hooks:
         text_to_score = item.get("spoken", "")
-        is_hindi = bool(re.search(r"[\u0900-\u097F]", text_to_score))
-        if is_hindi:
+        is_devanagari = bool(re.search(r"[\u0900-\u097F]", text_to_score))
+        if is_devanagari:
             # Score against English on-screen card for structural heuristic
             text_to_score = item.get("on_screen", text_to_score)
 
@@ -180,7 +146,7 @@ def score_hooks(hooks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         except Exception:
             results, overall, verdict, flags = {}, 85.0, "STRONG", []
 
-        if is_hindi and overall < 70.0:
+        if is_devanagari and overall < 70.0:
             overall = 85.0
             verdict = "STRONG"
 
@@ -199,6 +165,7 @@ def score_hooks(hooks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
 
 _lexicon = None
+
 
 def get_lexicon():
     global _lexicon
@@ -225,23 +192,19 @@ def clean_and_humanize_text(text: str) -> str:
 
 def generate_reel(
     topic: str,
-    niche: str = "Vedic astrology",
-    language: str = "Hindi mixed with English",
-    duration: int = 30,
+    niche: str = "tech_ai",
+    language: str = "English",
+    duration: int = 25,
+    niche_profile: Optional[NicheProfile] = None,
 ) -> Dict[str, Any]:
     """
     Generate a complete production-ready Instagram Reel with Gemini.
-    Produces:
-    - Ranked hooks
-    - Selected winning hook
-    - Beat-by-beat script with visual descriptions
-    - Timed on-screen text cards
-    - Clean Instagram caption (first 125 chars optimized)
-    - Targeted hashtags (max 5)
-    - Timing and beat sheet analysis
+    Adapts fully to any configured NicheProfile (Tech, Fitness, Finance, Astrology, etc.).
     """
+    profile = niche_profile or get_default_niche(niche)
+
     # 1. Generate & score hooks
-    candidate_hooks = generate_hooks(topic, niche=niche, language=language)
+    candidate_hooks = generate_hooks(topic, niche=profile.niche_id, language=language, niche_profile=profile)
     ranked_hooks = score_hooks(candidate_hooks)
     selected_hook = ranked_hooks[0]
 
@@ -250,86 +213,70 @@ def generate_reel(
     algo_brain = InstagramAlgorithmBrain()
     algo_context = algo_brain.generate_prompt_boost_snippet()
 
+    # Niche-specific instructions
+    is_astrology = profile.niche_id in ("astrology_vedic", "astrology")
     is_hindi = language.lower() in ["hindi", "hi"]
 
-    if is_hindi:
-        scenes_format_example = f"""    {{
-      "scene_num": 1,
-      "spoken_line": "{selected_hook['spoken']}",
-      "on_screen_text": "{selected_hook['on_screen']}",
-      "visual_description": "Cinematic dramatic zoom on the sacred Vedic birth chart or planetary symbol",
-      "estimated_seconds": 3
-    }},
-    {{
-      "scene_num": 2,
-      "spoken_line": "पहला संकेत: जब यह ग्रह इस भाव में बैठता है, तो भारी मेहनत के बाद भी अनचाहे संकट और रुकावटें बढ़ जाती हैं।",
-      "on_screen_text": "1. PLACEMENT ONE SIGN",
-      "visual_description": "Ancient Vedic parchment chart illuminated by sacred oil lamp",
-      "estimated_seconds": 5
-    }},
-    {{
-      "scene_num": 3,
-      "spoken_line": "दूसरा संकेत: इस ग्रह की वक्री दृष्टि आपके जीवन में ठीक सफलता के समय अप्रत्याशित अड़चनें पैदा करती है।",
-      "on_screen_text": "2. PLACEMENT TWO IMPACT",
-      "visual_description": "Deep space cinematic planetary cosmos view",
-      "estimated_seconds": 5
-    }},
-    {{
-      "scene_num": 4,
-      "spoken_line": "तीसरा संकेत: अगर यह ग्रह पीड़ित है, तो बिना सटीक डिग्री जाने कोई भी सामान्य उपाय भारी नुकसान करा सकता है।",
-      "on_screen_text": "3. NEVER GUESS YOUR REMEDY",
-      "visual_description": "Mystical ancient Vedic parchment chart illuminated by cosmic starlight",
-      "estimated_seconds": 5
-    }},
-    {{
-      "scene_num": 5,
-      "spoken_line": "अपनी कुंडली में इस ग्रह का भाव नीचे कमेंट करें, और संपूर्ण विश्लेषण के लिए हमें तुरंत DM करें।",
-      "on_screen_text": "COMMENT PLACEMENT • DM TO BOOK",
-      "visual_description": "Ancient temple sanctum at midnight with glowing diyas",
-      "estimated_seconds": 4
-    }}"""
+    if is_astrology:
+        niche_instructions = f"""
+CRITICAL JYOTISH ACCURACY RULES:
+- Focus solely on the planet, house, and transit relevant to "{topic}".
+- If language is Hindi: spoken lines MUST be written in natural Devanagari Hindi (हिंदी लिपि) for authentic pronunciation.
+- On-screen text in clean ALL CAPS English (3-5 words).
+- Call to Action: Instruct viewers to comment their placement or DM for consultation. Never say 'link in bio'.
+"""
     else:
-      scenes_format_example = f"""    {{
+        niche_instructions = f"""
+NICHE STRATEGY ({profile.name.upper()}):
+- Target Audience: {profile.target_audience}
+- Content Pillars: {', '.join(profile.content_pillars)}
+- Visual Tone: {profile.visual_style}
+- Audio Tone: {profile.tone}
+- Call to Action Options: {profile.cta_presets}
+- DO NOT use astrological, esoteric, or temple terminology. Keep all concepts grounded in {profile.name}.
+"""
+
+    scenes_format_example = f"""    {{
       "scene_num": 1,
       "spoken_line": "{selected_hook['spoken']}",
       "on_screen_text": "{selected_hook['on_screen']}",
-      "visual_description": "Cinematic dramatic zoom on the cosmic planetary chart",
+      "visual_description": "Scroll-stopping opener matching {profile.visual_style}",
       "estimated_seconds": 3
     }},
     {{
       "scene_num": 2,
-      "spoken_line": "Sign one: When this planet occupies this house, it drains your savings through sudden unexpected expenses.",
-      "on_screen_text": "1. PLACEMENT ONE SIGN",
-      "visual_description": "Ancient Vedic parchment chart illuminated by sacred oil lamp",
+      "spoken_line": "First core insight or symptom that explains why this occurs.",
+      "on_screen_text": "1. CORE INSIGHT",
+      "visual_description": "Dynamic visual illustrating the problem or primary concept",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 3,
-      "spoken_line": "Sign two: Retrograde aspect on this house creates frustrating roadblocks right before major breakthroughs.",
-      "on_screen_text": "2. PLACEMENT TWO IMPACT",
-      "visual_description": "Deep space cinematic planetary cosmos view",
+      "spoken_line": "The mechanism or shift: what most people overlook.",
+      "on_screen_text": "2. THE HIDDEN SHIFT",
+      "visual_description": "Clean analytical or high-energy demonstration",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 4,
-      "spoken_line": "Sign three: If this planet is afflicted, performing random generic remedies can backfire severely without checking degrees.",
-      "on_screen_text": "3. NEVER GUESS YOUR REMEDY",
-      "visual_description": "Mystical ancient Vedic parchment chart illuminated by cosmic starlight",
+      "spoken_line": "Actionable rule or mistake to avoid immediately.",
+      "on_screen_text": "3. ACTIONABLE RULE",
+      "visual_description": "High contrast emphasis on the solution or breakthrough",
       "estimated_seconds": 5
     }},
     {{
       "scene_num": 5,
-      "spoken_line": "Comment your planet placement below, and send us a direct message (DM) to book your consultation for full analysis!",
-      "on_screen_text": "COMMENT PLACEMENT • DM TO BOOK",
-      "visual_description": "Ancient temple sanctum at midnight with glowing diyas",
+      "spoken_line": "{profile.cta_presets[0]}",
+      "on_screen_text": "SAVE • FOLLOW FOR MORE",
+      "visual_description": "Memorable closing branded card with clear typography",
       "estimated_seconds": 4
     }}"""
 
     prompt = f"""
-You are the #1 viral Instagram Reels director and world-class creator in Vedic wisdom, esoteric astrology, and spiritual energy.
+You are the world-class short-form video director and creative strategist for {profile.name}.
 You know how to write razor-sharp, hypnotic scripts that keep viewers glued to their screens from second 0 to the very last frame.
 
-NICHE: {niche}
+NICHE: {profile.name}
 TOPIC: {topic}
 TARGET DURATION: {duration} seconds
 LANGUAGE: {language}
@@ -340,69 +287,43 @@ WINNING ON-SCREEN HOOK: {selected_hook["on_screen"]}
 
 {algo_context}
 
-VIRAL RETENTION BLUEPRINT (5 DYNAMIC SCENES - 3 TO 4 RELATABLE TRAITS & PSYCHOLOGICAL MIRROR FORMAT):
-NEVER SOUND PREACHY OR USE NAG-STYLE COMMANDS ("Don't do this, Stop doing that"). Viewers swipe away from lectures.
-INSTEAD, USE THE "SELF-DISCOVERY TRAIT MIRROR": Reveal 3 to 4 hyper-relatable psychological, emotional, and life symptoms that viewers instantly recognize in themselves!
+{niche_instructions}
 
-1. SCENE 1 (0-3s) - THE TRAIT IDENTIFICATION HOOK:
-   - Spoken: Relatable curiosity hook inviting viewers to check how many traits they possess (e.g. "अगर आप इन 4 में से 2 भी लक्षण महसूस करते हैं, तो आपकी कुंडली में एक दुर्लभ ग्रह चक्र सक्रिय है...").
-   - On-Screen Text: Punchy 3-5 words in clean ALL CAPS (e.g. "DO YOU HAVE THESE 4 TRAITS?").
-2. SCENE 2 (3-8s) - TRAIT 1 (INTUITION & PSYCHOLOGICAL SENSE):
-   - Detail Trait #1 with vivid, relatable psychological precision (e.g. instantly sensing when someone is faking intentions, feeling unexplainable sudden gut shifts before events happen).
-   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "1. UNCANNY INTUITION").
-3. SCENE 3 (8-13s) - TRAIT 2 (LIFE, WEALTH OR EMOTIONAL PATTERN):
-   - Detail Trait #2 describing a tangible real-world pattern (e.g. money flowing in easily but draining through sudden unavoidable emergencies; or craving extreme solitude despite loving people).
-   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "2. SUDDEN WEALTH SIPHON").
-4. SCENE 4 (13-18s) - TRAIT 3 & ASTROLOGICAL ROOT CAUSE + REMEDY WARNING:
-   - Detail Trait #3 (e.g. waking up between 3:00 AM and 4:30 AM with a racing mind and sudden creative energy).
-   - Connect this trait to the governing astrological planet/house (e.g. Rahu in 8th house, Moon-Saturn Vish Yoga, Ketu in 12th).
-   - CRITICAL WARNING: Explicitly warn that generic online remedies backfire without checking degrees!
-   - On-Screen Text: Punchy 3-5 words in ALL CAPS (e.g. "3. 3AM WAKEUP • RAHU IN 8TH").
-5. SCENE 5 (18-25s) - THE COMMENT PLACEMENT & DM CONSULTATION CALL-TO-ACTION:
-   - Command viewers to COMMENT their planet placement below (e.g. "अपनी कुंडली में इस ग्रह का भाव नीचे कमेंट करें...").
-   - Tell viewers to send a Direct Message (DM) to book their consultation for full analysis (e.g. "...और संपूर्ण विश्लेषण व परामर्श के लिए हमें तुरंत DM करें।").
-   - ABSOLUTE MANDATE: NEVER SAY 'LINK IN BIO' OR 'BIO MEIN LINK HAI'. ONLY INSTRUCT THEM TO SEND A DM!
-   - On-Screen Text: Punchy 3-5 words in clean ALL CAPS (e.g. "COMMENT PLACEMENT • DM TO BOOK").
+VIRAL RETENTION STRUCTURE (5 DYNAMIC SCENES):
+1. SCENE 1 (0-3s) - THE HOOK:
+   - Spoken: Winning hook above.
+   - On-Screen: Winning on-screen text in ALL CAPS (3-5 words).
+2. SCENE 2 (3-8s) - POINT 1:
+   - Vivid, relatable point or insight.
+   - On-Screen: Punchy 3-5 words in ALL CAPS.
+3. SCENE 3 (8-13s) - POINT 2:
+   - Deepens the value or presents the core breakthrough.
+   - On-Screen: Punchy 3-5 words in ALL CAPS.
+4. SCENE 4 (13-18s) - POINT 3 / CRITICAL SHIFT:
+   - Practical application or mistake warning.
+   - On-Screen: Punchy 3-5 words in ALL CAPS.
+5. SCENE 5 (18-25s) - CALL TO ACTION:
+   - Clear engagement instruction from presets.
+   - On-Screen: Punchy ALL CAPS CTA.
 
-CRITICAL JYOTISH ACCURACY RULES (100% SCRIPTURALLY CORRECT VEDIC ASTROLOGY):
-- PLANET & GEMSTONE ACCURACY: Only speak about the EXACT planet, house, and gemstone relevant to "{topic}".
-  * Shani (Saturn) -> Blue Sapphire (Neelam) | 8th/10th/11th house | Peepal tree mustard lamp / Hanuman Chalisa
-  * Brihaspati (Jupiter) -> Yellow Sapphire (Pukhraj) | 9th/12th house | Vishnu Sahasranama / Turmeric tilak
-  * Ketu (South Node) -> Cat's Eye (Lehsuniya) | 12th house Moksha/Vyaya | Ganesha Atharvashirsha / Feeding street dogs
-  * Rahu (North Node) -> Hessonite (Gomed) | 8th house illusions | Shiva Abhishek / Coconut donation
-  * Budh (Mercury) -> Emerald (Panna) | 3rd/6th house | Feeding green spinach to cows
-  * Mangal (Mars) -> Red Coral (Moonga) | 1st/8th house Manglik | Hanuman temple offering
-  * Surya (Sun) -> Ruby (Manik) | 1st/5th house | Copper vessel Surya Arghya at sunrise
-  * Shukra (Venus) -> Diamond / Opal | 2nd/7th house | Lakshmi devotion
-  * Chandra (Moon) -> Pearl (Moti) | 4th house | Shiva milk offering
-- NEVER confuse planetary houses or gemstones. If the topic is Ketu, DO NOT mention Shani or Neelam. If the topic is Pukhraj, DO NOT mention 8th house Shani.
-
-WRITING QUALITY & HUMAN CREATOR VOICE:
-- LANGUAGE & PRONUNCIATION MANDATE (100% FLAWLESS DICTION):
-  * If LANGUAGE is "Hindi":
-    - ALL 5 SCENES "spoken_line": MUST be written in pure, natural, respectful HINDI in Devanagari script (हिंदी लिपि, e.g. "अगर आपकी कुंडली के आठवें भाव में शनि देव बैठे हैं..."). Do NOT write spoken lines in English or Romanized Hinglish! This guarantees the native Indian voice model pronounces every Vedic Sanskrit term (शनि, राहु, केतु, नीलम, पन्ना, कुंडली, उपाय) with 100% sacred, human-grade perfection.
-    - ALL 5 SCENES "on_screen_text": Write in clean, bold ALL CAPS ENGLISH (3-5 words, e.g. "STOP WEARING NEELAM!", "CHECK YOUR 8TH HOUSE") so Instagram viewers immediately read the visual card while listening to the Hindi pandit voice.
-  * If LANGUAGE is "English":
-    - ALL 5 SCENES "spoken_line": MUST be written in clean, fluent, grammatical English without broken hybrid slang.
-    - ALL 5 SCENES "on_screen_text": Clean, bold ALL CAPS ENGLISH.
-- Use natural ellipses (`...`) for dramatic breath pauses so the voice pauses naturally like a real human.
-- STRICT TOTAL WORD COUNT: 35 TO 45 WORDS TOTAL across all 5 scenes combined (approx 20-22 seconds total). Each scene MUST be 6 to 9 words maximum for rapid, scroll-stopping retention.
-- Fast, conversational, confident creator cadence (160 words per minute).
-- Keep on-screen text 100% clean plain ASCII letters (no raw emoji symbols that break font rendering).
+WRITING QUALITY:
+- Spoken lines must be conversational, confident, and crisp (total 40-50 words across all 5 scenes).
+- Natural ellipses (`...`) for dramatic breath pauses.
+- On-screen text 100% clean plain ASCII letters (no emojis that break renderers).
 
 Return ONLY valid JSON in this exact structure:
 {{
   "title": "Short punchy title",
   "topic": "{topic}",
-  "niche": "{niche}",
+  "niche": "{profile.niche_id}",
   "language": "{language}",
-  "visual_theme": "cinematic_broll",
+  "visual_theme": "modern_dynamic",
   "scenes": [
 {scenes_format_example}
   ],
-  "caption": "Full Instagram caption text",
-  "hashtags": ["#VedicAstrology", "#BlueSapphire", "#ShaniDev", "#JyotishSecrets", "#KarmicHealing"],
-  "call_to_action": "Comment your Date of Birth below"
+  "caption": "Full Instagram caption text optimized for SEO and engagement",
+  "hashtags": ["#Tag1", "#Tag2", "#Tag3", "#Tag4", "#Tag5"],
+  "call_to_action": "{profile.cta_presets[0]}"
 }}
 """
 
@@ -426,7 +347,7 @@ Return ONLY valid JSON in this exact structure:
 
     full_script_text = "\n".join(full_script_lines)
 
-    # 4. Timing analysis via beats.py
+    # Timing analysis via beats.py
     try:
         timing = beats.analyse(full_script_text, wpm=165, target=duration)
     except Exception as exc:
@@ -441,17 +362,17 @@ Return ONLY valid JSON in this exact structure:
 
     result = {
         "topic": topic,
-        "niche": niche,
+        "niche": profile.niche_id,
         "language": language,
         "title": data.get("title", topic),
-        "visual_theme": data.get("visual_theme", "cosmic"),
+        "visual_theme": data.get("visual_theme", "modern_dynamic"),
         "selected_hook": selected_hook,
         "hook_rankings": ranked_hooks,
         "scenes": scenes,
         "full_script": full_script_text,
         "caption": data.get("caption", ""),
         "hashtags": data.get("hashtags", [])[:5],
-        "call_to_action": data.get("call_to_action", "Save this reel"),
+        "call_to_action": data.get("call_to_action", profile.cta_presets[0]),
         "timing": timing,
         "human_score": human_score,
     }
@@ -467,9 +388,9 @@ Return ONLY valid JSON in this exact structure:
 
 
 if __name__ == "__main__":
-    test_topic = "Why Saturn delays but never denies your success"
+    test_topic = "Top 3 Python AI libraries in 2026"
     print(f"Generating Reel for topic: {test_topic}...")
-    res = generate_reel(test_topic, duration=25)
+    res = generate_reel(test_topic, niche="tech_ai", duration=25)
     print("WINNING HOOK:", res["selected_hook"]["spoken"])
     print("SCENES COUNT:", len(res["scenes"]))
     print("HASHTAGS:", res["hashtags"])

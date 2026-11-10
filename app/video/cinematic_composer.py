@@ -308,52 +308,50 @@ def render_kinetic_caption_layer(
     scene_number: int,
     total_scenes: int,
     badge_text: str = "",
+    brand_handle: Optional[str] = None,
 ) -> Image.Image:
     """
-    Renders clean, modern, high-contrast typography designed for viral Instagram Reels:
-    - Top Center: Single high-visibility creator watermark pill (✨ @neodivinestore.in ✨)
-      in 32pt Arial Bold with native emoji sparkles. Zero stacked pills, zero overwriting.
-    - Scene 1: Prominent Hero Hook Card (Centered, gold-bordered glass pill, zero redundant badges).
-    - Scenes 2-5: Clean Trait/Topic Badge chip (34pt Arial Bold) + complementary kinetic subtitle.
-    - Bottom: Elegant golden scene progress dashes.
+    Renders clean, modern, high-contrast typography designed for viral Instagram Reels.
+    Supports dynamic brand handle and eliminates overlap between watermark and badge chips.
     """
     overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
 
     # 1. TOP CREATOR WATERMARK (High Visibility, Sleek Glass Pill, 32pt)
-    wm_font = get_font(32, bold=True, family="arial")
-    emoji_font_wm = get_emoji_font(26)
-    wm_handle = BRAND_WATERMARK.strip() if BRAND_WATERMARK else "@neodivinestore.in"
-    bbox_wm = draw.textbbox((0, 0), wm_handle, font=wm_font)
-    wm_w = bbox_wm[2] - bbox_wm[0]
-    wm_h = bbox_wm[3] - bbox_wm[1]
+    wm_handle = (brand_handle or BRAND_WATERMARK or "").strip()
+    if wm_handle:
+        wm_font = get_font(30, bold=True, family="arial")
+        emoji_font_wm = get_emoji_font(24)
+        bbox_wm = draw.textbbox((0, 0), wm_handle, font=wm_font)
+        wm_w = bbox_wm[2] - bbox_wm[0]
+        wm_h = bbox_wm[3] - bbox_wm[1]
 
-    sparkle_w = 36 if emoji_font_wm else 0
-    pill_w = wm_w + (sparkle_w * 2) + 44
-    pill_x = (width - pill_w) // 2
-    pill_y = 100
-    pill_h = wm_h + 24
+        sparkle_w = 32 if emoji_font_wm else 0
+        pill_w = wm_w + (sparkle_w * 2) + 40
+        pill_x = (width - pill_w) // 2
+        pill_y = 100
+        pill_h = wm_h + 22
 
-    draw.rounded_rectangle(
-        [pill_x, pill_y, pill_x + pill_w, pill_y + pill_h],
-        radius=20,
-        fill=(10, 8, 16, 215),
-        outline=(255, 215, 0, 220),
-        width=2,
-    )
+        draw.rounded_rectangle(
+            [pill_x, pill_y, pill_x + pill_w, pill_y + pill_h],
+            radius=20,
+            fill=(10, 8, 16, 215),
+            outline=(255, 215, 0, 220),
+            width=2,
+        )
 
-    if emoji_font_wm:
-        try:
-            draw.text((pill_x + 14, pill_y + 8), "✨", font=emoji_font_wm, embedded_color=True)
-        except Exception:
-            pass
-        draw.text((pill_x + 14 + sparkle_w + 8, pill_y + 11), wm_handle, font=wm_font, fill=(255, 255, 255, 255))
-        try:
-            draw.text((pill_x + pill_w - sparkle_w - 10, pill_y + 8), "✨", font=emoji_font_wm, embedded_color=True)
-        except Exception:
-            pass
-    else:
-        draw.text(((width - wm_w) // 2, pill_y + 11), wm_handle, font=wm_font, fill=(255, 255, 255, 255))
+        if emoji_font_wm:
+            try:
+                draw.text((pill_x + 14, pill_y + 8), "✨", font=emoji_font_wm, embedded_color=True)
+            except Exception:
+                pass
+            draw.text((pill_x + 14 + sparkle_w + 8, pill_y + 11), wm_handle, font=wm_font, fill=(255, 255, 255, 255))
+            try:
+                draw.text((pill_x + pill_w - sparkle_w - 10, pill_y + 8), "✨", font=emoji_font_wm, embedded_color=True)
+            except Exception:
+                pass
+        else:
+            draw.text(((width - wm_w) // 2, pill_y + 11), wm_handle, font=wm_font, fill=(255, 255, 255, 255))
 
     f_badge = get_font(34, bold=True, family="arial")
     cap_font = get_font(56, bold=True, family="impact")
@@ -789,30 +787,41 @@ def create_cinematic_reel_video(
     output_path = REELS_DIR / output_filename
 
     print(f"\n[CINEMATIC COMPOSER] Encoding professional edited reel -> {output_path}")
-    final_video.write_videofile(
-        str(output_path),
-        fps=VIDEO_FPS,
-        codec="libx264",
-        audio_codec="aac",
-        preset="veryfast",
-        threads=4,
-        ffmpeg_params=["-crf", "22", "-pix_fmt", "yuv420p"],
-    )
-
-    # 7. Export master synchronized voiceover track for standalone inspection
     try:
-        master_audio_dest = PROJECT_ROOT / "insta content" / "voiceover_audio.mp3"
-        master_audio_dest.parent.mkdir(parents=True, exist_ok=True)
-        final_video.audio.write_audiofile(str(master_audio_dest), logger=None)
-    except Exception as exc:
-        logger.warning(f"Could not export standalone master audio: {exc}")
+        final_video.write_videofile(
+            str(output_path),
+            fps=VIDEO_FPS,
+            codec="libx264",
+            audio_codec="aac",
+            preset="veryfast",
+            threads=4,
+            ffmpeg_params=["-crf", "22", "-pix_fmt", "yuv420p"],
+        )
 
-    # Cleanup clips
-    final_video.close()
-    for ac in audio_clips_to_close:
+        # 7. Export master synchronized voiceover track for standalone inspection
         try:
-            ac.close()
+            master_audio_dest = PROJECT_ROOT / "insta content" / "voiceover_audio.mp3"
+            master_audio_dest.parent.mkdir(parents=True, exist_ok=True)
+            if final_video.audio:
+                final_video.audio.write_audiofile(str(master_audio_dest), logger=None)
+        except Exception as exc:
+            logger.warning(f"Could not export standalone master audio: {exc}")
+
+        return output_path
+
+    finally:
+        # Safe cleanup for Windows file locks
+        try:
+            final_video.close()
         except Exception:
             pass
-
-    return output_path
+        for vc in video_clips:
+            try:
+                vc.close()
+            except Exception:
+                pass
+        for ac in audio_clips_to_close:
+            try:
+                ac.close()
+            except Exception:
+                pass
