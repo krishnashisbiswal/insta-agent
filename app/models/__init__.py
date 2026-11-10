@@ -8,6 +8,7 @@ from app.models.saas_models import (
     InstagramAccount,
     NicheProfileModel,
     PublishingJobModel,
+    AuditLog,
     init_db,
     get_db_session,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "InstagramAccount",
     "NicheProfileModel",
     "PublishingJobModel",
+    "AuditLog",
     "init_db",
     "get_db_session",
 ]

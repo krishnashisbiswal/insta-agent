@@ -24,12 +24,17 @@ urllib3>=2.0.0
 # Configuration, Serialization & Security
 python-dotenv>=1.0.0
 pydantic>=2.7.0
+email-validator>=2.0.0
 cryptography>=42.0.0
+pyjwt>=2.8.0
+bcrypt>=4.1.0
 
 # Multi-Tenant SaaS, Database & API
 sqlalchemy>=2.0.25
+alembic>=1.13.0
 fastapi>=0.110.0
 uvicorn>=0.28.0
+aiofiles>=24.0.0
 
 # Quality Assurance & Testing
 tqdm>=4.66.0
