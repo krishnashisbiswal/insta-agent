@@ -116,7 +116,7 @@ class InstagramAlgorithmBrain:
             "view_boosting_heuristics": [
                 "PATTERN INTERRUPT: Hook must deliver an aggressive counter-intuitive warning within 0-1.5 seconds.",
                 "REPLAY LOOP MULTIPLIER: The final sentence must flow seamlessly back into the first word of Beat 1 to push completion rate > 100%.",
-                "DYNAMIC VISUAL PACING: Rotate 3D procedural object and switch on-screen badges every 3.5 to 4 seconds to eliminate drop-off.",
+                "DYNAMIC VISUAL PACING: Rotate 4K photorealistic cinematic scenes and switch on-screen badges every 3.5 to 4 seconds to eliminate drop-off.",
                 "SUBTITLE RETENTION: Yellow highlight on critical danger keywords (#FFE600) to keep eyes locked on mobile screen.",
             ],
             "follower_conversion_heuristics": [

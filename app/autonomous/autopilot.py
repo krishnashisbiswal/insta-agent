@@ -33,8 +33,9 @@ from app.autonomous.timing_engine import (
     seconds_until_next_optimal,
 )
 from app.instagram.uploader import InstagramUploader
+from app.video.cinematic_composer import create_cinematic_reel_video
+from app.video.preflight_checker import PreFlightQualityGate, format_preflight_report
 from app.video.tts_engine import generate_speech
-from app.video.video_composer import create_reel_video
 from config.settings import (
     CONTENT_LANGUAGE,
     CONTENT_NICHE,
@@ -109,25 +110,17 @@ def run_single_autonomous_publish(
         niche=target_niche,
         language=target_lang,
         duration=target_dur,
+        seo_metadata=seo_meta,
     )
     hook = script_data["selected_hook"]
     print(f" -> Winning Hook: \"{hook['spoken']}\"")
     print(f"    On-Screen:    \"{hook['on_screen']}\"")
     print(f"    Hook Score:   {hook.get('score')}/100 [{hook.get('verdict')}]")
 
-    # 4. STUDIO NEURAL VOICEOVER (TTS)
-    print("\n[AUTOPILOT 4/6] Generating studio neural voiceover audio...")
-    audio_meta = generate_speech(text=script_data["full_script"])
-    audio_path = audio_meta["audio_path"]
-    print(f" -> Voice:     {audio_meta['voice']}")
-    print(f"    Duration:  {audio_meta['duration']:.2f} seconds")
-
-    # 5. 1080x1920 VERTICAL REEL COMPOSITION
-    print("\n[AUTOPILOT 5/6] Composing 1080x1920 MP4 vertical Reel...")
-    video_path = create_reel_video(
+    # 4 & 5. 1080x1920 CINEMATIC REEL PRODUCTION (FRAME-SYNCED AUDIO + 4K VISUALS + SACRED SOUND DESIGN)
+    print("\n[AUTOPILOT 4/6] Composing 1080x1920 Cinematic Reel with frame-synced audio & 4K visuals...")
+    video_path = create_cinematic_reel_video(
         script_data=script_data,
-        audio_path=audio_path,
-        theme_name=target_theme,
     )
     print(f" -> MP4 File:  {video_path.name}")
 
@@ -148,6 +141,16 @@ def run_single_autonomous_publish(
     print(f"    Visible Hook:    \"{caption_res['visible_first_line']}\"")
     print(f"    Tags:            {' '.join(hashtags)}")
 
+    # Pre-Flight Quality Gate & Algorithm Timing Audit
+    preflight_audit = PreFlightQualityGate.verify_content_package(
+        video_path=video_path,
+        script_data=script_data,
+        caption=final_caption,
+        hashtags=hashtags,
+        timezone_str=tz,
+    )
+    print(format_preflight_report(preflight_audit))
+
     # Execute Direct Publish or Safe Dry-Run
     uploader = InstagramUploader()
     upload_result = uploader.upload_reel(
@@ -165,10 +168,10 @@ def run_single_autonomous_publish(
         "niche": target_niche,
         "language": target_lang,
         "video_path": str(video_path),
-        "audio_path": audio_path,
+        "preflight_audit": preflight_audit,
         "hook": hook["spoken"],
         "caption": final_caption,
-        "seo_score": seo_audit["overall_seo_score"],
+        "seo_score": preflight_audit["readiness_score"],
         "upload_method": upload_result.get("method", "DRY_RUN"),
         "upload_status": upload_result.get("status", "COMPLETED"),
         "media_id": upload_result.get("media_id"),

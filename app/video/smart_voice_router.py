@@ -21,7 +21,7 @@ ASTRO_DEVNAGARI_MAP = {
     r"\bchandra\b": "चंद्र देव",
     r"\bmoon\b": "चंद्र देव",
     r"\bshukra\b": "शुक्र देव",
-    r"\bvenus\b": "शुक्र ग्रह",
+    r"\bvenus\b": "शुक्र देव",
 
     # Gemstones
     r"\bneelam\b": "नीलम",
@@ -118,6 +118,15 @@ def clean_pronunciation_for_hindi(text: str) -> str:
 
     for pattern, dewa in ASTRO_DEVNAGARI_MAP.items():
         res = re.sub(pattern, dewa, res, flags=re.IGNORECASE)
+
+    # Clean generic pronouns if text refers to Moon / Chandra
+    if any(k in res for k in ["चंद्र", "चन्द्र", "मोती"]):
+        res = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+का\b", "चंद्रमा का", res)
+        res = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+की\b", "चंद्रमा की", res)
+        res = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+के\b", "चंद्रमा के", res)
+        res = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+को\b", "चंद्र देव को", res)
+        res = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+से\b", "चंद्र देव से", res)
+        res = re.sub(r"\b(यह|इस|उस)\s+ग्रह\b", "चंद्र देव", res)
 
     res = re.sub(r"\s+", " ", res).strip()
     return res

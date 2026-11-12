@@ -95,13 +95,66 @@ class TrendDiscoveryEngine:
                 {"name": "Red Coral (Moonga)", "gem_type": "red_coral", "graha": "mars", "danger_houses": [8, 12], "safe_ascendants": ["Aries", "Scorpio", "Cancer", "Leo", "Sagittarius", "Pisces"]},
             ],
             "themes": [
-                "3 Gemstone Mistakes That Trigger Sudden Financial Ruin",
-                "3 Signs You Are Wearing The Wrong Gemstone Right Now",
-                "3 Gemstones You Must Never Wear Together Under Any Circumstances",
-                "The Pillow Test: 3 Signs A Gemstone Rejects Your Aura Within 72 Hours",
+                "5 Deadly Gemstone Mistakes That Trigger Sudden Financial Ruin",
+                "5 Warning Signs You Are Wearing The Wrong Gemstone Right Now",
+                "5 Fatal Mistakes People Make When Wearing Astrological Gemstones",
+                "The 72-Hour Test: 5 Warning Signs A Gemstone Rejects Your Aura",
+            ],
+        },
+        "vedic_foundations_basics": {
+            "name": "Vedic Astrology Foundations: Planets, 27 Nakshatras & 4 Padas",
+            "themes": [
+                "Vedic Astrology Foundation: 9 Planets, 27 Nakshatras and 4 Padas Explained",
+                "The Mystery of 4 Nakshatra Padas: How Dharma, Artha, Kama, Moksha Rule Your Kundli",
+                "The 9 Navagrahas Explained: How Sun to Ketu Control Your Entire Life Path",
+                "The 27 Nakshatras: The True Cosmic Power Behind Your Birth Chart",
+                "Why Your Rashi Means Nothing Without Your Birth Nakshatra and Pada",
             ],
         },
     }
+
+    NARRATIVE_ARCHETYPES = [
+        {
+            "id": "karmic_mystery_deep_dive",
+            "name": "Karmic Mystery & Hidden House Trap",
+            "hook_style": "Unveils a hidden Kundli mystery, rare yoga or difficult house activation (e.g. 7th house Ketu detachment, 8th house sudden wealth, Vipreet Raj Yoga).",
+            "point_count": 3,
+            "badge_prefix": "INSIGHT",
+            "focus": "Deep astrological placement mechanics, past-life debts, and sudden energetic shifts.",
+        },
+        {
+            "id": "real_life_symptoms",
+            "name": "Real-Life Awakening Symptoms & Physical Signs",
+            "hook_style": "Identifies 3 uncanny physical, emotional or circumstantial symptoms (e.g. 3 AM wakeups, money leakage, throat chakra blocks).",
+            "point_count": 3,
+            "badge_prefix": "SIGN",
+            "focus": "Tangible daily life symptoms that make viewers immediately relate and check their chart.",
+        },
+        {
+            "id": "contrarian_truth",
+            "name": "Contrarian Truth & Vedic Myth Buster",
+            "hook_style": "Shatters a common modern astrological myth using authentic Sage Parashara Vedic wisdom.",
+            "point_count": 3,
+            "badge_prefix": "TRUTH",
+            "focus": "Contrasting pop-astrology illusions against deep ancient Vedic reality (e.g. Rashi vs Nakshatra/Pada, Sade Sati cleansing).",
+        },
+        {
+            "id": "planetary_power_code",
+            "name": "Planetary Power & Nakshatra Codes",
+            "hook_style": "Explores the raw cosmic frequency of a specific Graha or Nakshatra and how it governs destiny.",
+            "point_count": 3,
+            "badge_prefix": "CODE",
+            "focus": "Celestial mechanics, soul evolution, and understanding planetary signatures in birth charts.",
+        },
+        {
+            "id": "consultation_case_study",
+            "name": "Astrologer Consultation Case Study",
+            "hook_style": "Begins with an authentic client consultation case study where a subtle placement changed everything.",
+            "point_count": 4,
+            "badge_prefix": "LESSON",
+            "focus": "Practical wisdom learned from consulting charts, avoiding blind remedies, and recognizing chart clashes.",
+        },
+    ]
 
     def __init__(self, history_file: Path = TREND_HISTORY_FILE):
         self.history_file = history_file
@@ -129,6 +182,9 @@ class TrendDiscoveryEngine:
             "topic": topic_info.get("topic", ""),
             "category": topic_info.get("category", "general"),
             "sub_niche": topic_info.get("sub_niche", ""),
+            "archetype": topic_info.get("archetype", ""),
+            "point_count": topic_info.get("point_count", 3),
+            "badge_prefix": topic_info.get("badge_prefix", "INSIGHT"),
             "gemstone": topic_info.get("gemstone", None),
             "graha": topic_info.get("graha", None),
             "house": topic_info.get("house", None),
@@ -149,36 +205,54 @@ class TrendDiscoveryEngine:
             "grahas": [h.get("graha", "").lower() for h in recent if h.get("graha")],
             "houses": [str(h.get("house")) for h in recent if h.get("house")],
             "formulas": [h.get("formula_name", "").lower() for h in recent if h.get("formula_name")],
+            "archetypes": [h.get("archetype", "").lower() for h in recent if h.get("archetype")],
         }
 
     def discover_next_viral_trend(
         self,
         niche: str = "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
         language: str = "Hindi mixed with English",
+        category: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Dynamically discovers or synthesizes the next high-trending, viral topic
         that is strictly DIFFERENT from recent content.
-        Balances across:
-        1. Gemstone Energy (Pukhraj, Ruby, Emerald, etc.)
-        2. Psychic Karma (Rahu-Moon, 8th House, 12th House, 3 AM wakeups)
-        3. Kundali Secrets (Kaal Sarp, Manglik, Kemdrum, Vipreet Raj Yoga)
-        4. Spiritual Devotion (Lord Shiva, Hanuman Chalisa, Peepal lamp)
-        5. Cosmic Transits (Shani transit, Rahu shifts)
+        Balances across 5 distinct narrative archetypes:
+        1. Karmic Mystery & Hidden House Trap (7th house Ketu, 8th house wealth, Vipreet Raj Yoga)
+        2. Real-Life Awakening Symptoms (3 AM wakeups, money leakage, emotional detachment)
+        3. Contrarian Truth & Vedic Myth Buster (Rashi vs Nakshatra & Pada, Sade Sati reality)
+        4. Planetary Power & Nakshatra Codes (Graha frequencies, soul evolution)
+        5. Astrologer Consultation Case Studies (Authentic client breakthroughs & clash avoidance)
         """
         recent = self.get_recent_elements(count=15)
         recent_topics = recent["topics"]
         recent_gems = recent["gemstones"]
         recent_houses = recent["houses"]
+        recent_archetypes = recent.get("archetypes", [])
 
         # Cycle category dynamically across all viral pillars to ensure explosive diversity
-        category_keys = ["wealth_and_money", "marriage_and_relationships", "career_and_saturn", "psychic_and_destiny", "gemstone_energy"]
+        category_keys = [
+            "vedic_foundations_basics",
+            "wealth_and_money",
+            "marriage_and_relationships",
+            "career_and_saturn",
+            "psychic_and_destiny",
+            "gemstone_energy",
+        ]
         hist = self.load_history()
         last_category = hist[-1].get("category", "") if hist else ""
 
-        # Pick next category different from last
-        avail_categories = [c for c in category_keys if c != last_category]
-        chosen_category = random.choice(avail_categories)
+        # Pick next category different from last (or explicit requested category)
+        if category and category in self.TRENDING_CATEGORIES:
+            chosen_category = category
+        else:
+            avail_categories = [c for c in category_keys if c != last_category]
+            chosen_category = random.choice(avail_categories if avail_categories else category_keys)
+
+        # Rotate narrative archetype dynamically to prevent repetitive "5 deadly mistakes" formats
+        last_archetype = hist[-1].get("archetype", "") if hist else ""
+        avail_archetypes = [a for a in self.NARRATIVE_ARCHETYPES if a["id"] != last_archetype]
+        chosen_archetype = random.choice(avail_archetypes if avail_archetypes else self.NARRATIVE_ARCHETYPES)
 
         # Use Gemini AI to synthesize an explosive trending topic
         try:
@@ -196,7 +270,11 @@ You deeply understand how the Instagram algorithm recommends high-retention cont
 
 NICHE: {niche}
 LANGUAGE: {language}
-CHOSEN SUB-NICHE CATEGORY FOR THIS REEL: {chosen_category} ({self.TRENDING_CATEGORIES.get(chosen_category, {}).get('name', 'Vedic Wisdom')})
+CHOSEN SUB-NICHE CATEGORY: {chosen_category} ({self.TRENDING_CATEGORIES.get(chosen_category, {}).get('name', 'Vedic Wisdom')})
+TARGET NARRATIVE ARCHETYPE: {chosen_archetype['name']}
+ARCHETYPE HOOK STYLE: {chosen_archetype['hook_style']}
+TARGET NUMBER OF POINTS: {chosen_archetype['point_count']}
+BADGE STYLE: {chosen_archetype['badge_prefix']} 1 OF {chosen_archetype['point_count']}
 
 {playbook_ctx}
 
@@ -208,103 +286,154 @@ RECENT TOPICS ALREADY COVERED (DO NOT REPEAT OR CLOSELY MIMIC ANY OF THESE):
 RECENT GEMSTONES RECENTLY USED (COOLDOWN ACTIVE): {recent_gems[-3:]}
 RECENT HOUSES RECENTLY COVERED: {recent_houses[-3:]}
 
-CRITICAL VIRAL RULE - MULTI-REASON / CHECKLIST HOOK:
-People DO NOT watch or share single-issue or boring gemstone lectures.
-Instagram algorithm demands HIGH-STAKES, MULTI-REASON TOPICS (e.g. '3 Placements That...', '3 Signs Your Chart Has...', '3 Dangerous Mistakes That...').
-When a video presents 3 concrete placements or signs:
-1. Viewers watch till the very end to check if Sign #2 or #3 applies to them (100% completion rate).
-2. Viewers flood the comments asking: 'I have #1 and #3, what should I do?' (Highest comment velocity).
-3. Viewers share the reel with friends: 'Look at #2, that is literally you!' (Exponential share velocity).
+CRITICAL DIVERSITY MANDATE:
+- DO NOT use generic repetitive templates like '5 Deadly Mistakes' or '5 Fatal Mistakes' unless explicitly requested.
+- Create an entirely fresh, unique angle fitting the '{chosen_archetype['name']}' archetype.
+- Make the title fascinating, educational, dignified, and curiosity-inducing.
+
+STRICT NEGATIVE CONSTRAINT:
+- DO NOT use the word 'degree', 'degrees', 'डिग्री', or abstract math jargon. Focus 100% on concrete real-life symptoms, mental peace, planetary energy, and personal Kundli placements.
+- STRICTLY ZERO REMEDIES & ZERO MANTRAS. No gemstone wearing prescriptions, no mantras, no rituals.
 
 TASK:
-Create ONE single explosive, audience-capturing, trending viral Instagram Reel topic in the '{chosen_category}' pillar.
-Requirements:
-1. Must be framed as a MULTI-REASON / 3-SIGNS hook (e.g., '3 Placements That Drain Your Money To Zero', '3 Kundli Signs That Delay Marriage', '3 Signs Saturn Is Preparing You For Wealth', '3 Gemstone Mistakes Destroying Your Peace').
-2. Highly relatable to universal life challenges (Money, Relationships, Career, Inner Awakening).
-3. Leaves space for viewers to comment their specific placement.
+Create ONE single explosive, fresh, never-before-seen Instagram Reel topic in the '{chosen_category}' pillar using the '{chosen_archetype['name']}' format.
 
 Return ONLY valid JSON in this exact structure:
 {{
-  "topic": "Concise high-voltage topic title (e.g. 3 Kundli Placements That Drain Your Wealth)",
+  "topic": "Concise high-voltage topic title (e.g. {chosen_archetype['hook_style']})",
   "category": "{chosen_category}",
   "sub_niche": "Specific sub-niche name",
+  "archetype": "{chosen_archetype['id']}",
+  "point_count": {chosen_archetype['point_count']},
+  "badge_prefix": "{chosen_archetype['badge_prefix']}",
   "gemstone": "Optional gemstone name or null",
   "graha": "Primary planetary deity involved (e.g. jupiter, saturn, mars, venus, rahu, ketu, mercury, moon, sun)",
   "house": 8,
-  "hook_angle": "Why this specific 3-signs hook stops thumb scroll and forces comment engagement",
-  "suggested_formula": "Checklist / Negative Command",
+  "hook_angle": "Why this specific hook stops thumb scroll and forces comment engagement",
+  "suggested_formula": "{chosen_archetype['name']}",
   "target_duration_seconds": 25,
-  "recommended_3d_theme": "kundli_chart_3d or planet_3d or gemstone_3d or sacred_yantra_3d"
+  "cinematic_visual_theme": "photorealistic_gemstone or sacred_temple or vedic_astrology_chart or cosmic_nebula"
 }}
 """
             res = generate_json(prompt)
             if res and res.get("topic"):
-                logger.info(f"Discovered new trending viral topic via Gemini: \"{res['topic']}\"")
+                if "archetype" not in res:
+                    res["archetype"] = chosen_archetype["id"]
+                if "point_count" not in res:
+                    res["point_count"] = chosen_archetype["point_count"]
+                if "badge_prefix" not in res:
+                    res["badge_prefix"] = chosen_archetype["badge_prefix"]
+                logger.info(f"Discovered new trending viral topic via Gemini: \"{res['topic']}\" (Archetype: {res['archetype']})")
                 return res
         except Exception as exc:
             logger.warning(f"Gemini trend discovery fallback triggered: {exc}")
 
-        # High-voltage curated fallback topics with 3-reasons viral structure
+        # High-voltage curated fallback topics spanning diverse archetypes
         curated_topics = [
             {
-                "topic": "3 Kundli Placements That Drain Your Wealth No Matter How Much You Earn",
+                "topic": "Vedic Astrology Foundation: 9 Planets, 27 Nakshatras and 4 Padas Explained",
+                "category": "vedic_foundations_basics",
+                "sub_niche": "Vedic Astrology Basics & Cosmic Mechanics",
+                "archetype": "contrarian_truth",
+                "point_count": 3,
+                "badge_prefix": "FOUNDATION",
+                "gemstone": None,
+                "graha": None,
+                "house": None,
+                "hook_angle": "Contrast superficial zodiac signs against the authentic 3-layer Vedic foundation (Planets, 27 Nakshatras, and 4 Padas)",
+                "suggested_formula": "Contrarian Truth",
+                "target_duration_seconds": 28,
+                "cinematic_visual_theme": "vedic_astrology_chart",
+            },
+            {
+                "topic": "3 Kundli Signs Rahu in 2nd House Is Creating Mysterious Financial Losses",
                 "category": "wealth_and_money",
-                "sub_niche": "Sudden Wealth & Money Leakage",
+                "sub_niche": "Sudden Wealth & Rahu Traps",
+                "archetype": "karmic_mystery_deep_dive",
+                "point_count": 3,
+                "badge_prefix": "INSIGHT",
                 "gemstone": None,
                 "graha": "rahu",
                 "house": 2,
-                "hook_angle": "Relatable financial pain: reveals the 3 exact astrological leaks draining bank accounts",
-                "suggested_formula": "Checklist Warning",
+                "hook_angle": "Uncanny financial mystery: explains why money disappears through unseen leakages",
+                "suggested_formula": "Karmic Mystery",
                 "target_duration_seconds": 25,
-                "recommended_3d_theme": "kundli_chart_3d",
+                "cinematic_visual_theme": "vedic_astrology_chart",
             },
             {
-                "topic": "3 Kundli Placements That Delay Marriage and Test Your Soul",
+                "topic": "The 7th House Ketu Trap: Why You Push Away Pure Love",
                 "category": "marriage_and_relationships",
-                "sub_niche": "Relationship Karma & Delays",
+                "sub_niche": "Relationship Karma & Detachment",
+                "archetype": "karmic_mystery_deep_dive",
+                "point_count": 3,
+                "badge_prefix": "INSIGHT",
                 "gemstone": None,
                 "graha": "ketu",
                 "house": 7,
-                "hook_angle": "Massive emotional resonance: explains why genuine souls struggle with marriage delays",
-                "suggested_formula": "Checklist Warning",
+                "hook_angle": "Deep emotional identification: why partners with 7th house Ketu feel sudden detachment",
+                "suggested_formula": "Karmic Mystery",
                 "target_duration_seconds": 25,
-                "recommended_3d_theme": "planet_3d",
+                "cinematic_visual_theme": "cosmic_nebula",
             },
             {
-                "topic": "3 Signs Saturn (Shani) Is Preparing You For Massive Wealth and Fame",
-                "category": "career_and_saturn",
-                "sub_niche": "Career & Sade Sati Breakthroughs",
-                "gemstone": None,
-                "graha": "saturn",
-                "house": 10,
-                "hook_angle": "Hope and empowerment during extreme struggle: flipping Saturn fear into power",
-                "suggested_formula": "Contrarian Truth",
-                "target_duration_seconds": 25,
-                "recommended_3d_theme": "planet_3d",
-            },
-            {
-                "topic": "3 Signs You Have Divine Protection (Deva Kripa) in Your Birth Chart",
+                "topic": "3 Hidden Meanings If You Wake Up Between 3:00 AM and 5:00 AM",
                 "category": "psychic_and_destiny",
-                "sub_niche": "Psychic Intuition & Old Souls",
+                "sub_niche": "Psychic Intuition & Brahma Muhurta",
+                "archetype": "real_life_symptoms",
+                "point_count": 3,
+                "badge_prefix": "SIGN",
                 "gemstone": None,
                 "graha": "jupiter",
-                "house": 9,
-                "hook_angle": "High curiosity and validation: people check their chart to verify spiritual guidance",
-                "suggested_formula": "The Secret Signs",
+                "house": 12,
+                "hook_angle": "Hyper-relatable spiritual awakening symptom explaining spontaneous night wakeups",
+                "suggested_formula": "Awakening Signs",
                 "target_duration_seconds": 25,
-                "recommended_3d_theme": "sacred_yantra_3d",
+                "cinematic_visual_theme": "sacred_temple",
             },
             {
-                "topic": "3 Gemstone Mistakes That Trigger Sudden Financial Ruin",
+                "topic": "Why Your Rashi Means Nothing Without Your Birth Nakshatra and Pada",
+                "category": "vedic_foundations_basics",
+                "sub_niche": "Ancient Vedic Secrets",
+                "archetype": "contrarian_truth",
+                "point_count": 3,
+                "badge_prefix": "TRUTH",
+                "gemstone": None,
+                "graha": "moon",
+                "house": 1,
+                "hook_angle": "Contrarian truth dismantling superficial Western sun-sign astrology",
+                "suggested_formula": "Contrarian Truth",
+                "target_duration_seconds": 25,
+                "cinematic_visual_theme": "vedic_astrology_chart",
+            },
+            {
+                "topic": "Vipreet Raj Yoga: How 6th and 8th Houses Trigger Massive Power",
+                "category": "career_and_saturn",
+                "sub_niche": "Career Breakthroughs & Reversals",
+                "archetype": "karmic_mystery_deep_dive",
+                "point_count": 3,
+                "badge_prefix": "INSIGHT",
+                "gemstone": None,
+                "graha": "saturn",
+                "house": 8,
+                "hook_angle": "Transforming struggle into victory: how dusthana houses trigger sudden royal power",
+                "suggested_formula": "Karmic Mystery",
+                "target_duration_seconds": 25,
+                "cinematic_visual_theme": "vedic_astrology_chart",
+            },
+            {
+                "topic": "The 72-Hour Test: 3 Signs A Gemstone Clashes With Your Aura",
                 "category": "gemstone_energy",
-                "sub_niche": "Gemstone Energy & Hazards",
+                "sub_niche": "Gemstone Energy & Aura Harmony",
+                "archetype": "consultation_case_study",
+                "point_count": 3,
+                "badge_prefix": "LESSON",
                 "gemstone": "blue_sapphire",
                 "graha": "saturn",
                 "house": 8,
-                "hook_angle": "Shocking cautionary truth: why wearing without ascendant check destroys peace",
-                "suggested_formula": "Negative Command",
+                "hook_angle": "Crucial client consultation rule: 3 energetic warning signs to test within 72 hours",
+                "suggested_formula": "Client Case Study",
                 "target_duration_seconds": 25,
-                "recommended_3d_theme": "gemstone_3d",
+                "cinematic_visual_theme": "photorealistic_gemstone",
             },
         ]
 

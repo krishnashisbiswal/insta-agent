@@ -11,14 +11,26 @@ PEAK_WINDOWS = [
     {"name": "Morning Commute", "start": (8, 30), "post_at": (8, 45), "end": (9, 30)},
     {"name": "Lunch Break", "start": (12, 30), "post_at": (12, 45), "end": (13, 30)},
     {"name": "Evening Prime", "start": (18, 30), "post_at": (18, 45), "end": (20, 30)},
-    {"name": "Late Night Relax", "start": (21, 45), "post_at": (22, 0), "end": (22, 45)},
+    {"name": "Late Night Relax", "start": (21, 30), "post_at": (22, 0), "end": (22, 45)},
 ]
+
+
+def get_tz(timezone_str: str = "Asia/Kolkata"):
+    """Robust timezone resolver with universal UTC+5:30 fallback for IST."""
+    try:
+        import zoneinfo
+        return zoneinfo.ZoneInfo(timezone_str)
+    except Exception:
+        from datetime import timezone, timedelta
+        if timezone_str == "Asia/Kolkata":
+            return timezone(timedelta(hours=5, minutes=30), name="IST")
+        return timezone.utc
 
 
 def get_current_time(timezone_str: str = "Asia/Kolkata") -> datetime:
     """Get timezone-aware current datetime."""
     try:
-        tz = zoneinfo.ZoneInfo(timezone_str)
+        tz = get_tz(timezone_str)
         return datetime.now(tz)
     except Exception:
         return datetime.now()

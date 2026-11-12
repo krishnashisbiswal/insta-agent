@@ -70,7 +70,7 @@ class CommentAgent:
         Strict 2-3 sentence format:
         1. Empathic acknowledgement of their specific placement or birth date.
         2. Accurate astrological insight explaining what is happening karmically.
-        3. Zero-cost scriptural remedy + invitation to DM for full chart guidance.
+        3. Clarification that individualized chart analysis is needed (NO REMEDIES OR MANTRAS) + invitation to DM for full chart consultation.
         """
         is_hindi = language.lower() in ["hindi", "hi"] or any(
             ord(c) >= 0x0900 and ord(c) <= 0x097F for c in comment_text
@@ -95,8 +95,8 @@ VIEWER'S COMMENT: "{comment_text}"
 OBJECTIVES:
 1. Parse whatever birth details, zodiac sign, house, or placement they provided (e.g. DOB, Lagna, Rahu in 2nd, Saturn in 8th, etc.).
 2. Offer a genuine, accurate, 2-sentence personalized preliminary astrological reading explaining what is occurring karmically.
-3. Consultation Conversion (NO UNVERIFIED GENERIC REMEDIES): Explicitly explain that remedies must be customized based on their exact degrees, nakshatras, and Mahadasha to avoid energetic clashes.
-4. Retention Call: Urge them to send a Direct Message (DM) to book a consultation for full deep chart analysis. NEVER mention 'link in bio' or 'bio mein link hai'! ONLY DM!
+3. STRICT ZERO REMEDIES & ZERO MANTRAS MANDATE: Do NOT prescribe ANY remedy, gemstone to wear, ritual, or mantra in comments. Explicitly explain that taking internet remedies without analyzing full Kundli house placements causes energetic clashes.
+4. Retention Call: Urge them to send a Direct Message (DM) to book a personal consultation for full deep chart analysis. NEVER mention 'link in bio' or 'bio mein link hai'! ONLY DM!
 5. Max length: 45 to 65 words (ideal for Instagram comment readability).
 6. Never be arrogant or fearmongering; be deeply reassuring, insightful, and spiritually elevating.
 
@@ -110,20 +110,25 @@ Return ONLY valid JSON:
         try:
             data = generate_json(prompt)
             if data and data.get("reply_text"):
+                rep = data["reply_text"].strip()
+                if "dm" not in rep.lower():
+                    cta = data.get("consultation_cta", "सटीक परामर्श के लिए हमें DM करें।")
+                    rep = f"{rep} {cta}"
+                data["reply_text"] = rep
                 return data
         except Exception as e:
             logger.warning(f"Gemini comment analysis fallback: {e}")
 
         # Reassuring fallback reply
         if is_hindi:
-            reply = f"नमस्ते @{commenter_name}! आपकी कुंडली का यह प्रभाव महत्वपूर्ण संकेत दे रहा है। बिना सटीक डिग्री और महादशा जाने कोई भी सामान्य उपाय न करें। अपने संपूर्ण विश्लेषण और परामर्श बुक करने के लिए हमें तुरंत DM करें। 🙏✨"
+            reply = f"नमस्ते @{commenter_name}! आपकी कुंडली का यह प्रभाव महत्वपूर्ण संकेत दे रहा है। बिना संपूर्ण जन्म कुंडली और महादशा जाने कोई भी सामान्य उपाय या रत्न न अपनाएं। अपनी कुंडली की सटीक स्थिति जानने और व्यक्तिगत परामर्श के लिए हमें तुरंत DM करें। 🙏✨"
         else:
-            reply = f"Hello @{commenter_name}! This planetary placement brings key karmic shifts. Because remedies vary by exact degrees and Mahadasha, avoid generic rituals. Send us a DM to book your consultation for full analysis! 🙏✨"
+            reply = f"Hello @{commenter_name}! This planetary placement brings key karmic shifts. Because every birth chart is unique, avoid generic online remedies. Send us a Direct Message (DM) to book your personalized consultation! 🙏✨"
 
         return {
             "detected_placement": "General chart query",
             "reply_text": reply,
-            "recommended_remedy": "Mantra and lamp ritual",
+            "consultation_scope": "Full chart placement review",
         }
 
     def process_reel_comments(

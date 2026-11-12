@@ -40,7 +40,7 @@ DEFAULT_PLAYBOOK: Dict[str, Any] = {
     "daily_golden_rules": [
         "RULE 1: Lead with a shocking negative command or high-stakes warning within the first 1.5 seconds (e.g. 'Never wear Neelam on a Saturday without checking your 8th house').",
         "RULE 2: Anchor every astrological or psychic claim to a concrete life symptom (e.g. sudden financial loss, unexplainable relationship detachment, 3 AM wakeups).",
-        "RULE 3: STRICT NO-FREE-REMEDIES MANDATE IN REELS. Never give away remedies in the video. Generic online rituals backfire without knowing exact degrees and ascendant. This withholds the resolution and drives curiosity.",
+        "RULE 3: STRICT NO-FREE-REMEDIES MANDATE IN REELS. Never give away remedies in the video. Generic online rituals backfire without analyzing complete Kundli chart and planetary enemy clashes. This withholds the resolution and drives curiosity.",
         "RULE 4: ALGORITHM BOOST VIA COMMENT PLACEMENT + DM CONSULTATION. Command viewers to comment their planet placement below, and send a DM to book their consultation for full analysis. (Zero mention of bio link).",
     ],
     "winning_hooks_bank": [

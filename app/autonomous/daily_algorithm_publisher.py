@@ -64,6 +64,8 @@ class DailyAlgorithmPublisher:
         self.algo_brain = InstagramAlgorithmBrain()
         self.trend_engine = TrendDiscoveryEngine()
         self.learning_engine = SelfLearningEngine()
+        from app.analytics.reinforcement_engine import ReinforcementEvolutionEngine
+        self.reinforcement_engine = ReinforcementEvolutionEngine()
 
     def load_tracker(self) -> Dict[str, Any]:
         if not self.tracker_file.exists():
@@ -79,10 +81,38 @@ class DailyAlgorithmPublisher:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
     def has_posted_today(self, tz: str = TIMEZONE) -> bool:
-        """Check if today's single video has already been published."""
+        """
+        Check if today's single video has already been published.
+        Dual-layer verification:
+        1. Local post tracker JSON (fast disk lookup)
+        2. Live Instagram profile feed inspection (catches live posts across ephemeral runners)
+        """
         tracker = self.load_tracker()
         today_str = get_current_time(tz).strftime("%Y-%m-%d")
-        return tracker.get("last_post_date") == today_str
+        if tracker.get("last_post_date") == today_str:
+            return True
+
+        # Live Instagram account check
+        try:
+            uploader = InstagramUploader()
+            if uploader.has_direct_credentials():
+                cl = uploader._init_direct_client()
+                clips = cl.user_clips(cl.user_id, amount=1)
+                if clips:
+                    from app.autonomous.timing_engine import get_tz
+                    tz_obj = get_tz(tz)
+                    latest = clips[0]
+                    latest_dt = latest.taken_at.astimezone(tz_obj)
+                    if latest_dt.strftime("%Y-%m-%d") == today_str:
+                        logger.info(f"Verified live Reel posted on Instagram today: {latest.code} at {latest_dt.strftime('%H:%M:%S IST')}")
+                        tracker["last_post_date"] = today_str
+                        tracker["last_media_code"] = latest.code
+                        self.save_tracker(tracker)
+                        return True
+        except Exception as exc:
+            logger.debug(f"Live Instagram profile verification skipped/failed: {exc}")
+
+        return False
 
     def record_post_today(self, post_info: Dict[str, Any], tz: str = TIMEZONE) -> None:
         """Record today's completed video."""
@@ -105,6 +135,8 @@ class DailyAlgorithmPublisher:
         language: str = CONTENT_LANGUAGE,
         voice: Optional[str] = None,
         dry_run: bool = False,
+        topic_override: Optional[str] = None,
+        category: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Executes complete production of a fresh trending viral reel:
@@ -121,9 +153,7 @@ class DailyAlgorithmPublisher:
 
         # 1. Autonomous Reinforcement Learning & Self-Evolution Upgrade
         print("\n[STEP 1/6] Running autonomous reinforcement learning & policy upgrade...")
-        from app.analytics.reinforcement_engine import ReinforcementEvolutionEngine
-        rl_engine = ReinforcementEvolutionEngine()
-        rl_state = rl_engine.run_daily_autonomous_training_cycle()
+        rl_state = self.reinforcement_engine.run_daily_autonomous_training_cycle()
         algo_state = self.algo_brain.get_algorithm_state()
         print(f" -> Brain Level:      {rl_state.get('evolution_level', 2.0):.1f}")
         print(f" -> Active Policy:    {rl_state.get('policy', {}).get('trait_frameworks', [{}])[0].get('name', 'Relatable Traits Mirror')}")
@@ -131,10 +161,21 @@ class DailyAlgorithmPublisher:
 
         # 2. Hot Trending Topic Discovery (Zero Repetition)
         print("\n[STEP 2/6] Trend Discovery Engine scanning hot viral angles...")
-        trend = self.trend_engine.discover_next_viral_trend(niche=niche, language=language)
-        topic = trend.get("topic", "Stop Wearing Yellow Sapphire (Pukhraj) Until You Check This One Placement")
-        target_dur = int(trend.get("target_duration_seconds", 25))
-        self.trend_engine.record_generated_topic(trend)
+        if topic_override:
+            topic = topic_override
+            trend = {
+                "topic": topic,
+                "target_duration_seconds": 28,
+                "sub_niche": "Vedic Astrology Insights & Karmic Traps",
+                "hook_angle": "Viral Vedic insight on placements and karmic patterns",
+            }
+            target_dur = 28
+            self.trend_engine.record_generated_topic(trend)
+        else:
+            trend = self.trend_engine.discover_next_viral_trend(niche=niche, language=language, category=category)
+            topic = trend.get("topic", "Stop Wearing Yellow Sapphire (Pukhraj) Until You Check This One Placement")
+            target_dur = int(trend.get("target_duration_seconds", 25))
+            self.trend_engine.record_generated_topic(trend)
 
         print(f" -> Hot Trend Topic:  \"{topic}\"")
         if trend.get("sub_niche"):
@@ -144,10 +185,16 @@ class DailyAlgorithmPublisher:
 
         # Smart Voice & Language Switch (Zero Pronunciation Compromise)
         voice_mode = os.getenv("VOICE_MODE", "smart").lower().strip()
+        voice_engine = os.getenv("VOICE_ENGINE", "sarvam").lower().strip()
+        sarvam_key = os.getenv("SARVAM_API_KEY", "").strip()
+        sarvam_speaker = os.getenv("SARVAM_SPEAKER", "arjun").strip()
         gender = os.getenv("VOICE_GENDER", "male").lower().strip()
         smart_lang, smart_voice, script_mode = determine_smart_voice(topic=topic, voice_mode=voice_mode, gender=gender)
 
-        if voice_mode in ["hindi", "hi"]:
+        if voice_engine in ["sarvam", "sarvam_ai"] and sarvam_key:
+            active_lang = "Hindi" if voice_mode in ["hindi", "hi", "smart"] else "English"
+            active_voice = voice or f"sarvam:{sarvam_speaker}"
+        elif voice_mode in ["hindi", "hi"]:
             active_lang = "Hindi"
             active_voice = "hi-IN-MadhurNeural" if gender == "male" else "hi-IN-SwaraNeural"
         elif voice_mode in ["english", "en"]:
@@ -157,7 +204,7 @@ class DailyAlgorithmPublisher:
             active_lang = smart_lang
             active_voice = voice or smart_voice
 
-        print(f" -> Smart Switch Mode:    {voice_mode.upper()} -> {active_lang} ({active_voice})")
+        print(f" -> Voice Engine / Voice: {voice_engine.upper()} -> {active_lang} ({active_voice})")
 
         # 3. 5-Beat Viral Retention Script with Infinite Replay Loop
         print("\n[STEP 3/6] Director AI writing 5-beat retention script with Gemini...")
@@ -182,6 +229,13 @@ class DailyAlgorithmPublisher:
         )
         print(f" -> Rendered MP4:     {video_path}")
 
+        # Clean intermediate audio and frame generation chunks to save disk space
+        try:
+            from app.utils.storage_cleaner import StorageCleaner
+            StorageCleaner.clean_intermediate_generation_data()
+        except Exception as e:
+            logger.debug(f"Intermediate cleanup notice: {e}")
+
         # 6. Explore SEO Caption Optimization & Delivery
         print("\n[STEP 6/6] Packaging Explore SEO metadata and delivering to insta content/...")
         caption_res = optimize_caption(
@@ -195,7 +249,7 @@ class DailyAlgorithmPublisher:
         final_caption = caption_res["full_caption"]
         hashtags = caption_res["hashtags"]
 
-        seo_audit = verify_seo_integrity(script_data, final_caption, hashtags)
+        seo_audit = caption_res.get("seo_audit") or verify_seo_integrity(script_data, final_caption, hashtags)
         print(f" -> SEO Score:        {seo_audit['overall_seo_score']}/100 [{seo_audit['verdict']}]")
 
         dest_dir = PROJECT_ROOT / "insta content"
@@ -266,6 +320,16 @@ class DailyAlgorithmPublisher:
                     )
                     print(f" -> Instagram Post Status: {upload_res.get('status', 'OK')} [ID: {upload_res.get('media_id', 'N/A')}]")
                     res_info["instagram_upload"] = upload_res
+
+                    # Auto-purge video and intermediate broll from disk to clear space once published
+                    if upload_res.get("status") == "OK" or upload_res.get("media_id"):
+                        print("\n[STORAGE AUTO-PURGE] Video successfully published to Instagram. Purging local files to clear space...")
+                        try:
+                            from app.utils.storage_cleaner import StorageCleaner
+                            clean_stats = StorageCleaner.clean_post_publishing_data(keep_latest_reel=False)
+                            print(f" -> 🧹 Space Cleared: Reclaimed {clean_stats['freed_mb']} MB across {clean_stats['files_removed']} files.")
+                        except Exception as ce:
+                            logger.warning(f"Storage purge notice: {ce}")
                 except Exception as e:
                     print(f" -> Instagram Upload Notice: {e}. Video safely delivered to insta content/.")
                     res_info["instagram_upload_error"] = str(e)
@@ -292,6 +356,20 @@ class DailyAlgorithmPublisher:
         except Exception as e:
             logger.warning(f"Comment retention notice: {e}")
 
+        # 9. Real-Time Algorithm Feedback Ingestion & Q-Value Evolution
+        print("\n[STEP 9/9] Syncing live Instagram algorithm feedback & evolving Q-learning brain...")
+        try:
+            fb = self.reinforcement_engine.sync_live_insights_and_reward_brain(
+                seo_score=seo_audit["overall_seo_score"],
+            )
+            print(f" -> Evolved Brain Level: {fb['evolution_level']} (Q-Reward: {fb['reward_score']})")
+            overview_data["agent_evolution_level"] = fb["evolution_level"]
+            overview_data["q_reward_score"] = fb["reward_score"]
+            with open(overview_dest, "w", encoding="utf-8") as f:
+                json.dump(overview_data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            logger.warning(f"Reinforcement feedback notice: {e}")
+
         print("\n" + "=" * 75)
         print("  DAILY VIRAL REEL PRODUCTION COMPLETE!")
         print(f"  Topic:    {topic}")
@@ -301,7 +379,14 @@ class DailyAlgorithmPublisher:
 
         return res_info
 
-    def run_daily_algorithm_cycle(self, force: bool = False, tz: str = TIMEZONE, dry_run: bool = False) -> Dict[str, Any]:
+    def run_daily_algorithm_cycle(
+        self,
+        force: bool = False,
+        tz: str = TIMEZONE,
+        dry_run: bool = False,
+        topic: Optional[str] = None,
+        category: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Executes today's single video generation and scheduling based on algorithm timing.
         """
@@ -310,16 +395,37 @@ class DailyAlgorithmPublisher:
 
         if not force and not dry_run and self.has_posted_today(tz=tz):
             secs, win_name, nxt = seconds_until_next_optimal(tz)
-            print(f"[DAILY PUBLISHER] Today's video ({today_str}) has ALREADY been produced.")
+            print(f"[DAILY PUBLISHER] Today's video ({today_str}) has ALREADY been published to Instagram.")
             print(f"[DAILY PUBLISHER] Next optimal algorithm window: {nxt.strftime('%Y-%m-%d %H:%M')} ({win_name}) in {secs // 3600}h {(secs % 3600) // 60}m.")
             return {"status": "already_posted_today", "next_post_time": str(nxt)}
 
-        # Check algorithm engagement window
+        # Check algorithm engagement window and velocity score
         in_peak, peak_name = is_in_optimal_window(tz)
-        print(f"[DAILY PUBLISHER] Checking Instagram Algorithm State: {peak_name} ({'PEAK ALGORITHM WINDOW' if in_peak else 'PREPARATION WINDOW'})")
+        algo_state = self.algo_brain.get_algorithm_state(tz)
+        velocity_score = algo_state.get("algorithm_velocity_score", 50.0)
+        active_phase = algo_state.get("active_phase", "General")
+
+        print(f"[DAILY PUBLISHER] Instagram Algorithm Status: {peak_name} (Velocity: {velocity_score}/100, Phase: {active_phase})")
+
+        # Off-peak protection: If scheduled run triggers off-peak and velocity is low, defer to next peak window
+        if not force and not dry_run and not in_peak and velocity_score < 75.0:
+            secs, win_name, nxt = seconds_until_next_optimal(tz)
+            print(f"[DAILY PUBLISHER] ⚠️ Current time is in off-peak indexing window ({active_phase}).")
+            print(f"[DAILY PUBLISHER] ⏰ Next high-velocity window: {win_name} at {nxt.strftime('%Y-%m-%d %H:%M %Z')} (in {secs // 3600}h {(secs % 3600) // 60}m).")
+            print(f"[DAILY PUBLISHER] Pass --force to override algorithm gating or trigger during scheduled peak.")
+            return {
+                "status": "off_peak_deferred",
+                "current_velocity_score": velocity_score,
+                "next_optimal_time": str(nxt),
+                "next_window_name": win_name,
+            }
 
         # Produce today's high-retention reel
-        result = self.produce_trending_reel(dry_run=dry_run)
+        result = self.produce_trending_reel(
+            dry_run=dry_run,
+            topic_override=topic,
+            category=category,
+        )
 
         # Record in daily tracker only if live published
         if not dry_run:
@@ -373,7 +479,16 @@ if __name__ == "__main__":
     parser.add_argument("--daemon", action="store_true", help="Run 24/7 continuous autonomous server daemon")
     parser.add_argument("--voice-mode", choices=["smart", "hindi", "english"], default=None, help="Smart Voice Switch mode")
     parser.add_argument("--gender", choices=["male", "female"], default=None, help="Voice gender")
+    parser.add_argument("--topic", type=str, default=None, help="Specific topic override")
+    parser.add_argument("--category", type=str, default=None, help="Specific category override")
+    parser.add_argument("--clean-space", action="store_true", help="Clean up intermediate audio chunks, temporary frame renders, and cached files to clear disk space")
     args = parser.parse_args()
+
+    if args.clean_space:
+        from app.utils.storage_cleaner import StorageCleaner
+        res = StorageCleaner.clean_intermediate_generation_data()
+        print(f"\n[STORAGE CLEANER] Successfully cleaned {res['files_removed']} intermediate files, freed {res['freed_mb']} MB.")
+        sys.exit(0)
 
     if args.voice_mode:
         os.environ["VOICE_MODE"] = args.voice_mode
@@ -384,4 +499,9 @@ if __name__ == "__main__":
     if args.daemon:
         publisher.run_continuous_daemon()
     else:
-        publisher.run_daily_algorithm_cycle(force=args.force, dry_run=args.dry_run)
+        publisher.run_daily_algorithm_cycle(
+            force=args.force,
+            dry_run=args.dry_run,
+            topic=args.topic,
+            category=args.category,
+        )

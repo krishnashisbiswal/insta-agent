@@ -20,6 +20,7 @@ httpx>=0.27.0
 # HTTP & Official Meta Graph API Integration
 requests>=2.31.0
 urllib3>=2.0.0
+instagrapi>=2.1.3
 
 # Configuration, Serialization & Security
 python-dotenv>=1.0.0
@@ -28,6 +29,7 @@ email-validator>=2.0.0
 cryptography>=42.0.0
 pyjwt>=2.8.0
 bcrypt>=4.1.0
+tzdata>=2024.1
 
 # Multi-Tenant SaaS, Database & API
 sqlalchemy>=2.0.25

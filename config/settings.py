@@ -86,8 +86,8 @@ DEFAULT_FONT_PATH = "C:/Windows/Fonts/arialbd.ttf"
 FALLBACK_FONT_PATH = "C:/Windows/Fonts/arial.ttf"
 IMPACT_FONT_PATH = "C:/Windows/Fonts/impact.ttf"
 
-# Voice settings (edge-tts & ElevenLabs)
-# Ultra-realistic neural voices with expressive human intonation
+# Voice settings (edge-tts & Sarvam AI)
+# Ultra-realistic neural voices with expressive Indian human intonation
 VOICE_MAP = {
     "hindi": "hi-IN-MadhurNeural",              # Deep, authoritative, native Indian Vedic male voice
     "hindi_male": "hi-IN-MadhurNeural",
@@ -102,12 +102,15 @@ VOICE_MAP = {
 }
 DEFAULT_VOICE = os.getenv("DEFAULT_VOICE", "hi-IN-MadhurNeural")
 
-# Voice engine selector: "elevenlabs" (Studio quality) with automatic fallback to "edge_neural"
-VOICE_ENGINE = os.getenv("VOICE_ENGINE", "elevenlabs").strip().lower()
+# Voice engine selector: "sarvam" (Sarvam AI Arjun) with automatic fallback to "edge_neural"
+VOICE_ENGINE = os.getenv("VOICE_ENGINE", "sarvam").strip().lower()
 
-# Optional ElevenLabs ultra-realistic human voice API
-ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "").strip()
-ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "pNInz6obpgDQGcFmaJgB").strip()
+# Sarvam AI - Indian Native Expressive Voice Engine (Arjun speaker)
+# Sign up at dashboard.sarvam.ai for ₹100 free developer credits (zero monthly subscription)
+SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "").strip()
+SARVAM_SPEAKER = os.getenv("SARVAM_SPEAKER", "arjun").strip()
+SARVAM_MODEL = os.getenv("SARVAM_MODEL", "bulbul:v4-flash").strip()
+SARVAM_PACE = float(os.getenv("SARVAM_PACE", "1.00"))
 
 # Brand watermark for Instagram reels
 BRAND_WATERMARK = os.getenv("BRAND_WATERMARK", "@neovibestore.in").strip()

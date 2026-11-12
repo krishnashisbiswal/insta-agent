@@ -2,13 +2,19 @@ name: Daily Autonomous Instagram Reel Publisher
 
 on:
   schedule:
-    # 13:15 UTC = 18:45 IST (Peak Instagram Algorithm Evening Velocity)
-    - cron: '15 13 * * *'
+    # 03:00 UTC = 08:30 IST (Morning Devotion - Pre-generates at 08:30, ready for 09:00 peak)
+    - cron: '0 3 * * *'
+    # 07:00 UTC = 12:30 IST (Lunch Break - Pre-generates at 12:30, ready for 13:00 peak)
+    - cron: '0 7 * * *'
+    # 13:00 UTC = 18:30 IST (Prime Evening Surge - Pre-generates at 18:30, ready for 19:15 golden peak)
+    - cron: '0 13 * * *'
+    # 16:00 UTC = 21:30 IST (Late Night Relax - Pre-generates at 21:30, ready for 22:00 peak)
+    - cron: '0 16 * * *'
   workflow_dispatch:
     inputs:
       force:
-        description: 'Force publish today (bypasses daily frequency limiter)'
-        required: true
+        description: 'Force publish today (bypasses daily frequency limiter & timing gate)'
+        required: false
         default: 'false'
         type: choice
         options:
@@ -35,16 +41,11 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Verify FFmpeg
+      - name: Verify FFmpeg and Fonts
         run: |
-          if ! command -v ffmpeg &> /dev/null; then
-            echo "Installing ffmpeg..."
-            sudo apt-get update -o Acquire::http::Timeout="10" -o Acquire::Retries="2" || true
-            sudo apt-get install -y --no-install-recommends -o Acquire::http::Timeout="10" ffmpeg || true
-          else
-            echo "FFmpeg is already pre-installed on runner:"
-            ffmpeg -version | head -n 1
-          fi
+          sudo apt-get update -o Acquire::http::Timeout="10" -o Acquire::Retries="2" || true
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-core fonts-deva || true
+          ffmpeg -version | head -n 1
 
       - name: Install Python Dependencies
         run: |
@@ -58,15 +59,32 @@ jobs:
           INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
           INSTAGRAM_SESSION_ID: ${{ secrets.INSTAGRAM_SESSION_ID }}
           INSTAGRAM_SESSION_DATA: ${{ secrets.INSTAGRAM_SESSION_DATA }}
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-          VOICE_ENGINE: "edge_neural"
+          SARVAM_API_KEY: ${{ secrets.SARVAM_API_KEY }}
+          SARVAM_SPEAKER: "arjun"
+          SARVAM_MODEL: "bulbul:v4-flash"
+          SARVAM_PACE: "1.00"
+          VOICE_ENGINE: "sarvam"
           VOICE_MODE: "smart"
           VOICE_GENDER: "male"
           BRAND_WATERMARK: "@neodivinestore.in"
           TIMEZONE: "Asia/Kolkata"
         run: |
-          python app/autonomous/daily_algorithm_publisher.py --force
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then
+            echo "⚡ Manual forced publication requested by operator."
+            python app/autonomous/daily_algorithm_publisher.py --force
+          else
+            echo "🤖 Autonomous algorithmic run - Agent Brain evaluating optimal window & daily limit."
+            python app/autonomous/daily_algorithm_publisher.py
+          fi
+
+      - name: Commit Tracking History & State
+        if: success()
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f storage/daily_post_tracker.json storage/trend_history.json storage/algorithm_intelligence.json 2>/dev/null || true
+          git commit -m "chore(autonomous): sync post tracker & trend history [skip ci]" || echo "No tracking changes to commit"
+          git push || echo "Push skipped or not needed"
 
       - name: Save Generated Reel Package as Artifact
         if: always()

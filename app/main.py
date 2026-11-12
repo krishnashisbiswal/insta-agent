@@ -25,12 +25,16 @@ from app.agents.caption_agent import optimize_caption
 from app.agents.gemini_client import check_health
 from app.agents.script_agent import generate_reel
 from app.analytics.audit_agent import audit_profile
+from app.analytics.seo_optimizer import generate_seo_metadata
 from app.instagram.uploader import InstagramUploader, upload_or_preview_reel
 from app.research.trend_agent import research_viral_ideas
+from app.video.cinematic_composer import create_cinematic_reel_video
+from app.video.preflight_checker import PreFlightQualityGate, format_preflight_report
 from app.video.tts_engine import generate_speech
 from app.video.video_composer import create_reel_video
 from config.settings import (
     AUDIO_DIR,
+    CONTENT_LANGUAGE,
     DEFAULT_GEMINI_MODEL,
     OUTPUT_DIR,
     REELS_DIR,
@@ -77,13 +81,20 @@ def run_full_pipeline(
     print(f"Auto-Upload:  {'YES' if upload else 'NO (Local Only)'}")
     print("-" * 70)
 
-    # STEP 1: GENERATE SCRIPT & HOOKS WITH GEMINI
-    print("\n[STEP 1/5] Generating Reel script & hook options with Gemini...")
+    # STEP 1: EXTRACT INSTAGRAM EXPLORE SEO & GENERATE SCRIPT
+    print("\n[STEP 1/5] Extracting Instagram Explore SEO keywords & generating script...")
+    seo_metadata = generate_seo_metadata(topic=topic, niche=niche)
+    keywords = seo_metadata.get("primary_search_keywords", [])
+    print(f" -> High-Volume SEO Keywords: {', '.join(keywords) if keywords else 'Auto-indexed'}")
+    print(f" -> Retention Loop Hook:      \"{seo_metadata.get('loop_closing_phrase', '')}\"")
+    print(f" -> Save/Share Trigger:       \"{seo_metadata.get('save_trigger_reason', '')}\"")
+
     script_data = generate_reel(
         topic=topic,
         niche=niche,
         language=language,
         duration=duration,
+        seo_metadata=seo_metadata,
     )
 
     hook = script_data["selected_hook"]
@@ -93,45 +104,46 @@ def run_full_pipeline(
     print(f"    Score:     {hook.get('score', 'N/A')}/100 [{hook.get('verdict', 'OK')}]")
     print(f"    Scenes:    {len(script_data['scenes'])} scenes generated")
 
-    # STEP 2: GENERATE NEURAL VOICEOVER AUDIO
-    print("\n[STEP 2/5] Generating neural voiceover audio...")
-    audio_meta = generate_speech(
-        text=script_data["full_script"],
+    # STEP 2: COMPOSE 1080x1920 CINEMATIC REEL (PER-SCENE AUDIO + 4K B-ROLL + SACRED SOUND DESIGN)
+    print("\n[STEP 2/5] Composing 1080x1920 Cinematic Reel with frame-synced audio & 4K visuals...")
+    video_path = create_cinematic_reel_video(
+        script_data=script_data,
         voice=voice,
     )
-    audio_path = audio_meta["audio_path"]
-    actual_duration = audio_meta["duration"]
-    print(f" -> Voiceover generated successfully!")
-    print(f"    Voice:    {audio_meta['voice']}")
-    print(f"    Duration: {actual_duration:.2f} seconds")
-    print(f"    Audio:    {audio_path}")
-
-    # STEP 3: ASSEMBLE 1080x1920 VERTICAL REEL VIDEO
-    print("\n[STEP 3/5] Composing and rendering 1080x1920 vertical Reel video...")
-    video_path = create_reel_video(
-        script_data=script_data,
-        audio_path=audio_path,
-        theme_name=theme_name,
-    )
-    print(f" -> Video rendered successfully!")
+    print(f" -> Cinematic Video rendered successfully!")
     print(f"    File: {video_path}")
 
-    # STEP 4: OPTIMIZE CAPTION & HASHTAGS
-    print("\n[STEP 4/5] Optimizing Instagram caption for maximum reach...")
+    # STEP 3: OPTIMIZE CAPTION & HASHTAGS
+    print("\n[STEP 3/5] Optimizing Instagram caption for maximum reach & SEO indexing...")
+    top_kw = keywords[0] if keywords else None
     caption_res = optimize_caption(
         topic=topic,
         script_hook=hook["spoken"],
         draft_caption=script_data["caption"],
         niche=niche,
+        target_keyword=top_kw,
+        script_data=script_data,
+        language=language,
     )
     final_caption = caption_res["full_caption"]
+    hashtags = seo_metadata.get("recommended_hashtags") or caption_res["hashtags"]
     print(f" -> Caption ready!")
     print(f"    First line: \"{caption_res['visible_first_line']}\"")
-    print(f"    Hashtags:   {' '.join(caption_res['hashtags'])}")
+    print(f"    Hashtags:   {' '.join(hashtags)}")
+
+    # STEP 4: PRE-FLIGHT QUALITY VERIFICATION & ALGORITHM TIMING AUDIT
+    print("\n[STEP 4/5] Executing Pre-Flight Quality Gate & Algorithm Timing Audit...")
+    preflight_report = PreFlightQualityGate.verify_content_package(
+        video_path=video_path,
+        script_data=script_data,
+        caption=final_caption,
+        hashtags=hashtags,
+    )
+    print(format_preflight_report(preflight_report))
 
     # STEP 5: INSTAGRAM UPLOAD / DRY RUN
     if upload and not force_dry_run:
-        print("\n[STEP 5/5] Publishing directly to Instagram via Meta Graph API...")
+        print("\n[STEP 5/5] Publishing directly to Instagram...")
         upload_result = upload_or_preview_reel(
             video_path=video_path,
             caption=final_caption,
@@ -146,20 +158,19 @@ def run_full_pipeline(
         )
 
     manifest = {
-        "status": "COMPLETED",
+        "status": "PUBLISHED" if (upload_result and upload_result.get("success") and not upload_result.get("mode") == "DRY_RUN") else "COMPLETED",
         "topic": topic,
         "niche": niche,
         "language": language,
         "video_path": str(video_path),
-        "audio_path": audio_path,
         "script_summary": {
             "hook": hook["spoken"],
             "on_screen_hook": hook["on_screen"],
             "hook_score": hook.get("score"),
             "scenes": len(script_data["scenes"]),
-            "duration": round(actual_duration, 2),
         },
         "caption": final_caption,
+        "preflight_audit": preflight_report,
         "upload_result": upload_result,
     }
 
@@ -171,10 +182,11 @@ def run_full_pipeline(
     print("                 PIPELINE COMPLETED SUCCESSFULLY!")
     print("=" * 70)
     print(f"Video MP4:      {video_path}")
-    print(f"Voiceover MP3:  {audio_path}")
     print(f"Result JSON:    {manifest_file}")
     if upload_result and upload_result.get("success"):
         print(f"Published ID:   {upload_result.get('media_id')}")
+        if upload_result.get("media_url"):
+            print(f"Live Reel URL:  {upload_result.get('media_url')}")
     print("=" * 70 + "\n")
 
     return manifest
@@ -190,7 +202,7 @@ def main():
     run_parser = subparsers.add_parser("run", help="Run complete generation & upload pipeline")
     run_parser.add_argument("--topic", "-t", type=str, required=True, help="Topic for the Reel")
     run_parser.add_argument("--niche", "-n", type=str, default="Vedic astrology", help="Content niche")
-    run_parser.add_argument("--lang", "-l", type=str, default="Hindi mixed with English", help="Script language")
+    run_parser.add_argument("--lang", "-l", type=str, default=CONTENT_LANGUAGE, help="Script language")
     run_parser.add_argument("--duration", "-d", type=int, default=30, help="Target duration in seconds")
     run_parser.add_argument(
         "--theme",

@@ -126,14 +126,14 @@ def generate_text(
                     )
                     break
 
-                # Transient error codes: 429 (RPM throttle), 500 (Internal), 503 (Unavailable)
-                if exc.code in (429, 500, 503) and attempt < (GEMINI_MAX_RETRIES - 1):
-                    wait_time = 3 if exc.code == 429 else 1
+                # Transient error codes: 429 (RPM throttle), 500 (Internal), 502 (Bad Gateway), 503 (Unavailable), 504 (Deadline Exceeded)
+                if exc.code in (429, 500, 502, 503, 504) and attempt < (GEMINI_MAX_RETRIES - 1):
+                    wait_time = 3 if exc.code == 429 else 2
                     logger.warning(
                         f"Model {target_model} temporary error ({exc.code}). Retrying in {wait_time}s..."
                     )
                     time.sleep(wait_time)
-                elif exc.code in (404, 429, 500, 503):
+                elif exc.code in (404, 429, 500, 502, 503, 504):
                     logger.warning(
                         f"Model {target_model} failed with code {exc.code}. Falling back to next available model..."
                     )
