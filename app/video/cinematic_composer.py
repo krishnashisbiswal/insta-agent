@@ -538,7 +538,8 @@ def create_cinematic_scene_clip(
     - Dynamic 2-beat kinetic subtitles with full native color emojis
     """
     # 1. Load and prep source image
-    src_img = Image.open(image_path).convert("RGB")
+    with Image.open(image_path) as loaded_img:
+        src_img = loaded_img.convert("RGB")
     src_w, src_h = src_img.size
 
     target_ratio = width / height

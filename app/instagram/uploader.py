@@ -17,6 +17,7 @@ from config.settings import (
     IG_SESSION_FILE,
     INSTAGRAM_ACCESS_TOKEN,
     INSTAGRAM_PASSWORD,
+    INSTAGRAM_SESSION_DATA,
     INSTAGRAM_SESSION_ID,
     INSTAGRAM_UPLOAD_METHOD,
     INSTAGRAM_USER_ID,
@@ -41,19 +42,26 @@ class InstagramUploader:
         username: Optional[str] = None,
         password: Optional[str] = None,
         session_id: Optional[str] = None,
+        session_data: Optional[str] = None,
         user_id: Optional[str] = None,
         access_token: Optional[str] = None,
     ):
-        self.username = (username or INSTAGRAM_USERNAME).strip()
-        self.password = (password or INSTAGRAM_PASSWORD).strip()
-        self.session_id = (session_id or INSTAGRAM_SESSION_ID).strip()
-        self.user_id = (user_id or INSTAGRAM_USER_ID).strip()
-        self.access_token = (access_token or INSTAGRAM_ACCESS_TOKEN).strip()
+        self.username = (username if username is not None else INSTAGRAM_USERNAME).strip()
+        self.password = (password if password is not None else INSTAGRAM_PASSWORD).strip()
+        self.session_id = (session_id if session_id is not None else INSTAGRAM_SESSION_ID).strip()
+        self.session_data = (
+            session_data
+            if session_data is not None
+            else (INSTAGRAM_SESSION_DATA or os.getenv("INSTAGRAM_SESSION_DATA", ""))
+        ).strip()
+        self.user_id = (user_id if user_id is not None else INSTAGRAM_USER_ID).strip()
+        self.access_token = (access_token if access_token is not None else INSTAGRAM_ACCESS_TOKEN).strip()
         self._instagrapi_client = None
 
     def has_direct_credentials(self) -> bool:
-        """Check if Direct Instagram account credentials are configured."""
-        return bool((self.username and self.password) or self.session_id)
+        """Check if Direct Instagram account credentials or session are configured."""
+        has_session = bool(self.session_id or self.session_data or IG_SESSION_FILE.exists())
+        return bool((self.username and self.password) or has_session)
 
     def has_graph_credentials(self) -> bool:
         """Check if Meta Graph API credentials are configured."""
@@ -90,8 +98,8 @@ class InstagramUploader:
         cl.delay_range = [1, 3]
 
         # Check if full session data was passed via environment variable (e.g. GitHub Actions)
-        session_data_env = os.getenv("INSTAGRAM_SESSION_DATA", "").strip()
-        if session_data_env and not IG_SESSION_FILE.exists():
+        session_data_env = self.session_data or os.getenv("INSTAGRAM_SESSION_DATA", "").strip()
+        if session_data_env and (not IG_SESSION_FILE.exists() or IG_SESSION_FILE.stat().st_size == 0):
             try:
                 IG_SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
                 IG_SESSION_FILE.write_text(session_data_env, encoding="utf-8")
@@ -128,7 +136,10 @@ class InstagramUploader:
             print(f"[INSTAGRAM DIRECT] Authenticating @{self.username}...")
             cl.login(self.username, self.password)
         else:
-            raise RuntimeError("Missing INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD in .env or GitHub Secrets")
+            raise RuntimeError(
+                "Missing valid Instagram credentials. Provide INSTAGRAM_SESSION_DATA, INSTAGRAM_SESSION_ID, "
+                "or INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD in .env or GitHub Secrets"
+            )
 
         # Save session to avoid repeated logins
         try:

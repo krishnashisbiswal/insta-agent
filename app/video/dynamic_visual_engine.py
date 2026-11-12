@@ -499,7 +499,8 @@ class DynamicVisualEngine:
                 if matched:
                     cand = matched[0]
                     if cand.stat().st_size > 30000 and not cls.is_image_used(cand) and cand not in used_images:
-                        img = Image.open(cand).convert("RGB")
+                        with Image.open(cand) as opened_img:
+                            img = opened_img.convert("RGB")
                         cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
                         cls.save_clean_photographic_image(cropped, target_file, quality=95)
                         cls.register_used_image(target_file)
@@ -518,7 +519,8 @@ class DynamicVisualEngine:
                 data = resp.read()
 
             if len(data) > 12000:
-                img = Image.open(io.BytesIO(data)).convert("RGB")
+                with Image.open(io.BytesIO(data)) as opened_img:
+                    img = opened_img.convert("RGB")
                 cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
                 cls.save_clean_photographic_image(cropped, target_file, quality=95)
                 if not cls.is_image_used(target_file):

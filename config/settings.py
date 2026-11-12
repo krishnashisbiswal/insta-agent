@@ -53,6 +53,7 @@ INSTAGRAM_UPLOAD_METHOD = os.getenv("INSTAGRAM_UPLOAD_METHOD", "auto").strip().l
 INSTAGRAM_USERNAME = os.getenv("INSTAGRAM_USERNAME", "").strip()
 INSTAGRAM_PASSWORD = os.getenv("INSTAGRAM_PASSWORD", "").strip()
 INSTAGRAM_SESSION_ID = os.getenv("INSTAGRAM_SESSION_ID", "").strip()
+INSTAGRAM_SESSION_DATA = os.getenv("INSTAGRAM_SESSION_DATA", "").strip()
 IG_SESSION_FILE = STORAGE_DIR / "instagram_session.json"
 
 # Official Meta Graph API Credentials
