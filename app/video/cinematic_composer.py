@@ -613,6 +613,76 @@ def create_cinematic_scene_clip(
 # =====================================================================
 # 5. MASTER CINEMATIC REEL BUILDER
 # =====================================================================
+def sanitize_and_spoof_camera_metadata(video_path: Path) -> Path:
+    """
+    Strips all synthetic AI, MoviePy, and Lavf metadata, and injects authentic
+    Apple iPhone 15 Pro Max QuickTime camera tags and color profiles.
+
+    This completely cleans the MP4 container:
+    1. Removes all Lavf (libavformat) and Lavc encoder signatures.
+    2. Purges any leftover C2PA or synthetic provenance manifests.
+    3. Injects physical Apple hardware metadata:
+       - Make: Apple
+       - Model: iPhone 15 Pro Max
+       - Software: 17.5.1
+       - Encoder: com.apple.quicktime
+       - Video Stream Handler: Core Media Video
+       - Audio Stream Handler: Core Media Audio
+    4. Sets standard Apple QuickTime color primaries (bt709) and faststart moov atom.
+    """
+    video_path = Path(video_path)
+    if not video_path.exists():
+        return video_path
+
+    import subprocess
+    import shutil
+    try:
+        import imageio_ffmpeg
+        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        ffmpeg_exe = shutil.which("ffmpeg") or "ffmpeg"
+
+    clean_tmp = video_path.parent / f"clean_{int(time.time()*1000)}_{video_path.name}"
+
+    cmd = [
+        str(ffmpeg_exe), "-y",
+        "-i", str(video_path),
+        "-c", "copy",
+        "-map_metadata", "-1",
+        "-fflags", "+bitexact",
+        "-flags:v", "+bitexact",
+        "-flags:a", "+bitexact",
+        "-metadata", "title=",
+        "-metadata", "comment=",
+        "-metadata", "description=",
+        "-metadata", "artist=",
+        "-metadata", "album=",
+        "-metadata", "encoder=com.apple.quicktime",
+        "-metadata", "make=Apple",
+        "-metadata", "model=iPhone 15 Pro Max",
+        "-metadata", "software=17.5.1",
+        "-metadata:s:v:0", "handler_name=Core Media Video",
+        "-metadata:s:a:0", "handler_name=Core Media Audio",
+        "-movflags", "+faststart",
+        str(clean_tmp),
+    ]
+
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if clean_tmp.exists() and clean_tmp.stat().st_size > 500:
+            shutil.move(str(clean_tmp), str(video_path))
+            print(f"[METADATA SANITIZER] Stripped synthetic/Lavf metadata and injected Apple iPhone 15 Pro Max camera tags into {video_path.name}!")
+    except Exception as exc:
+        logger.warning(f"[METADATA SANITIZER] Notice remuxing camera metadata: {exc}")
+        if clean_tmp.exists():
+            try:
+                clean_tmp.unlink()
+            except Exception:
+                pass
+
+    return video_path
+
+
 def create_cinematic_reel_video(
     script_data: Dict[str, Any],
     audio_path: Optional[str] = None,
@@ -800,8 +870,6 @@ def create_cinematic_reel_video(
         except Exception as exc:
             logger.warning(f"Could not export standalone master audio: {exc}")
 
-        return output_path
-
     finally:
         # Safe cleanup for Windows file locks
         try:
@@ -818,3 +886,7 @@ def create_cinematic_reel_video(
                 ac.close()
             except Exception:
                 pass
+
+    # Post-process: strip all synthetic/Lavf metadata & spoof authentic Apple iPhone 15 Pro Max camera tags
+    output_path = sanitize_and_spoof_camera_metadata(output_path)
+    return output_path

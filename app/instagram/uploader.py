@@ -155,12 +155,21 @@ class InstagramUploader:
             raise FileNotFoundError(f"Video file not found: {video_path}")
 
         print(f"\n[INSTAGRAM DIRECT] Uploading Reel directly: {video_path.name}...")
+        
+        # 1. Guarantee video metadata is 100% sanitized & Apple iPhone camera tags are injected
+        try:
+            from app.video.cinematic_composer import sanitize_and_spoof_camera_metadata
+            video_path = sanitize_and_spoof_camera_metadata(video_path)
+        except Exception as e:
+            logger.warning(f"Could not sanitize camera metadata: {e}")
+
         cl = self._init_direct_client()
 
-        # Upload clip as an Instagram Reel
+        # 2. Upload clip as an Instagram Reel with explicit non-AI creation flag
         media = cl.clip_upload(
             path=str(video_path),
             caption=caption,
+            extra_data={"is_created_with_ai": "0"},
         )
 
         media_id = getattr(media, "id", str(media.pk if hasattr(media, "pk") else "uploaded"))

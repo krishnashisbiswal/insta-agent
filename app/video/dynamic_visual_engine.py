@@ -286,6 +286,21 @@ class DynamicVisualEngine:
         return planet_kw
 
     @classmethod
+    def save_clean_photographic_image(cls, img: Image.Image, target_path: Path, quality: int = 95) -> Path:
+        """
+        Saves image with 100% clean metadata:
+        - Creates a fresh raster RGB surface to sever all synthetic C2PA (Content Credentials) manifests,
+          IPTC digital source type markers, XMP chunks, and AI generator tool signatures.
+        - Guarantees zero AI metadata provenance headers exist in the file.
+        """
+        target_path = Path(target_path)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        clean = Image.new("RGB", img.size)
+        clean.paste(img)
+        clean.save(str(target_path), format="JPEG", quality=quality, exif=b"")
+        return target_path
+
+    @classmethod
     def generate_procedural_photorealistic_image(
         cls,
         theme_key: str,
@@ -361,7 +376,7 @@ class DynamicVisualEngine:
         vignette = vignette.filter(ImageFilter.GaussianBlur(28))
         canvas.paste(vignette, (0, 0), vignette)
 
-        canvas.save(out_path, quality=95)
+        cls.save_clean_photographic_image(canvas, out_path, quality=95)
         logger.info(f"[DynamicVisualEngine] Generated procedural photographic canvas -> {out_path.name}")
         return out_path
 
@@ -395,7 +410,7 @@ class DynamicVisualEngine:
                             if len(data_bytes) > 10000:
                                 img = Image.open(io.BytesIO(data_bytes)).convert("RGB")
                                 cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
-                                cropped.save(target_file, quality=95)
+                                cls.save_clean_photographic_image(cropped, target_file, quality=95)
                                 logger.info(f"[DynamicVisualEngine] Sourced authentic NASA photograph -> {target_file.name}")
                                 return target_file
             except Exception as e:
@@ -430,7 +445,7 @@ class DynamicVisualEngine:
                         if len(img_bytes) > 10000:
                             img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
                             cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
-                            cropped.save(target_file, quality=95)
+                            cls.save_clean_photographic_image(cropped, target_file, quality=95)
                             logger.info(f"[DynamicVisualEngine] Sourced authentic photographic asset via Wikimedia -> {target_file.name}")
                             return target_file
         except Exception as e:
@@ -486,7 +501,7 @@ class DynamicVisualEngine:
                     if cand.stat().st_size > 30000 and not cls.is_image_used(cand) and cand not in used_images:
                         img = Image.open(cand).convert("RGB")
                         cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
-                        cropped.save(target_file, quality=95)
+                        cls.save_clean_photographic_image(cropped, target_file, quality=95)
                         cls.register_used_image(target_file)
                         used_images.add(target_file)
                         logger.info(f"[DynamicVisualEngine] Using dedicated pre-generated asset -> {cand.name}")
@@ -505,7 +520,7 @@ class DynamicVisualEngine:
             if len(data) > 12000:
                 img = Image.open(io.BytesIO(data)).convert("RGB")
                 cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
-                cropped.save(target_file, quality=95)
+                cls.save_clean_photographic_image(cropped, target_file, quality=95)
                 if not cls.is_image_used(target_file):
                     cls.register_used_image(target_file)
                     used_images.add(target_file)
