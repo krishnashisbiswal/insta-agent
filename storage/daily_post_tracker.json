@@ -1,13 +1,39 @@
 {
   "last_post_date": "2026-11-13",
-  "total_posts": 1,
+  "total_posts": 2,
   "history": [
     {
+      "date": "2026-11-12",
+      "timestamp": 1794488150,
+      "topic": "5 deadly mistakes when wearing Pukhraj (Yellow Sapphire) that trigger sudden financial ruin",
+      "seo_score": 98.0,
+      "media_id": "4028810505692432835_30700917740",
+      "media_code": "DfpNc8zKMnD",
+      "media_url": "https://www.instagram.com/reel/DfpNc8zKMnD/"
+    },
+    {
       "date": "2026-11-13",
-      "timestamp": 1794582624,
-      "topic": "The Hidden Nakshatra Code Behind Sudden Wealth Collapse and Unexplained Money Blockages",
+      "timestamp": 1794593114,
+      "topic": "Consultation Case Study: Why a client wearing Blue Sapphire (Neelam) suffered sudden financial collapse due to hidden Shani-Rahu enemy clashes.",
       "seo_score": 100.0,
-      "video_path": "/home/runner/work/insta-agent/insta-agent/insta content/viral_reel_video.mp4"
+      "media_id": "4029661281612490825_30700917740",
+      "media_code": "DfsO5XnqGhJ",
+      "media_url": "https://www.instagram.com/reel/DfsO5XnqGhJ/",
+      "video_path": "C:\\Users\\KRISHNA\\Desktop\\agent\\insta content\\viral_reel_video.mp4"
     }
-  ]
+  ],
+  "2026-11-12": {
+    "published_at": "2026-11-12 19:25:31",
+    "media_id": "4028810505692432835_30700917740",
+    "media_code": "DfpNc8zKMnD",
+    "media_url": "https://www.instagram.com/reel/DfpNc8zKMnD/",
+    "topic": "5 deadly mistakes when wearing Pukhraj (Yellow Sapphire) that trigger sudden financial ruin"
+  },
+  "2026-11-13": {
+    "published_at": "2026-11-13 23:35:14",
+    "media_id": "4029661281612490825_30700917740",
+    "media_code": "DfsO5XnqGhJ",
+    "media_url": "https://www.instagram.com/reel/DfsO5XnqGhJ/",
+    "topic": "Consultation Case Study: Why a client wearing Blue Sapphire (Neelam) suffered sudden financial collapse due to hidden Shani-Rahu enemy clashes."
+  }
 }

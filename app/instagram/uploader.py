@@ -101,8 +101,17 @@ class InstagramUploader:
         session_data_env = self.session_data or os.getenv("INSTAGRAM_SESSION_DATA", "").strip()
         if session_data_env and (not IG_SESSION_FILE.exists() or IG_SESSION_FILE.stat().st_size == 0):
             try:
+                raw_json = session_data_env
+                if not session_data_env.startswith("{"):
+                    try:
+                        import base64
+                        decoded = base64.b64decode(session_data_env).decode("utf-8")
+                        if decoded.startswith("{"):
+                            raw_json = decoded
+                    except Exception:
+                        pass
                 IG_SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
-                IG_SESSION_FILE.write_text(session_data_env, encoding="utf-8")
+                IG_SESSION_FILE.write_text(raw_json, encoding="utf-8")
                 print(f"[INSTAGRAM DIRECT] Restored session file from INSTAGRAM_SESSION_DATA.")
             except Exception as e:
                 logger.warning(f"Failed restoring session data: {e}")

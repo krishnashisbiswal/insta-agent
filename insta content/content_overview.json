@@ -1,27 +1,27 @@
 {
-  "topic": "5 deadly mistakes when wearing Pukhraj (Yellow Sapphire) that trigger sudden financial ruin",
+  "topic": "Consultation Case Study: Why a client wearing Blue Sapphire (Neelam) suffered sudden financial collapse due to hidden Shani-Rahu enemy clashes.",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 5.4,
+  "agent_evolution_level": 5.5,
   "hook": {
-    "id": "hook_1",
+    "id": "cost_confession",
     "name": "Cost Confession",
-    "spoken": "पैंतालीस लाख का भारी नुकसान हुआ जब हमारे क्लाइंट ने बिना कुंडली दिखाए पुखराज पहना।",
-    "on_screen": "FORTY FIVE LAKHS LOST",
-    "why_it_works": "Uses a verified client case study with a specific financial loss amount to instantly trigger high curiosity and caution about gemstone wearing.",
+    "spoken": "पैंतालीस लाख का भारी नुकसान हुआ हमारे क्लाइंट को गलत नीलम पहनने से।",
+    "on_screen": "45 LAKHS LOST FROM NEELAM",
+    "why_it_works": "Uses a specific high-value financial cost to demonstrate the catastrophic danger of hidden Shani-Rahu enemy clashes.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
-        "score": 80,
-        "detail": "4 words, 21 chars, ~1.5s spoken (want 5-12 words)"
+        "score": 100.0,
+        "detail": "5 words, 25 chars, ~1.8s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 100.0,
-        "detail": "2 concrete marker(s): forty, five"
+        "score": 75,
+        "detail": "1 concrete marker(s): 45"
       },
       "STAKES": {
         "score": 70.0,
@@ -47,11 +47,11 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "82 chars (Target: <=125)"
+        "detail": "67 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
-        "detail": "7 visual scenes with dynamic pacing (avg 3.9s)"
+        "detail": "5 visual scenes with dynamic pacing (avg 4.0s)"
       },
       "high_value_cta": {
         "score": 100,
@@ -63,9 +63,9 @@
       }
     }
   },
-  "duration_seconds": 48.78,
-  "generated_at": "2026-11-12 19:18:21",
-  "algorithm_phase": "Prime Evening Explore Feed Surge",
+  "duration_seconds": 30.9,
+  "generated_at": "2026-11-13 23:34:28",
+  "algorithm_phase": "Late Night Subconscious & Gemstone Truth",
   "daily_post_enforced": true,
   "comment_consultations_handled": 0,
   "q_reward_score": 0.922

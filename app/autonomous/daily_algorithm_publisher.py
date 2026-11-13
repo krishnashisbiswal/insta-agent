@@ -84,15 +84,12 @@ class DailyAlgorithmPublisher:
         """
         Check if today's single video has already been published.
         Dual-layer verification:
-        1. Local post tracker JSON (fast disk lookup)
-        2. Live Instagram profile feed inspection (catches live posts across ephemeral runners)
+        1. Live Instagram profile feed inspection (ground truth: checks if Reel actually exists on Instagram)
+        2. Local post tracker JSON fallback
         """
-        tracker = self.load_tracker()
         today_str = get_current_time(tz).strftime("%Y-%m-%d")
-        if tracker.get("last_post_date") == today_str:
-            return True
 
-        # Live Instagram account check
+        # 1. Live Instagram account check (ground truth)
         try:
             uploader = InstagramUploader()
             if uploader.has_direct_credentials():
@@ -105,17 +102,33 @@ class DailyAlgorithmPublisher:
                     latest_dt = latest.taken_at.astimezone(tz_obj)
                     if latest_dt.strftime("%Y-%m-%d") == today_str:
                         logger.info(f"Verified live Reel posted on Instagram today: {latest.code} at {latest_dt.strftime('%H:%M:%S IST')}")
+                        tracker = self.load_tracker()
                         tracker["last_post_date"] = today_str
                         tracker["last_media_code"] = latest.code
                         self.save_tracker(tracker)
                         return True
+                    else:
+                        logger.info(f"Live Instagram profile check: No reel posted today ({today_str}). Latest post was {latest.code} on {latest_dt.strftime('%Y-%m-%d')}.")
+                        return False
         except Exception as exc:
             logger.debug(f"Live Instagram profile verification skipped/failed: {exc}")
 
-        return False
+        # 2. Local tracker fallback
+        tracker = self.load_tracker()
+        return tracker.get("last_post_date") == today_str
 
     def record_post_today(self, post_info: Dict[str, Any], tz: str = TIMEZONE) -> None:
-        """Record today's completed video."""
+        """Record today's completed video ONLY if actually published to Instagram."""
+        ig_res = post_info.get("instagram_upload", {})
+        media_id = ig_res.get("media_id")
+        media_code = ig_res.get("media_code", "")
+        media_url = ig_res.get("media_url", "")
+
+        # Never record a false positive if upload failed or was dry run
+        if not media_id or ig_res.get("mode") == "DRY_RUN":
+            logger.warning("[DAILY PUBLISHER] Skipping tracker update: Reel was not verified published on Instagram.")
+            return
+
         tracker = self.load_tracker()
         today_str = get_current_time(tz).strftime("%Y-%m-%d")
         tracker["last_post_date"] = today_str
@@ -125,8 +138,18 @@ class DailyAlgorithmPublisher:
             "timestamp": int(time.time()),
             "topic": post_info.get("topic", ""),
             "seo_score": post_info.get("seo_score", 90),
+            "media_id": media_id,
+            "media_code": media_code,
+            "media_url": media_url,
             "video_path": str(post_info.get("video_path", "")),
         })
+        tracker[today_str] = {
+            "published_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "media_id": media_id,
+            "media_code": media_code,
+            "media_url": media_url,
+            "topic": post_info.get("topic", ""),
+        }
         self.save_tracker(tracker)
 
     def produce_trending_reel(
@@ -322,19 +345,28 @@ class DailyAlgorithmPublisher:
                     res_info["instagram_upload"] = upload_res
 
                     # Auto-purge video and intermediate broll from disk to clear space once published
-                    if upload_res.get("status") == "OK" or upload_res.get("media_id"):
-                        print("\n[STORAGE AUTO-PURGE] Video successfully published to Instagram. Purging local files to clear space...")
+                    if upload_res.get("status") == "PUBLISHED" or upload_res.get("media_id"):
+                        print(f"\n[INSTAGRAM SUCCESS] Reel published successfully! Link: {upload_res.get('media_url')}")
+                        print("\n[STORAGE AUTO-PURGE] Purging intermediate files to clear space...")
                         try:
                             from app.utils.storage_cleaner import StorageCleaner
                             clean_stats = StorageCleaner.clean_post_publishing_data(keep_latest_reel=False)
                             print(f" -> 🧹 Space Cleared: Reclaimed {clean_stats['freed_mb']} MB across {clean_stats['files_removed']} files.")
                         except Exception as ce:
                             logger.warning(f"Storage purge notice: {ce}")
+                    else:
+                        print(f"\n[INSTAGRAM NOTICE] Live upload did not return confirmed media_id: {upload_res}")
+                        if os.getenv("CI"):
+                            raise RuntimeError(f"Instagram upload did not succeed in CI: {upload_res}")
                 except Exception as e:
-                    print(f" -> Instagram Upload Notice: {e}. Video safely delivered to insta content/.")
+                    print(f" -> ❌ Instagram Upload Error: {e}. Video safely delivered to insta content/.")
                     res_info["instagram_upload_error"] = str(e)
+                    if os.getenv("CI"):
+                        raise
             else:
-                print("\n[STEP 7/7] No live Instagram credentials in .env. Video saved ready for manual post or GitHub Actions.")
+                print("\n[STEP 7/7] ⚠️ No live Instagram credentials in .env / Secrets. Video saved ready for manual post or GitHub Actions.")
+                if os.getenv("CI"):
+                    raise RuntimeError("Missing live Instagram credentials in CI runner.")
 
         # 8. Autonomous Community Retention & AI Comment Consultation
         print("\n[STEP 8/8] Running AI Comment Consultation & Community Retention Agent...")
@@ -427,8 +459,8 @@ class DailyAlgorithmPublisher:
             category=category,
         )
 
-        # Record in daily tracker only if live published
-        if not dry_run:
+        # Record in daily tracker only if live published with confirmed media_id
+        if not dry_run and result.get("instagram_upload", {}).get("media_id"):
             self.record_post_today(result, tz=tz)
 
         return result
