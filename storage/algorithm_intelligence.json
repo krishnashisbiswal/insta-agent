@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-11-13 20:37:21",
+  "timezone": "Asia/Kolkata",
+  "algorithm_velocity_score": 85.8,
+  "is_high_velocity_window": true,
+  "active_phase": "Prime Evening Explore Feed Surge",
+  "ai_indexing_lead_time_minutes": 15,
+  "core_ranking_vectors": {
+    "watch_time_multiplier": 1.45,
+    "comment_velocity_weight": 5.0,
+    "share_ratio_target": "1 share per 15 views",
+    "save_ratio_target": "1 save per 25 views (Gemstone reference saves)",
+    "follower_conversion_trigger": "Asymmetric knowledge + single-word comment"
+  }
+}
