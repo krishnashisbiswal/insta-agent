@@ -1,35 +1,35 @@
 {
-  "topic": "Consultation Case Study: Why a client wearing Blue Sapphire (Neelam) suffered sudden financial collapse due to hidden Shani-Rahu enemy clashes.",
+  "topic": "Consultation case study: how a client's 4th house Moon and Saturn affliction caused chronic chest heaviness and sleep terror, decoded through 5 hidden bio-electric turning points of 7 Mukhi Rudraksha.",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 5.5,
+  "agent_evolution_level": 5.8,
   "hook": {
-    "id": "cost_confession",
+    "id": "fourth_house_affliction",
     "name": "Cost Confession",
-    "spoken": "पैंतालीस लाख का भारी नुकसान हुआ हमारे क्लाइंट को गलत नीलम पहनने से।",
-    "on_screen": "45 LAKHS LOST FROM NEELAM",
-    "why_it_works": "Uses a specific high-value financial cost to demonstrate the catastrophic danger of hidden Shani-Rahu enemy clashes.",
+    "spoken": "चौथे भाव में शनि-चंद्रमा का विष योग छाती की जकड़न और रातों की दहशत का कारण बनता है।",
+    "on_screen": "SATURN MOON CHRONIC TERROR",
+    "why_it_works": "Directly reveals the hidden astrological cause behind intense physical and emotional distress without any exaggerated money claims.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
-        "score": 100.0,
-        "detail": "5 words, 25 chars, ~1.8s spoken (want 5-12 words)"
+        "score": 80,
+        "detail": "4 words, 26 chars, ~1.5s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 75,
-        "detail": "1 concrete marker(s): 45"
+        "score": 15.0,
+        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
       },
       "STAKES": {
-        "score": 70.0,
-        "detail": "1 tension marker(s): lost"
+        "score": 20.0,
+        "detail": "0 tension marker(s) - nothing is at stake in this line"
       },
       "FRONTLOAD": {
-        "score": 100.0,
-        "detail": "payload at word 1"
+        "score": 30.0,
+        "detail": "no payload word anywhere in the line"
       },
       "ADDRESS": {
         "score": 35.0,
@@ -47,11 +47,11 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "67 chars (Target: <=125)"
+        "detail": "83 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
-        "detail": "5 visual scenes with dynamic pacing (avg 4.0s)"
+        "detail": "7 visual scenes with dynamic pacing (avg 4.0s)"
       },
       "high_value_cta": {
         "score": 100,
@@ -63,9 +63,9 @@
       }
     }
   },
-  "duration_seconds": 30.9,
-  "generated_at": "2026-11-13 23:34:28",
-  "algorithm_phase": "Late Night Subconscious & Gemstone Truth",
+  "duration_seconds": 40.47,
+  "generated_at": "2026-11-14 00:49:12",
+  "algorithm_phase": "Algorithmic Indexing & Quiet Hours",
   "daily_post_enforced": true,
   "comment_consultations_handled": 0,
   "q_reward_score": 0.922

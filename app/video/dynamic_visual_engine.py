@@ -146,6 +146,18 @@ class DynamicVisualEngine:
         elif any(k in entity_context for k in ["clear quartz", "sphatik"]):
             gem_name = "flawless prismatic natural Clear Quartz crystal point refracting crystalline rainbow light"
             planet_name = "pure high-frequency universal light and mental clarity"
+        elif any(k in entity_context for k in ["selenite"]):
+            gem_name = "luminous silky white Selenite crystal tower with pearlescent cleansing glow"
+            planet_name = "pure lunar high-frequency light and auric cleansing"
+        elif any(k in entity_context for k in ["labradorite"]):
+            gem_name = "natural raw Labradorite crystal with iridescent peacock blue-green flash and spectral labradorescence"
+            planet_name = "mystical psychic shielding and aura protection"
+        elif any(k in entity_context for k in ["carnelian"]):
+            gem_name = "vibrant fiery orange Carnelian crystal polished stone with warm translucent glow"
+            planet_name = "sacral chakra creative energy and vital motivation"
+        elif any(k in entity_context for k in ["obsidian"]):
+            gem_name = "mirror-reflective glossy Black Obsidian volcanic stone with deep dark protection shield"
+            planet_name = "grounding root chakra security and negative energy reflection"
         elif any(k in entity_context for k in ["gauri shankar"]):
             gem_name = "sacred natural Nepali Gauri Shankar Rudraksha two naturally joined beads with distinct divine grooves"
             planet_name = "sacred cosmic Shiva-Shakti union and divine grace"
@@ -180,44 +192,39 @@ class DynamicVisualEngine:
             gem_name = "natural certified Chrysoberyl Cat's Eye (Lehsuniya) gemstone with sharp chatoyant band"
             planet_name = "luminous celestial comet in deep starry galaxy"
 
-        # 2. Semantic scene intent matching (strictly derived from THIS SCENE's text & description)
+        # 2. Semantic scene intent matching (STRICTLY Anchored to the Crystal/Gemstone/Rudraksha Subject)
         # Hook / Opener Scene (Scene 1)
         if scene_idx == 0:
-            if any(k in entity_context for k in ["pyrite", "amethyst", "tourmaline", "citrine", "rose quartz", "tiger", "quartz", "crystal", "rudraksh", "mukhi"]):
-                return (
-                    f"cinematic dramatic macro luxury shot of a {gem_name} resting upon a clean dark reflective surface, "
-                    f"soft celestial aura of {planet_name} radiating around it, inspiring high-vibrational sacred lighting, {base_modifiers}"
-                )
             return (
-                f"cinematic dramatic macro luxury shot of a {gem_name} resting upon dark reflective obsidian stone, "
-                f"subtle celestial aura of {planet_name} reflecting above, scroll-stopping high-stakes contrast, {base_modifiers}"
+                f"cinematic dramatic macro luxury shot of {gem_name} resting upon a clean dark reflective surface, "
+                f"soft celestial aura of {planet_name} radiating around it, inspiring high-vibrational sacred lighting, {base_modifiers}"
             )
 
         # Call to Action / DM Consultation / Sacred Temple Sanctuary
         if any(k in scene_context for k in ["dm", "save", "consultation", "परामर्श", "कमेंट", "booking", "message"]):
             return (
-                f"cinematic sacred sanctum sanctorum of an ancient Vedic temple, multiple glowing brass oil lamps (diyas) "
-                f"casting warm golden radiance on sacred offerings and ancient carved stone pillars, peaceful divine atmosphere, {base_modifiers}"
+                f"cinematic sacred sanctum sanctorum of an ancient Vedic temple, {gem_name} respectfully placed on a pure silk offering cloth "
+                f"before multiple glowing brass oil lamps (diyas) casting warm golden reflections on sacred carved stone pillars, peaceful divine tranquility, {base_modifiers}"
             )
 
         # Calming Nervous System / Meditation / Mental Clarity / Peace
         if any(k in scene_context for k in ["calm", "nervous system", "peace", "meditat", "focus", "clarity", "anxiety relief", "blood pressure", "एकाग्रता", "शांति", "तंत्रिका", "तनाव", "ध्यान", "फायदे", "राहत"]):
             return (
-                f"cinematic peaceful shot of a serene person meditating in gentle morning golden sunlight, "
-                f"soft glowing aura of harmonic tranquility, calming sacred atmosphere, warm zen aesthetic, {base_modifiers}"
+                f"cinematic serene macro shot of {gem_name} held gently in mindful hands during morning meditation in gentle golden sunlight, "
+                f"soft glowing aura of {planet_name} harmonizing the atmosphere, warm zen aesthetic, high vibrational peace, {base_modifiers}"
             )
 
         # Aura Cleansing / Energy Shielding / EMF Protection / Negative Energy Absorption
         if any(k in scene_context for k in ["shield", "aura", "protect", "negative", "absorb", "emf", "psychic", "सुरक्षा", "आभामंडल", "नजर", "नकारात्मक"]):
             return (
-                f"cinematic visual of a luminous energetic aura shield surrounding a peaceful silhouette, "
-                f"sacred protective crystalline light particles deflecting shadowy negative waves, high vibrational energy, {base_modifiers}"
+                f"cinematic visual of {gem_name} radiating an impenetrable luminous energetic aura shield, "
+                f"sacred protective crystalline light particles deflecting shadowy negative waves, high vibrational {planet_name} energy field, {base_modifiers}"
             )
 
         # Wealth Attraction / Abundance / Prosperity / Work Desk Sacred Setup
         if any(k in scene_context for k in ["attract", "wealth", "abundance", "prosperity", "money", "desk", "office", "धन", "समृद्धि", "आकर्षण", "बरकत", "कार्यस्थल"]):
             return (
-                f"cinematic macro photograph of a natural golden {gem_name} catching warm morning sunlight on a refined executive wooden desk, "
+                f"cinematic macro photograph of {gem_name} catching warm morning sunlight on a refined executive wooden desk beside a clean journal, "
                 f"subtle golden bokeh, inspiring atmosphere of abundance and success, {base_modifiers}"
             )
 
@@ -228,56 +235,60 @@ class DynamicVisualEngine:
                 f"harmonizing bio-energy fields, ancient Vedic spiritual science visualization, {base_modifiers}"
             )
 
-        # Warning Against Blind Internet Remedies / Unverified Rules
+        # Warning Against Blind Internet Remedies / Unverified Rules / Sacred Knowledge
         if any(k in scene_context for k in ["blind", "remedy", "remedies", "unverified", "internet", "नियम", "उपाय", "अंधाधुंध"]):
             return (
-                f"cinematic moody mystical library sanctum with ancient palm-leaf astrological scrolls, antique brass compass, "
-                f"and a single solitary oil lamp flickering on dark weathered wood, caution and sacred wisdom, {base_modifiers}"
+                f"cinematic moody mystical shot of {gem_name} resting beside ancient palm-leaf astrological manuscripts and an antique brass compass, "
+                f"single warm oil lamp flickering on dark weathered wood, sacred wisdom and precision, {base_modifiers}"
             )
 
         # Birth Chart, Kundli Houses (6th, 8th, 12th House, Lagna, Kendra)
         if any(k in scene_context for k in ["kundli", "house", "houses", "chart", "horoscope", "भाव", "लग्न", "केंद्र", "त्रिकोण", "छठे", "आठवें", "बारहवें"]):
             return (
-                f"cinematic ancient Vedic astrological birth chart manuscript written on aged parchment with intricate golden geometric alignments, "
-                f"glowing cosmic symbols and Sanskrit numbers illuminating astrological houses, floating stardust, {base_modifiers}"
+                f"cinematic ancient Vedic astrological birth chart manuscript with {gem_name} resting gracefully upon the astrological houses, "
+                f"glowing cosmic Sanskrit numbers and stardust softly illuminating the crystalline facets, {base_modifiers}"
             )
 
         # Opposing Enemy Planets Clashing / Energy Collision (e.g. Saturn clashing with Sun/Ruby)
         if any(k in scene_context for k in ["enemy", "clash", "collision", "opposing", "शत्रु", "टकराव", "विपरीत"]):
             return (
-                f"cinematic epic cosmic collision of two opposing celestial forces, intense dark velvet blue energy clashing violently against "
-                f"fiery blazing crimson solar rays in deep space, cosmic shockwaves and glowing plasma particles, {base_modifiers}"
+                f"cinematic dramatic macro shot of {gem_name} glowing steadily while harmonizing turbulent contrasting cosmic energies of {planet_name}, "
+                f"luminous glowing plasma particles and celestial balancing waves in deep space, {base_modifiers}"
             )
 
         # Panic, Anxiety, Insomnia, 3 AM Restlessness, Stress
         if any(k in scene_context for k in ["panic", "anxiety", "insomnia", "3 am", "sleep", "restless", "तनाव", "घबराहट", "अनिद्रा", "बेचैनी"]):
             return (
-                f"cinematic moody dramatic shot of an exhausted restless person sitting awake by a dark rainy window at 3 AM in deep despair, "
-                f"subtle cold blue rim light, moody psychological tension and sleeplessness, {base_modifiers}"
+                f"cinematic calming night shot of {gem_name} resting on a clean wooden bedside stand in soft warm amber ambient light, "
+                f"soothing tranquil aura melting away nighttime restlessness, peaceful deep serenity, {base_modifiers}"
             )
 
-        # Career Destruction, Bankruptcy, Financial Loss, Business Crash
+        # Career Destruction, Bankruptcy, Financial Loss, Business Crash / Grounding
         if any(k in scene_context for k in ["career", "financ", "money", "drain", "ruin", "destruct", "loss", "करियर", "नुकसान", "हानि", "कर्ज", "बर्बाद"]):
             return (
-                f"cinematic moody dramatic shot of a distressed business professional sitting late at night at an executive desk with head in hands, "
-                f"crashing red financial market graphs on multiple monitors in background, moody volumetric shadows, tension and heavy loss, {base_modifiers}"
+                f"cinematic macro luxury shot of {gem_name} resting firmly on a sleek dark executive desk, "
+                f"providing grounding stability and resolute mental focus amidst high stakes, rich warm ambient reflections, {base_modifiers}"
             )
 
         # Wrong Metal, Wrong Finger, Ring Fitting, Physical Gemstone Placement
         if any(k in scene_context for k in ["metal", "finger", "hand", "wear", "ring", "धातु", "उंगली", "हाथ", "अंगूठी"]):
             return (
-                f"cinematic macro luxury photograph of a person's hand wearing an elegant ring set with a {gem_name}, "
-                f"dramatic moody studio lighting, subtle warning golden visual flare, fine jewelry details, {base_modifiers}"
+                f"cinematic macro luxury photograph of a person's hand wearing an elegant ring or holding {gem_name}, "
+                f"dramatic moody studio lighting, subtle golden visual flare, fine jewelry details, {base_modifiers}"
             )
 
-        # Use Gemini's custom visual description if provided
+        # Use Gemini's custom visual description if provided (guaranteeing subject inclusion)
         if vis_desc and len(vis_desc.split()) >= 4:
             clean_desc = re.sub(r"^(cinematic\s+)?(8k\s+)?(shot\s+of\s+)?", "", vis_desc.strip(), flags=re.I)
+            gem_kw_token = gem_name.split()[0].lower()
+            if gem_kw_token not in clean_desc.lower() and not any(k in clean_desc.lower() for k in ["crystal", "gemstone", "rudraksha", "stone", "bead"]):
+                clean_desc = f"{gem_name}, {clean_desc}"
             return f"cinematic 8k {clean_desc}, moody dramatic atmosphere, {base_modifiers}"
 
-        # Default Planetary / Gemstone Macro
+        # Default Planetary / Gemstone Macro (strictly featuring subject)
         return (
-            f"cinematic dramatic cosmic photograph of {planet_name} with radiant glowing nebula, {base_modifiers}"
+            f"cinematic dramatic macro luxury photograph of {gem_name} bathed in ethereal glowing radiance of {planet_name}, "
+            f"crystalline reflections and sacred aesthetic, {base_modifiers}"
         )
 
     @classmethod
@@ -300,16 +311,19 @@ class DynamicVisualEngine:
             planet_kw = "amethyst purple mineral"
         elif any(k in entity_context for k in ["tourmaline"]):
             gem_kw = "black tourmaline crystal"
-            planet_kw = "schorl tourmaline mineral"
+            planet_kw = "black tourmaline mineral"
         elif any(k in entity_context for k in ["citrine"]):
             gem_kw = "citrine quartz crystal"
-            planet_kw = "natural citrine mineral"
+            planet_kw = "citrine mineral"
         elif any(k in entity_context for k in ["rose quartz"]):
             gem_kw = "rose quartz crystal mineral"
             planet_kw = "raw rose quartz stone"
         elif any(k in entity_context for k in ["tiger", "tigers eye", "tiger's eye"]):
             gem_kw = "tigers eye mineral gemstone"
             planet_kw = "tigers eye stone macro"
+        elif any(k in entity_context for k in ["selenite"]):
+            gem_kw = "selenite crystal"
+            planet_kw = "selenite mineral"
         elif any(k in entity_context for k in ["gauri shankar"]):
             gem_kw = "rudraksha sacred bead"
             planet_kw = "rudraksha seed nepali"
@@ -318,82 +332,88 @@ class DynamicVisualEngine:
             planet_kw = "rudraksha seeds prayer"
         elif any(k in entity_context for k in ["neelam", "blue sapphire", "shani", "saturn"]):
             gem_kw = "blue sapphire gemstone"
-            planet_kw = "saturn planet cassini"
+            planet_kw = "blue sapphire mineral"
         elif any(k in entity_context for k in ["manik", "ruby", "surya", "sun"]):
             gem_kw = "ruby gemstone jewelry"
-            planet_kw = "sun solar flare nasa"
+            planet_kw = "ruby mineral corundum"
         elif any(k in entity_context for k in ["pukhraj", "yellow sapphire", "guru", "jupiter"]):
             gem_kw = "yellow sapphire gemstone"
-            planet_kw = "jupiter planet hubble"
+            planet_kw = "yellow sapphire corundum"
         elif any(k in entity_context for k in ["panna", "emerald", "budh", "mercury"]):
             gem_kw = "emerald gemstone jewelry"
-            planet_kw = "mercury planet space"
+            planet_kw = "emerald beryl mineral"
         elif any(k in entity_context for k in ["moti", "pearl", "chandra", "moon"]):
             gem_kw = "natural pearl gemstone"
-            planet_kw = "full moon night sky"
+            planet_kw = "pearl oyster jewelry"
         elif any(k in entity_context for k in ["moonga", "coral", "mangal", "mars"]):
             gem_kw = "red coral gemstone"
-            planet_kw = "planet mars hubble"
+            planet_kw = "red coral mineral"
         elif any(k in entity_context for k in ["heera", "diamond", "shukra", "venus"]):
             gem_kw = "diamond gemstone jewelry"
-            planet_kw = "venus planet twilight"
+            planet_kw = "raw diamond crystal"
+        elif any(k in entity_context for k in ["gomed", "hessonite", "rahu"]):
+            gem_kw = "hessonite garnet gemstone"
+            planet_kw = "hessonite mineral"
+        elif any(k in entity_context for k in ["lehsuniya", "cat's eye", "ketu"]):
+            gem_kw = "chrysoberyl cats eye gemstone"
+            planet_kw = "chrysoberyl mineral"
 
         # 1. Hook (Scene 0)
         if scene_idx == 0:
-            return gem_kw
+            return f"{gem_kw} macro"
 
         # 2. CTA / DM Consultation / Sacred Temple
         if any(k in scene_context for k in ["dm", "save", "consultation", "परामर्श", "कमेंट", "booking", "message"]):
-            queries = ["traditional hindu temple oil lamp", "diya lamp temple sanctum", "ancient temple sanctum brass diyas"]
+            queries = [f"{gem_kw} temple sacred altar", f"{gem_kw} brass diya", f"{gem_kw} altar"]
             return queries[scene_idx % len(queries)]
 
         # 3. Calming Nervous System / Meditation / Peace
         if any(k in scene_context for k in ["calm", "nervous system", "peace", "meditat", "focus", "clarity", "anxiety relief", "एकाग्रता", "शांति", "ध्यान"]):
-            queries = ["person meditating sunrise calm", "peaceful meditation zen morning", "peaceful zen stone balance"]
+            queries = [f"{gem_kw} meditation stone", f"{gem_kw} zen harmony", f"{gem_kw} healing"]
             return queries[scene_idx % len(queries)]
 
         # 4. Aura / Protection / Negativity Shield
         if any(k in scene_context for k in ["shield", "aura", "protect", "negative", "absorb", "emf", "सुरक्षा", "आभामंडल", "नजर"]):
-            queries = [gem_kw, "aurora borealis night sky", "light beam dark space rays"]
+            queries = [f"{gem_kw} raw mineral specimen", f"{gem_kw} energy crystal", f"{gem_kw} specimen"]
             return queries[scene_idx % len(queries)]
 
         # 5. Wealth Attraction / Abundance / Office Desk
         if any(k in scene_context for k in ["attract", "wealth", "abundance", "prosperity", "money", "desk", "office", "धन", "समृद्धि"]):
-            queries = [gem_kw, "pyrite crystal cluster", "morning sunlight office desk"]
+            queries = [f"{gem_kw} mineral crystal cluster", f"{gem_kw} desk stone", f"{gem_kw} specimen"]
             return queries[scene_idx % len(queries)]
 
         # 6. Blind Remedies / Internet Mistakes / Ancient Texts
         if any(k in scene_context for k in ["blind", "remedy", "remedies", "unverified", "internet", "नियम", "उपाय"]):
-            queries = ["ancient sanskrit manuscript scroll", "antique astrology manuscript", "sacred oil lamp temple"]
+            queries = [f"{gem_kw} natural gemstone specimen", f"{gem_kw} antique manuscript", f"{gem_kw} sacred"]
             return queries[scene_idx % len(queries)]
 
         # 7. Birth Chart, Kundli Houses
         if any(k in scene_context for k in ["kundli", "house", "houses", "chart", "horoscope", "भाव", "लग्न", "केंद्र", "त्रिकोण"]):
-            queries = ["ancient astrology manuscript chart", "astrolabe celestial horoscope", "zodiac horoscope chart wheel"]
+            queries = [f"{gem_kw} astrology chart", f"{gem_kw} sacred stone", f"{gem_kw} crystal"]
             return queries[scene_idx % len(queries)]
 
         # 8. Enemy Planets Clashing / Collision
         if any(k in scene_context for k in ["enemy", "clash", "collision", "opposing", "शत्रु", "टकराव", "विपरीत"]):
-            queries = [planet_kw, "galaxy collision space hubble", "nebula explosion cosmos"]
+            queries = [f"{gem_kw} rough mineral crystal", f"{gem_kw} specimen raw", f"{gem_kw} crystal cluster"]
             return queries[scene_idx % len(queries)]
 
         # 9. Panic, Anxiety, Insomnia, 3 AM Restlessness
         if any(k in scene_context for k in ["panic", "anxiety", "insomnia", "3 am", "sleep", "restless", "तनाव", "घबराहट", "अनिद्रा", "बेचैनी"]):
-            queries = ["insomnia stressed dark room", "night darkness window silhouette", "stressed person head in hands"]
+            queries = [f"{gem_kw} bedside calm", f"{gem_kw} soothing crystal", f"{gem_kw} polished stone"]
             return queries[scene_idx % len(queries)]
 
         # 10. Career Destruction, Financial Loss, Office Stress
         if any(k in scene_context for k in ["career", "financ", "money", "drain", "ruin", "destruct", "loss", "करियर", "नुकसान", "हानि", "कर्ज", "बर्बाद"]):
-            queries = ["business executive stress office", "financial crisis stock market", "stock crash chart screen"]
+            queries = [f"{gem_kw} executive desk stone", f"{gem_kw} grounding crystal", f"{gem_kw} cluster"]
             return queries[scene_idx % len(queries)]
 
         # 11. Wrong Metal, Wrong Finger, Ring Fitting
         if any(k in scene_context for k in ["metal", "finger", "hand", "wear", "ring", "धातु", "उंगली", "हाथ", "अंगूठी"]):
-            queries = [f"{gem_kw} ring", "gemstone jewelry ring fingers", gem_kw]
+            queries = [f"{gem_kw} ring", f"{gem_kw} jewelry ring fingers", gem_kw]
             return queries[scene_idx % len(queries)]
 
         # 12. Fallback
-        return planet_kw
+        return f"{gem_kw} mineral specimen"
 
     @classmethod
     def save_clean_photographic_image(cls, img: Image.Image, target_path: Path, quality: int = 95) -> Path:
@@ -420,26 +440,29 @@ class DynamicVisualEngine:
     ) -> Path:
         """
         Creates an original, rich, cinematic 9:16 photographic canvas using multi-layered
-        astronomical gradients, depth bokeh, celestial starfields, and atmospheric vignette.
-        Guarantees that an image is ALWAYS produced even if offline.
+        mineral studio gradients, sacred crystalline geometry, warm golden bokeh, and atmospheric vignette.
+        Guarantees that a high-end luxury crystal/gemstone visual is ALWAYS produced even if offline.
         """
-        canvas = Image.new("RGB", (width, height), (8, 6, 16))
+        canvas = Image.new("RGB", (width, height), (8, 6, 12))
         draw = ImageDraw.Draw(canvas)
 
         palettes = {
-            "lunar": ((6, 10, 24), (24, 38, 75), (200, 225, 255)),
-            "gold": ((18, 12, 5), (65, 42, 12), (255, 205, 90)),
-            "crimson": ((25, 6, 8), (75, 18, 22), (255, 120, 100)),
-            "emerald": ((6, 22, 14), (18, 60, 38), (140, 255, 190)),
-            "sapphire": ((5, 8, 28), (16, 28, 75), (120, 180, 255)),
-            "cosmic": ((12, 5, 20), (45, 15, 65), (210, 140, 255)),
-            "temple": ((20, 8, 5), (75, 25, 10), (255, 165, 50)),
-            "deep": ((4, 4, 10), (15, 20, 35), (140, 180, 220)),
+            "tourmaline": ((6, 6, 10), (18, 18, 26), (180, 200, 220)),
+            "pyrite": ((18, 14, 6), (58, 44, 16), (255, 215, 110)),
+            "amethyst": ((14, 6, 22), (48, 18, 70), (220, 160, 255)),
+            "citrine": ((20, 12, 4), (70, 42, 10), (255, 200, 80)),
+            "rudraksha": ((18, 8, 4), (64, 26, 12), (255, 170, 70)),
+            "sapphire": ((4, 8, 24), (14, 26, 68), (140, 190, 255)),
+            "ruby": ((24, 6, 8), (72, 16, 22), (255, 130, 120)),
+            "emerald": ((4, 18, 10), (14, 52, 30), (130, 255, 180)),
+            "temple": ((20, 8, 4), (70, 25, 10), (255, 165, 50)),
+            "cosmic": ((10, 8, 16), (36, 22, 54), (210, 170, 240)),
+            "deep": ((6, 6, 12), (18, 20, 36), (150, 180, 220)),
         }
-        palette = palettes.get(theme_key, palettes["cosmic"])
+        palette = palettes.get(theme_key, palettes["tourmaline"])
         c_dark, c_mid, c_light = palette
 
-        # 1. Vertical Atmospheric Gradient
+        # 1. Vertical Luxury Studio Gradient
         for y in range(height):
             frac = y / height
             r = int(c_dark[0] * (1 - frac) + c_mid[0] * frac)
@@ -447,43 +470,78 @@ class DynamicVisualEngine:
             b = int(c_dark[2] * (1 - frac) + c_mid[2] * frac)
             draw.line([(0, y), (width, y)], fill=(r, g, b))
 
-        # 2. Glowing Radial Light Source (Celestial Orb)
-        orb_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        orb_draw = ImageDraw.Draw(orb_layer)
-        cx, cy = width // 2, int(height * 0.42)
-        r_orb = int(width * 0.38)
-        for i in range(r_orb, 0, -8):
-            alpha = int(45 * (1 - i / r_orb))
-            orb_draw.ellipse(
-                [cx - i, cy - i, cx + i, cy + i],
+        # 2. Glowing Radial Sacred Aura Spotlight
+        aura_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        aura_draw = ImageDraw.Draw(aura_layer)
+        cx, cy = width // 2, int(height * 0.44)
+        r_max = int(width * 0.48)
+        for i in range(r_max, 0, -12):
+            alpha = int(60 * (1 - i / r_max))
+            aura_draw.ellipse(
+                [cx - i, cy - int(i * 1.1), cx + i, cy + int(i * 1.1)],
                 fill=(c_light[0], c_light[1], c_light[2], alpha),
             )
-        orb_layer = orb_layer.filter(ImageFilter.GaussianBlur(36))
-        canvas.paste(orb_layer, (0, 0), orb_layer)
+        aura_layer = aura_layer.filter(ImageFilter.GaussianBlur(40))
+        canvas.paste(aura_layer, (0, 0), aura_layer)
 
-        # 3. Dense High-Resolution Celestial Starfield
+        # 3. Sacred Crystalline Geometry / Facet Refraction Lattice
+        geo_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        geo_draw = ImageDraw.Draw(geo_layer)
+        facets = [
+            [(cx, cy - 240), (cx + 160, cy - 60), (cx, cy + 220), (cx - 160, cy - 60)],
+            [(cx, cy - 160), (cx + 110, cy - 40), (cx, cy + 140), (cx - 110, cy - 40)],
+            [(cx, cy - 240), (cx, cy + 220)],
+            [(cx - 160, cy - 60), (cx + 160, cy - 60)],
+            [(cx - 160, cy - 60), (cx, cy - 160)],
+            [(cx + 160, cy - 60), (cx, cy - 160)],
+            [(cx - 110, cy - 40), (cx, cy + 220)],
+            [(cx + 110, cy - 40), (cx, cy + 220)],
+        ]
+        line_color = (c_light[0], c_light[1], c_light[2], 55)
+        for poly in facets:
+            if len(poly) > 2:
+                geo_draw.polygon(poly, outline=line_color, fill=(c_light[0], c_light[1], c_light[2], 8))
+            else:
+                geo_draw.line(poly, fill=line_color, width=2)
+
+        for ring_r in [180, 260, 340]:
+            geo_draw.ellipse(
+                [cx - ring_r, cy - ring_r, cx + ring_r, cy + ring_r],
+                outline=(c_light[0], c_light[1], c_light[2], 30),
+                width=1,
+            )
+        geo_layer = geo_layer.filter(ImageFilter.GaussianBlur(2))
+        canvas.paste(geo_layer, (0, 0), geo_layer)
+
+        # 4. Soft Golden Bokeh Particles (warm motes, not sharp stars)
         rng = random.Random(int(time.time() * 1000) % 999999)
-        star_draw = ImageDraw.Draw(canvas)
-        for _ in range(350):
-            sx = rng.randint(0, width - 1)
-            sy = rng.randint(0, height - 1)
-            brightness = rng.randint(120, 255)
-            s_sz = 1 if rng.random() > 0.12 else 2
-            star_draw.ellipse([sx, sy, sx + s_sz, sy + s_sz], fill=(brightness, brightness, brightness))
+        bokeh_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        bokeh_draw = ImageDraw.Draw(bokeh_layer)
+        for _ in range(45):
+            bx = rng.randint(int(width * 0.1), int(width * 0.9))
+            by = rng.randint(int(height * 0.2), int(height * 0.75))
+            b_radius = rng.randint(4, 22)
+            b_alpha = rng.randint(25, 90)
+            bokeh_draw.ellipse(
+                [bx - b_radius, by - b_radius, bx + b_radius, by + b_radius],
+                fill=(c_light[0], c_light[1], c_light[2], b_alpha),
+            )
+        bokeh_layer = bokeh_layer.filter(ImageFilter.GaussianBlur(6))
+        canvas.paste(bokeh_layer, (0, 0), bokeh_layer)
 
-        # 4. Cinematic Heavy Perimeter Vignette
+        # 5. Cinematic Deep Perimeter Vignette
         vignette = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         v_draw = ImageDraw.Draw(vignette)
         max_dist = math.sqrt((width / 2) ** 2 + (height / 2) ** 2)
-        for r_step in range(int(width * 0.4), int(max_dist), 24):
-            alpha = int(220 * ((r_step - width * 0.4) / (max_dist - width * 0.4)) ** 1.8)
-            alpha = min(235, max(0, alpha))
+        for r_step in range(int(width * 0.35), int(max_dist), 20):
+            alpha = int(230 * ((r_step - width * 0.35) / (max_dist - width * 0.35)) ** 1.6)
+            alpha = min(245, max(0, alpha))
             v_draw.ellipse(
                 [width // 2 - r_step, height // 2 - r_step, width // 2 + r_step, height // 2 + r_step],
                 outline=(0, 0, 0, alpha),
-                width=24,
+                width=20,
             )
-        vignette = vignette.filter(ImageFilter.GaussianBlur(28))
+        vignette = vignette.filter(ImageFilter.GaussianBlur(24))
         canvas.paste(vignette, (0, 0), vignette)
 
         cls.save_clean_photographic_image(canvas, out_path, quality=95)
@@ -526,40 +584,48 @@ class DynamicVisualEngine:
             except Exception as e:
                 logger.debug(f"[DynamicVisualEngine] NASA search notice: {e}")
 
-        # 2. Check Wikimedia Commons API with 1080px thumbnail width for instant download
-        try:
-            # Strictly filter out scanned books, PDF pages, treatises, and archive documents
-            clean_search_query = f"{query} filetype:bitmap -pdf -djvu -book -text -treatise -ia -page"
-            wiki_url = f"https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch={urllib.parse.quote(clean_search_query)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|size&iiurlwidth=1080&format=json"
-            req = urllib.request.Request(wiki_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
-            with urllib.request.urlopen(req, timeout=4) as r:
-                data = json.loads(r.read())
-            pages = data.get("query", {}).get("pages", {})
-            for _, pdata in pages.items():
-                title_lower = pdata.get("title", "").lower()
-                # Strict exclusion of scans, book covers, PDFs, and archive files
-                if any(bad in title_lower for bad in [".pdf", ".djvu", ".tif", "page1", "ia ", "treatise", "report", "journal", "document", "disassembled", "book"]):
-                    continue
+        # 2. Check Wikimedia Commons API with progressive query fallback
+        candidate_queries = [query]
+        tokens = [t for t in query.split() if t.lower() not in ["macro", "specimen", "cluster", "sacred", "raw", "altar", "temple", "stone", "close", "up"]]
+        if len(tokens) >= 2:
+            candidate_queries.append(" ".join(tokens[:2]))
+        if len(tokens) >= 1:
+            candidate_queries.append(tokens[0])
 
-                ii = pdata.get("imageinfo", [{}])[0]
-                dl_url = ii.get("thumburl") or ii.get("url")
-                if dl_url:
-                    clean_url = dl_url.split("?")[0]
-                    url_lower = clean_url.lower()
-                    if any(bad in url_lower for bad in [".pdf", ".djvu", ".tif", "page1", "ia_"]):
+        for c_query in candidate_queries:
+            try:
+                # Strictly filter out scanned books, PDF pages, treatises, and archive documents
+                clean_search_query = f"{c_query} filetype:bitmap -pdf -djvu -book -text -treatise -ia -page"
+                wiki_url = f"https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch={urllib.parse.quote(clean_search_query)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|size&iiurlwidth=1080&format=json"
+                req = urllib.request.Request(wiki_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
+                with urllib.request.urlopen(req, timeout=4) as r:
+                    data = json.loads(r.read())
+                pages = data.get("query", {}).get("pages", {})
+                for _, pdata in pages.items():
+                    title_lower = pdata.get("title", "").lower()
+                    # Strict exclusion of scans, book covers, PDFs, and archive files
+                    if any(bad in title_lower for bad in [".pdf", ".djvu", ".tif", "page1", "ia ", "treatise", "report", "journal", "document", "disassembled", "book"]):
                         continue
-                    if clean_url.lower().endswith((".jpg", ".jpeg", ".png")):
-                        img_req = urllib.request.Request(dl_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
-                        with urllib.request.urlopen(img_req, timeout=5) as ir:
-                            img_bytes = ir.read(5 * 1024 * 1024)
-                        if len(img_bytes) > 10000:
-                            img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-                            cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
-                            cls.save_clean_photographic_image(cropped, target_file, quality=95)
-                            logger.info(f"[DynamicVisualEngine] Sourced authentic photographic asset via Wikimedia -> {target_file.name}")
-                            return target_file
-        except Exception as e:
-            logger.debug(f"[DynamicVisualEngine] Wikimedia search notice: {e}")
+
+                    ii = pdata.get("imageinfo", [{}])[0]
+                    dl_url = ii.get("thumburl") or ii.get("url")
+                    if dl_url:
+                        clean_url = dl_url.split("?")[0]
+                        url_lower = clean_url.lower()
+                        if any(bad in url_lower for bad in [".pdf", ".djvu", ".tif", "page1", "ia_"]):
+                            continue
+                        if clean_url.lower().endswith((".jpg", ".jpeg", ".png")):
+                            img_req = urllib.request.Request(dl_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
+                            with urllib.request.urlopen(img_req, timeout=5) as ir:
+                                img_bytes = ir.read(5 * 1024 * 1024)
+                            if len(img_bytes) > 10000:
+                                img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+                                cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
+                                cls.save_clean_photographic_image(cropped, target_file, quality=95)
+                                logger.info(f"[DynamicVisualEngine] Sourced authentic photographic asset via Wikimedia ('{c_query}') -> {target_file.name}")
+                                return target_file
+            except Exception as e:
+                logger.debug(f"[DynamicVisualEngine] Wikimedia search notice ('{c_query}'): {e}")
 
         return None
 
@@ -585,17 +651,19 @@ class DynamicVisualEngine:
         prompt_hash = hashlib.md5(f"{reel_slug}_{scene_idx}_{timestamp_seed}_{prompt}".encode()).hexdigest()[:10]
         target_file = GENERATED_BROLL_DIR / f"{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
 
-        # 1. ATTEMPT AI GENERATION (Pollinations AI with custom seed & 1080x1920 9:16 target)
+        # 1. ATTEMPT AI GENERATION (Pollinations AI with turbo model, custom seed & client-side 9:16 fit)
+        # Note: We omit width/height params in the URL because Pollinations now charges HTTP 402 for custom dimensions.
+        # Instead, Pollinations returns a pristine 768x768 square image which ImageOps.fit cleanly crops to 1080x1920.
         try:
             encoded_prompt = urllib.parse.quote(prompt)
             seed = random.randint(10000, 999999)
-            url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1080&height=1920&nologo=true&seed={seed}"
+            url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=turbo&nologo=true&seed={seed}"
             logger.info(f"[DynamicVisualEngine] Generating fresh AI visual for Scene {scene_idx + 1}...")
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-            with urllib.request.urlopen(req, timeout=12) as resp:
+            with urllib.request.urlopen(req, timeout=14) as resp:
                 data = resp.read()
 
-            if len(data) > 12000:
+            if len(data) > 10000:
                 with Image.open(io.BytesIO(data)) as opened_img:
                     img = opened_img.convert("RGB")
                 cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
@@ -606,7 +674,25 @@ class DynamicVisualEngine:
                     logger.info(f"[DynamicVisualEngine] AI generation SUCCESS -> {target_file.name} ({cropped.size})")
                     return target_file
         except Exception as e:
-            logger.warning(f"[DynamicVisualEngine] AI generator notice ({e}). Searching authentic photo repositories...")
+            logger.warning(f"[DynamicVisualEngine] Primary AI generator notice ({e}). Trying fallback AI endpoint...")
+            try:
+                # Secondary Pollinations fallback without model=turbo
+                fb_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?nologo=true&seed={seed}"
+                fb_req = urllib.request.Request(fb_url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(fb_req, timeout=12) as fb_resp:
+                    fb_data = fb_resp.read()
+                if len(fb_data) > 10000:
+                    with Image.open(io.BytesIO(fb_data)) as opened_img:
+                        img = opened_img.convert("RGB")
+                    cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
+                    cls.save_clean_photographic_image(cropped, target_file, quality=95)
+                    if not cls.is_image_used(target_file):
+                        cls.register_used_image(target_file)
+                        used_images.add(target_file)
+                        logger.info(f"[DynamicVisualEngine] Fallback AI generation SUCCESS -> {target_file.name}")
+                        return target_file
+            except Exception as e2:
+                logger.warning(f"[DynamicVisualEngine] Fallback AI notice ({e2}). Searching online photo repositories...")
 
         # 2. LIVE ONLINE PHOTOGRAPHIC SEARCH (Wikimedia Commons + NASA API)
         search_query = cls.get_scene_search_query(scene_dict, topic, scene_idx)
@@ -656,16 +742,26 @@ class DynamicVisualEngine:
             return cand
 
         # 4. FAILSAFE PROCEDURAL HIGH-RESOLUTION CANVASES (100% Unique, Never Repeated)
-        theme_map = {
-            0: "lunar" if any(k in t_lower for k in ["chandra", "moon"]) else "cosmic",
-            1: "sapphire" if any(k in t_lower for k in ["chandra", "moon"]) else "deep",
-            2: "lunar",
-            3: "deep",
-            4: "lunar" if any(k in t_lower for k in ["chandra", "moon", "pearl"]) else "gold",
-            5: "temple",
-            6: "temple",
-        }
-        theme = theme_map.get(scene_idx, "cosmic")
+        theme = "tourmaline"
+        if any(k in t_lower for k in ["pyrite"]):
+            theme = "pyrite"
+        elif any(k in t_lower for k in ["amethyst"]):
+            theme = "amethyst"
+        elif any(k in t_lower for k in ["citrine"]):
+            theme = "citrine"
+        elif any(k in t_lower for k in ["rudraksha", "rudraksh"]):
+            theme = "rudraksha"
+        elif any(k in t_lower for k in ["neelam", "blue sapphire"]):
+            theme = "sapphire"
+        elif any(k in t_lower for k in ["manik", "ruby"]):
+            theme = "ruby"
+        elif any(k in t_lower for k in ["emerald", "panna"]):
+            theme = "emerald"
+        elif any(k in scene_txt for k in ["dm", "save", "consultation", "परामर्श"]):
+            theme = "temple"
+        elif any(k in t_lower for k in ["chandra", "moon", "moti"]):
+            theme = "sapphire"
+
         proc_file = GENERATED_BROLL_DIR / f"proc_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
         cls.generate_procedural_photorealistic_image(theme_key=theme, out_path=proc_file)
         cls.register_used_image(proc_file)

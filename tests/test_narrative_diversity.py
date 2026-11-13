@@ -200,6 +200,28 @@ def test_crystal_and_rudraksha_badges_and_prompts():
     )
     assert "rudraksha" in r_query.lower()
 
+    # 4. Verify that EVERY scene index (1 to 6) strictly retains the subject in both prompt and query
+    for s_idx in range(1, 7):
+        p_p = DynamicVisualEngine.get_trait_visual_prompt(
+            pyrite_scene, "5 Benefits of Pyrite Crystal", scene_idx=s_idx
+        )
+        assert "pyrite" in p_p.lower(), f"Scene {s_idx} prompt lost pyrite subject: {p_p}"
+
+        r_p = DynamicVisualEngine.get_trait_visual_prompt(
+            rudraksha_scene, "5 Secrets of 5 Mukhi Rudraksha", scene_idx=s_idx
+        )
+        assert "rudraksha" in r_p.lower(), f"Scene {s_idx} prompt lost rudraksha subject: {r_p}"
+
+        p_q = DynamicVisualEngine.get_scene_search_query(
+            pyrite_scene, "5 Benefits of Pyrite Crystal", scene_idx=s_idx
+        )
+        assert "pyrite" in p_q.lower(), f"Scene {s_idx} search query lost pyrite subject: {p_q}"
+
+        r_q = DynamicVisualEngine.get_scene_search_query(
+            rudraksha_scene, "5 Secrets of 5 Mukhi Rudraksha", scene_idx=s_idx
+        )
+        assert "rudraksha" in r_q.lower(), f"Scene {s_idx} search query lost rudraksha subject: {r_q}"
+
 
 def test_kinetic_overlay_strips_robotic_numbering():
     from app.video.cinematic_composer import render_kinetic_caption_layer
