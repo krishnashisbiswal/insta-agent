@@ -62,7 +62,7 @@ jobs:
           SARVAM_API_KEY: ${{ secrets.SARVAM_API_KEY }}
           SARVAM_SPEAKER: "arjun"
           SARVAM_MODEL: "bulbul:v4-flash"
-          SARVAM_PACE: "1.00"
+          SARVAM_PACE: "1.20"
           VOICE_ENGINE: "sarvam"
           VOICE_MODE: "smart"
           VOICE_GENDER: "male"

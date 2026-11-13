@@ -100,10 +100,16 @@ LANGUAGE & PRONUNCIATION MANDATE (100% PURE DEVANAGARI HINDI FOR SPOKEN):
   DO NOT write spoken lines in Roman English or Hinglish! Pure Devanagari guarantees native Indian neural voice models pronounce every Vedic Sanskrit term (शनि, राहु, केतु, नीलम, पन्ना, कुंडली, उपाय) with 100% human-grade studio perfection.
 - "on_screen": MUST be written in clean, bold ALL CAPS plain ASCII ENGLISH (3 to 6 words).
 
-ASTROLOGER IDENTITY & CLIENT CASE STUDY MANDATE (CRITICAL):
+ASTROLOGER IDENTITY & DIVERSE CONSULTATION CASE STUDY MANDATE:
 - NEVER write hooks where the astrologer makes rookie mistakes on themselves ("मैंने गलती की", "मेरा नुकसान हुआ", "मैंने गलत रत्न पहना"). An experienced Vedic astrologer does NOT blunder their own karma or money!
-- ALWAYS frame financial losses or wrong gemstone examples as REAL CLIENT CONSULTATION CASE STUDIES:
-  e.g. "हमारे एक क्लाइंट को पैंतालीस लाख का भारी नुकसान हुआ जब उन्होंने बिना कुंडली दिखाए पुखराज पहना..." or "एक क्लाइंट हमारे पास आए जिन्होंने बिना परामर्श रत्न धारण कर लिया था..."
+- STRICT ZERO-REPETITION MANDATE (NO "45 LAKHS" OR MONEY LOSS REPETITION):
+  * NEVER use "पैंतालीस लाख", "45 लाख", or "भारी नुकसान हुआ" repeatedly! That is strictly prohibited.
+  * DO NOT make every script about money loss or financial disaster.
+  * VARY hooks across diverse life situations and Kundli placements:
+    - Career Stagnation: "करियर में अथक परिश्रम के बाद भी हमारे एक क्लाइंट की पदोन्नति बार-बार क्यों टल रही थी?"
+    - 3 AM Wakeups & Intuition: "रात तीन से पांच बजे के बीच अचानक आंख खुलना किस दिव्य संकेत की ओर इशारा करता है?"
+    - Relationship & 7th House Karma: "सातवें भाव में केतु होने पर जातक सच्चे रिश्तों से भी खुद को अलग क्यों महसूस करता है?"
+    - Kundli House Mysteries: "कुंडली का आठवां भाव सक्रिय होने पर जीवन में अप्रत्याशित बदलाव क्यों आते हैं?"
 - TONE: Calm, gentle, poised, protective, and respectful. NO AGGRESSIVE, SHOUTY, OR ATTACKING WORDS.
 """
     else:
@@ -186,9 +192,12 @@ Return ONLY valid JSON in this exact structure:
         sp = re.sub(r"\bजब\s+मैंने\s+अपनी\s+कुंडली\b", "जब हमारे एक क्लाइंट ने अपनी कुंडली", sp)
         sp = re.sub(r"\bजब\s+मैंने\b", "जब हमारे एक क्लाइंट ने", sp)
         sp = re.sub(r"\bमैंने\s+गलत\s+तरीके\s+से\b", "हमारे एक क्लाइंट ने गलत तरीके से", sp)
-        sp = re.sub(r"\bमेरा\s+नुकसान\s+हुआ\b", "क्लाइंट को भारी नुकसान हुआ", sp)
-        sp = re.sub(r"\bमुझे\s+भारी\s+नुकसान\s+हुआ\b", "क्लाइंट को भारी नुकसान हुआ", sp)
-        sp = re.sub(r"\bमुझसे\s+गलती\s+हुई\b", "क्लाइंट से यह गलती हुई", sp)
+        sp = re.sub(r"\bमेरा\s+नुकसान\s+हुआ\b", "क्लाइंट को बड़ी रुकावटों का सामना करना पड़ा", sp)
+        sp = re.sub(r"\bमुझे\s+भारी\s+नुकसान\s+हुआ\b", "क्लाइंट के जीवन में अप्रत्याशित चुनौतियाँ आईं", sp)
+        sp = re.sub(r"\bमुझसे\s+गलती\s+हुई\b", "क्लाइंट से यह चूक हुई", sp)
+        # Strict ban on repetitive 45 lakhs
+        sp = re.sub(r"(?:पैंतालीस|पैंतालीस\s*लाख|45\s*लाख|45\s*lakhs?)\s*(?:का\s*)?(?:भारी\s*)?नुकसान\s*(?:हुआ)?", "अचानक गंभीर रुकावटों का सामना करना पड़ा", sp, flags=re.I)
+        h["on_screen"] = re.sub(r"\b45\s*LAKHS?\s*(?:LOST)?\b", "MAJOR SETBACK", h["on_screen"], flags=re.I)
 
         sp = re.sub(r"ॐ\s*[\u0900-\u097F\s]+?(?:नमः|स्वाहा|फट्|वषट्)", "", sp)
         sp = re.sub(r"\bॐ\b", "", sp)
@@ -450,6 +459,138 @@ def resolve_entity_context(topic: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def sanitize_script_dialogue(scenes: List[Dict[str, Any]], topic: str = "") -> List[Dict[str, Any]]:
+    """
+    Sanitizes scenes to guarantee:
+    1. Pure Devanagari Hindi humanization.
+    2. Consultation case study framing (zero first-person blunders).
+    3. Strict anti-repetition (bans 'पैंतालीस लाख' or '45 lakhs' or repetitive numerical loss).
+    4. Zero degree jargon.
+    5. Zero remedies & zero mantras.
+    6. Divine reverence for celestial entities.
+    """
+    graha_map = {
+        "surya": {"dev": "सूर्य देव", "alt": "सूर्य", "en": "Sun"},
+        "sun": {"dev": "सूर्य देव", "alt": "सूर्य", "en": "Sun"},
+        "chandra": {"dev": "चन्द्र देव", "alt": "चन्द्रमा", "en": "Moon"},
+        "moon": {"dev": "चन्द्र देव", "alt": "चन्द्रमा", "en": "Moon"},
+        "mangal": {"dev": "मंगल देव", "alt": "मंगल", "en": "Mars"},
+        "mars": {"dev": "मंगल देव", "alt": "मंगल", "en": "Mars"},
+        "budh": {"dev": "बुध देव", "alt": "बुध", "en": "Mercury"},
+        "mercury": {"dev": "बुध देव", "alt": "बुध", "en": "Mercury"},
+        "guru": {"dev": "गुरु बृहस्पति", "alt": "गुरु देव", "en": "Jupiter"},
+        "jupiter": {"dev": "गुरु बृहस्पति", "alt": "गुरु देव", "en": "Jupiter"},
+        "pukhraj": {"dev": "गुरु बृहस्पति", "alt": "गुरु देव", "en": "Jupiter"},
+        "yellow sapphire": {"dev": "गुरु बृहस्पति", "alt": "गुरु देव", "en": "Jupiter"},
+        "shukra": {"dev": "शुक्र देव", "alt": "शुक्र", "en": "Venus"},
+        "venus": {"dev": "शुक्र देव", "alt": "शुक्र", "en": "Venus"},
+        "diamond": {"dev": "शुक्र देव", "alt": "शुक्र", "en": "Venus"},
+        "heera": {"dev": "शुक्र देव", "alt": "शुक्र", "en": "Venus"},
+        "shani": {"dev": "शनि देव", "alt": "शनि", "en": "Saturn"},
+        "saturn": {"dev": "शनि देव", "alt": "शनि", "en": "Saturn"},
+        "blue sapphire": {"dev": "शनि देव", "alt": "शनि", "en": "Saturn"},
+        "neelam": {"dev": "शनि देव", "alt": "शनि", "en": "Saturn"},
+        "rahu": {"dev": "राहु देव", "alt": "राहु", "en": "Rahu"},
+        "ketu": {"dev": "केतु देव", "alt": "केतु", "en": "Ketu"},
+    }
+    detected_graha = None
+    topic_lower = (topic or "").lower()
+    for k, v in graha_map.items():
+        if k in topic_lower:
+            detected_graha = v
+            break
+
+    sanitized_scenes = []
+    for sc in scenes:
+        item = dict(sc)
+        line = clean_and_humanize_text(item.get("spoken_line", ""))
+        # Transform first-person rookie mistakes to consulting astrologer client case studies
+        line = re.sub(r"\b(?:मैंने|मुझे)\s+(?:अपनी\s+)?कुंडली\s+बिना\s+(?:देखे|दिखाए|जांचे)\b", "हमारे एक क्लाइंट ने बिना कुंडली जांचे", line)
+        line = re.sub(r"\bजब\s+मैंने\s+अपनी\s+कुंडली\b", "जब हमारे एक क्लाइंट ने अपनी कुंडली", line)
+        line = re.sub(r"\bजब\s+मैंने\b", "जब हमारे एक क्लाइंट ने", line)
+        line = re.sub(r"\bमैंने\s+गलत\s+तरीके\s+से\b", "हमारे एक क्लाइंट ने गलत तरीके से", line)
+        line = re.sub(r"\bमेरा\s+नुकसान\s+हुआ\b", "क्लाइंट को बड़ी रुकावटों का सामना करना पड़ा", line)
+        line = re.sub(r"\bमुझे\s+भारी\s+नुकसान\s+हुआ\b", "क्लाइंट के जीवन में अप्रत्याशित चुनौतियाँ आईं", line)
+        line = re.sub(r"\bमुझसे\s+गलती\s+हुई\b", "क्लाइंट से यह चूक हुई", line)
+        # Strict ban on repetitive 45 lakhs
+        line = re.sub(r"(?:पैंतालीस|पैंतालीस\s*लाख|45\s*लाख|45\s*lakhs?)\s*(?:का\s*)?(?:भारी\s*)?नुकसान\s*(?:हुआ)?", "अचानक गंभीर रुकावटों का सामना करना पड़ा", line, flags=re.I)
+        
+        on_screen = item.get("on_screen_text", "")
+        on_screen = re.sub(r"\b45\s*LAKHS?\s*(?:LOST)?\b", "MAJOR SETBACK", on_screen, flags=re.I)
+        on_screen = re.sub(r"\b45\s*LAKH\s*LOSS\b", "MAJOR SETBACK", on_screen, flags=re.I)
+
+        # Strict negative constraint: purge degree references
+        line = re.sub(r"\b(बिना|की|के)?\s*(सटीक\s*)?डिग्री(यों)?\s*(जांचे|देखे|के)?", "दशा और गोचर समझे", line)
+        line = re.sub(r"\bडिग्री(यों)?\b", "स्थिति", line)
+        line = re.sub(r"\bअंश(ों)?\b", "दशा", line)
+        line = re.sub(r"\bdegrees?\b", "placements", line, flags=re.I)
+
+        # STRICT MANDATE - ZERO REMEDIES & ZERO MANTRAS
+        line = re.sub(r"ॐ\s*[\u0900-\u097F\s]+?(?:नमः|स्वाहा|फट्|वषट्)", "", line)
+        line = re.sub(r"\bॐ\b", "", line)
+        line = re.sub(r"\b(?:बीज\s*मंत्र|वैदिक\s*मंत्र|मंत्र\s*जप|मंत्रों?)\b", "कुंडली नियम", line)
+        line = re.sub(r"\b(?:mantras?|beej\s*mantra)\b", "chart placement", line, flags=re.I)
+        line = re.sub(r"\b(?:पांचवां\s*उपाय|अचूक\s*उपाय|वैदिक\s*उपाय|सरल\s*उपाय)\b", "पांचवां नियम", line)
+        line = re.sub(r"\bउपायों?\b", "नियम", line)
+        line = re.sub(r"\b(यह|सच्चा|प्राकृतिक|सिद्ध)?\s*रत्न\s*(पहनें|धारण करें|पहनना चाहिए)\b", "बिना कुंडली जांचे कोई रत्न न पहनें", line)
+        line = re.sub(r"\bरत्न\s*पहनने\s*के\s*नियम\b", "कुंडली भाव के नियम", line)
+        line = re.sub(r"\bहवन\s*करें\b", "परामर्श लें", line)
+        line = re.sub(r"\bदान\s*करें\b", "स्थिति जांचें", line)
+        line = re.sub(r"\s{2,}", " ", line).strip()
+
+        # Strict reverence constraint: eliminate generic pronouns ("यह ग्रह", "इस ग्रह")
+        if detected_graha:
+            dev_name = detected_graha["dev"]
+            alt_name = detected_graha["alt"]
+            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+का\b", f"{alt_name} का", line)
+            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+की\b", f"{alt_name} की", line)
+            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+के\b", f"{alt_name} के", line)
+            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+को\b", f"{dev_name} को", line)
+            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+से\b", f"{dev_name} से", line)
+            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+पर\b", f"{alt_name} पर", line)
+            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+में\b", f"{alt_name} में", line)
+            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\b", dev_name, line)
+            line = re.sub(r"\bउक्त\s+ग्रह\b", dev_name, line)
+            line = re.sub(r"\bग्रह\s+की\s+ऊर्जा\b", f"{alt_name} की ऊर्जा", line)
+            line = re.sub(r"\bग्रह\s+का\s+प्रभाव\b", f"{alt_name} का प्रभाव", line)
+            line = re.sub(r"\bग्रह\s+कमजोर\b", f"{dev_name} कमजोर", line)
+            line = re.sub(r"\bकमजोर\s+ग्रह\b", f"कमजोर {alt_name}", line)
+            line = re.sub(r"\bthis\s+planet\b", f"Lord {detected_graha['en']}", line, flags=re.I)
+        else:
+            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\b", "संबंधित ग्रह", line)
+            line = re.sub(r"\bthis\s+planet\b", "this celestial placement", line, flags=re.I)
+
+        item["spoken_line"] = line
+
+        # Enforce on-screen text word limit & sanitize
+        clean_card = re.sub(r"\b(?:MY\s+FINANCES|MY\s+CAREER|MY\s+LIFE|MY\s+MISTAKE)\b", "CLIENT FINANCES", on_screen, flags=re.I)
+        clean_card = re.sub(r"\bRUINED\s+MY\b", "RUINED CLIENT", clean_card, flags=re.I)
+        clean_card = re.sub(r"\bCOST\s+ME\b", "COST CLIENT", clean_card, flags=re.I)
+        clean_card = re.sub(r"\bI\s+LOST\b", "CLIENT LOST", clean_card, flags=re.I)
+        clean_card = re.sub(r"\bDEGREES?\b", "RULES", clean_card, flags=re.I)
+        clean_card = re.sub(r"\bDEAD DEGREES\b", "WRONG ENERGIES", clean_card, flags=re.I)
+        clean_card = re.sub(r"\b(?:SACRED\s+BEEJ\s+REMEDY|SACRED\s+REMEDY\s*&\s*STONE|SACRED\s+REMEDY|VEDIC\s+REMEDY|REMEDY\s*&\s*STONE)\b", "AVOID BLIND REMEDIES", clean_card, flags=re.I)
+        if not re.search(r"AVOID BLIND REMEDIES", clean_card, re.I):
+            clean_card = re.sub(r"\b(?:REMEDY|REMEDIES|UPAY|BEEJ|MANTRA)\b", "PLACEMENT", clean_card, flags=re.I)
+        if detected_graha:
+            clean_card = re.sub(r"\bTHIS PLANET\b", detected_graha["en"].upper(), clean_card, flags=re.I)
+            clean_card = re.sub(r"\bYEH GRAH\b", detected_graha["dev"], clean_card, flags=re.I)
+        card_words = clean_card.split()
+        if len(card_words) > 6:
+            item["on_screen_text"] = " ".join(card_words[:6])
+        else:
+            item["on_screen_text"] = clean_card
+
+        if "badge" in item:
+            badge_text = clean_and_humanize_text(item["badge"]).upper()
+            badge_text = re.sub(r"\bVEDIC REMEDY & ADVICE\b", "CHECK PLACEMENT & DM US", badge_text)
+            badge_text = re.sub(r"\b(?:REMEDY|REMEDIES|UPAY|MANTRA)\b", "PLACEMENT", badge_text)
+            item["badge"] = badge_text
+
+        sanitized_scenes.append(item)
+    return sanitized_scenes
+
+
 def generate_reel(
     topic: str,
     niche: str = "tech_ai",
@@ -542,11 +683,16 @@ CRITICAL LANGUAGE & PRONUNCIATION MANDATE (100% PURE DEVANAGARI HINDI FOR VOICE)
 - ALL SCENES "on_screen_text": Write in clean, bold ALL CAPS plain ASCII ENGLISH (3-5 words, e.g. "1. TOPIC ASPECT", "2. TOPIC ASPECT", ...).
 - EVERY POINT SCENE MUST HAVE ITS NUMBER SYNCED (1 to {num_points}) on both "on_screen_text" and "badge" (e.g. "{badge_kw} 1 OF {num_points}", "{badge_kw} 2 OF {num_points}", ...).
 
-CRITICAL TONE & ASTROLOGER IDENTITY MANDATE (CALM, GENTLE & CLIENT CASE STUDIES):
+CRITICAL TONE & ASTROLOGER IDENTITY MANDATE (CALM, GENTLE & DIVERSE CLIENT CASE STUDIES):
 - TONE: Calm, gentle, soothing, poised, compassionate and respectful. Absolutely NO aggressive, shouty, attacking, or accusatory delivery!
 - NEVER speak in the first person about making a rookie mistake or suffering personal loss ("मैंने गलती की", "मेरा नुकसान हुआ", "मैंने गलत रत्न पहना").
-- You are a wise, serene Vedic astrologer representing Neo Divine Store. ALWAYS frame challenges, financial losses, or cautions as REAL CLIENT CASE STUDIES from your astrological consultations:
-  e.g., "हमारे एक क्लाइंट को भारी नुकसान हुआ, जब उन्होंने बिना कुंडली जांचे यह निर्णय लिया..." or "हाल ही में हमारे पास एक क्लाइंट आए जिन्होंने बिना परामर्श यह कदम उठाया था..."
+- STRICT ZERO-REPETITION MANDATE (ABSOLUTE BAN ON "पैंतालीस लाख / 45 LAKHS / भारी नुकसान"):
+  * NEVER use "पैंतालीस लाख" or "भारी नुकसान" repeatedly. That is completely banned.
+  * Rotate across all life dimensions: mental clarity, 3 AM awakening intuition, career breakthroughs, emotional serenity, and ancestral karmic lessons.
+  * Use varied, dignified expressions:
+    "हमारे परामर्श सत्र में एक जातक आए जो निरंतर मानसिक तनाव से जूझ रहे थे...",
+    "कुंडली विश्लेषण के दौरान हमने पाया कि उनकी कार्यक्षेत्र में प्रगति क्यों रुकी हुई थी...",
+    "हाल ही में एक क्लाइंट अपनी जन्मपत्रिका लेकर आए जो रात में अचानक नींद टूटने की समस्या से परेशान थे..."
 
 STRICT MANDATE - ZERO REMEDIES & ZERO MANTRAS (ABSOLUTELY CRITICAL):
 - DO NOT recommend ANY remedies (no gemstones to wear, no rituals, no havan, no donations, no fasting).
@@ -749,127 +895,12 @@ Return ONLY valid JSON in this exact structure:
 
     data = generate_json(prompt)
 
-    # Extract scenes
     scenes = data.get("scenes", [])
     if not scenes:
         raise ValueError("Gemini returned no scenes for the Reel.")
 
-    # Detect celestial entity for divine reverence & pronoun sanitization
-    graha_map = {
-        "surya": {"dev": "सूर्य देव", "alt": "सूर्य", "en": "Sun"},
-        "sun": {"dev": "सूर्य देव", "alt": "सूर्य", "en": "Sun"},
-        "chandra": {"dev": "चन्द्र देव", "alt": "चन्द्रमा", "en": "Moon"},
-        "moon": {"dev": "चन्द्र देव", "alt": "चन्द्रमा", "en": "Moon"},
-        "mangal": {"dev": "मंगल देव", "alt": "मंगल", "en": "Mars"},
-        "mars": {"dev": "मंगल देव", "alt": "मंगल", "en": "Mars"},
-        "budh": {"dev": "बुध देव", "alt": "बुध", "en": "Mercury"},
-        "mercury": {"dev": "बुध देव", "alt": "बुध", "en": "Mercury"},
-        "guru": {"dev": "गुरु बृहस्पति", "alt": "गुरु देव", "en": "Jupiter"},
-        "jupiter": {"dev": "गुरु बृहस्पति", "alt": "गुरु देव", "en": "Jupiter"},
-        "pukhraj": {"dev": "गुरु बृहस्पति", "alt": "गुरु देव", "en": "Jupiter"},
-        "yellow sapphire": {"dev": "गुरु बृहस्पति", "alt": "गुरु देव", "en": "Jupiter"},
-        "shukra": {"dev": "शुक्र देव", "alt": "शुक्र", "en": "Venus"},
-        "venus": {"dev": "शुक्र देव", "alt": "शुक्र", "en": "Venus"},
-        "diamond": {"dev": "शुक्र देव", "alt": "शुक्र", "en": "Venus"},
-        "heera": {"dev": "शुक्र देव", "alt": "शुक्र", "en": "Venus"},
-        "shani": {"dev": "शनि देव", "alt": "शनि", "en": "Saturn"},
-        "saturn": {"dev": "शनि देव", "alt": "शनि", "en": "Saturn"},
-        "blue sapphire": {"dev": "शनि देव", "alt": "शनि", "en": "Saturn"},
-        "neelam": {"dev": "शनि देव", "alt": "शनि", "en": "Saturn"},
-        "rahu": {"dev": "राहु देव", "alt": "राहु", "en": "Rahu"},
-        "ketu": {"dev": "केतु देव", "alt": "केतु", "en": "Ketu"},
-    }
-    detected_graha = None
-    topic_lower = topic.lower()
-    for k, v in graha_map.items():
-        if k in topic_lower:
-            detected_graha = v
-            break
-
-    # Humanize spoken lines & sanitize against degree jargon
-    full_script_lines = []
-    for sc in scenes:
-        line = clean_and_humanize_text(sc["spoken_line"])
-        # Transform first-person rookie mistakes to consulting astrologer client case studies
-        line = re.sub(r"\b(?:मैंने|मुझे)\s+(?:अपनी\s+)?कुंडली\s+बिना\s+(?:देखे|दिखाए|जांचे)\b", "हमारे एक क्लाइंट ने बिना कुंडली जांचे", line)
-        line = re.sub(r"\bजब\s+मैंने\s+अपनी\s+कुंडली\b", "जब हमारे एक क्लाइंट ने अपनी कुंडली", line)
-        line = re.sub(r"\bजब\s+मैंने\b", "जब हमारे एक क्लाइंट ने", line)
-        line = re.sub(r"\bमैंने\s+गलत\s+तरीके\s+से\b", "हमारे एक क्लाइंट ने गलत तरीके से", line)
-        line = re.sub(r"\bमेरा\s+नुकसान\s+हुआ\b", "क्लाइंट को भारी नुकसान हुआ", line)
-        line = re.sub(r"\bमुझे\s+भारी\s+नुकसान\s+हुआ\b", "क्लाइंट को भारी नुकसान हुआ", line)
-        line = re.sub(r"\bमुझसे\s+गलती\s+हुई\b", "क्लाइंट से यह गलती हुई", line)
-
-        # Strict negative constraint: purge degree references
-        line = re.sub(r"\b(बिना|की|के)?\s*(सटीक\s*)?डिग्री(यों)?\s*(जांचे|देखे|के)?", "दशा और गोचर समझे", line)
-        line = re.sub(r"\bडिग्री(यों)?\b", "स्थिति", line)
-        line = re.sub(r"\bअंश(ों)?\b", "दशा", line)
-        line = re.sub(r"\bdegrees?\b", "placements", line, flags=re.I)
-
-        # STRICT MANDATE - ZERO REMEDIES & ZERO MANTRAS
-        # 1. Purge all mantras (Devanagari ॐ, Beej mantras, Vedic chants)
-        line = re.sub(r"ॐ\s*[\u0900-\u097F\s]+?(?:नमः|स्वाहा|फट्|वषट्)", "", line)
-        line = re.sub(r"\bॐ\b", "", line)
-        line = re.sub(r"\b(?:बीज\s*मंत्र|वैदिक\s*मंत्र|मंत्र\s*जप|मंत्रों?)\b", "कुंडली नियम", line)
-        line = re.sub(r"\b(?:mantras?|beej\s*mantra)\b", "chart placement", line, flags=re.I)
-
-        # 2. Eliminate all remedy recommendations & enforce placement awareness
-        line = re.sub(r"\b(?:पांचवां\s*उपाय|अचूक\s*उपाय|वैदिक\s*उपाय|सरल\s*उपाय)\b", "पांचवां नियम", line)
-        line = re.sub(r"\bउपायों?\b", "नियम", line)
-        line = re.sub(r"\b(यह|सच्चा|प्राकृतिक|सिद्ध)?\s*रत्न\s*(पहनें|धारण करें|पहनना चाहिए)\b", "बिना कुंडली जांचे कोई रत्न न पहनें", line)
-        line = re.sub(r"\bरत्न\s*पहनने\s*के\s*नियम\b", "कुंडली भाव के नियम", line)
-        line = re.sub(r"\bहवन\s*करें\b", "परामर्श लें", line)
-        line = re.sub(r"\bदान\s*करें\b", "स्थिति जांचें", line)
-        line = re.sub(r"\s{2,}", " ", line).strip()
-
-        # Strict reverence constraint: eliminate generic pronouns ("यह ग्रह", "इस ग्रह")
-        if detected_graha:
-            dev_name = detected_graha["dev"]
-            alt_name = detected_graha["alt"]
-            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+का\b", f"{alt_name} का", line)
-            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+की\b", f"{alt_name} की", line)
-            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+के\b", f"{alt_name} के", line)
-            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+को\b", f"{dev_name} को", line)
-            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+से\b", f"{dev_name} से", line)
-            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+पर\b", f"{alt_name} पर", line)
-            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\s+में\b", f"{alt_name} में", line)
-            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\b", dev_name, line)
-            line = re.sub(r"\bउक्त\s+ग्रह\b", dev_name, line)
-            line = re.sub(r"\bग्रह\s+की\s+ऊर्जा\b", f"{alt_name} की ऊर्जा", line)
-            line = re.sub(r"\bग्रह\s+का\s+प्रभाव\b", f"{alt_name} का प्रभाव", line)
-            line = re.sub(r"\bग्रह\s+कमजोर\b", f"{dev_name} कमजोर", line)
-            line = re.sub(r"\bकमजोर\s+ग्रह\b", f"कमजोर {alt_name}", line)
-            line = re.sub(r"\bthis\s+planet\b", f"Lord {detected_graha['en']}", line, flags=re.I)
-        else:
-            line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\b", "संबंधित ग्रह", line)
-            line = re.sub(r"\bthis\s+planet\b", "this celestial placement", line, flags=re.I)
-
-        sc["spoken_line"] = line
-        full_script_lines.append(sc["spoken_line"])
-
-        # Enforce on-screen text word limit & sanitize
-        clean_card = re.sub(r"\b(?:MY\s+FINANCES|MY\s+CAREER|MY\s+LIFE|MY\s+MISTAKE)\b", "CLIENT FINANCES", sc["on_screen_text"], flags=re.I)
-        clean_card = re.sub(r"\bRUINED\s+MY\b", "RUINED CLIENT", clean_card, flags=re.I)
-        clean_card = re.sub(r"\bCOST\s+ME\b", "COST CLIENT", clean_card, flags=re.I)
-        clean_card = re.sub(r"\bI\s+LOST\b", "CLIENT LOST", clean_card, flags=re.I)
-        clean_card = re.sub(r"\bDEGREES?\b", "RULES", clean_card, flags=re.I)
-        clean_card = re.sub(r"\bDEAD DEGREES\b", "WRONG ENERGIES", clean_card, flags=re.I)
-        clean_card = re.sub(r"\b(?:SACRED\s+BEEJ\s+REMEDY|SACRED\s+REMEDY\s*&\s*STONE|SACRED\s+REMEDY|VEDIC\s+REMEDY|REMEDY\s*&\s*STONE)\b", "AVOID BLIND REMEDIES", clean_card, flags=re.I)
-        if not re.search(r"AVOID BLIND REMEDIES", clean_card, re.I):
-            clean_card = re.sub(r"\b(?:REMEDY|REMEDIES|UPAY|BEEJ|MANTRA)\b", "PLACEMENT", clean_card, flags=re.I)
-        if detected_graha:
-            clean_card = re.sub(r"\bTHIS PLANET\b", detected_graha["en"].upper(), clean_card, flags=re.I)
-            clean_card = re.sub(r"\bYEH GRAH\b", detected_graha["dev"], clean_card, flags=re.I)
-        card_words = clean_card.split()
-        if len(card_words) > 6:
-            sc["on_screen_text"] = " ".join(card_words[:6])
-        else:
-            sc["on_screen_text"] = clean_card
-
-        if "badge" in sc:
-            badge_text = clean_and_humanize_text(sc["badge"]).upper()
-            badge_text = re.sub(r"\bVEDIC REMEDY & ADVICE\b", "CHECK PLACEMENT & DM US", badge_text)
-            badge_text = re.sub(r"\b(?:REMEDY|REMEDIES|UPAY|MANTRA)\b", "PLACEMENT", badge_text)
-            sc["badge"] = badge_text
+    scenes = sanitize_script_dialogue(scenes, topic)
+    full_script_lines = [sc["spoken_line"] for sc in scenes]
 
     full_script_text = "\n".join(full_script_lines)
 

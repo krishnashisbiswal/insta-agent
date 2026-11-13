@@ -26,6 +26,13 @@ BANNED_IMAGE_NAMES: Set[str] = {
     "2_kundli_chart.jpg",
     "4_sacred_havan.jpg",
     "5_temple_sanctum.jpg",
+    "gemstone_blue_sapphire.jpg",
+    "gemstone_yellow_sapphire.jpg",
+    "gemstone_ruby.jpg",
+    "gemstone_emerald.jpg",
+    "temple_sanctum_golden_diyas.jpg",
+    "vedic_astrology_parchment_chart.jpg",
+    "sacred_vedic_fire_altar.jpg",
 }
 
 
@@ -85,7 +92,11 @@ class DynamicVisualEngine:
     @classmethod
     def is_image_used(cls, img_path: Path) -> bool:
         """Checks if this image has ever been used in this or past videos."""
-        if img_path.name in BANNED_IMAGE_NAMES:
+        name = img_path.name.lower()
+        if name in BANNED_IMAGE_NAMES:
+            return True
+        # Permanently block any legacy static artifact b-roll or repeated files
+        if any(pat in name for pat in ["neelam_sc", "pukhraj_sc", "panna_sc", "gomed_sc", "ruby_sc", "sample_"]):
             return True
         reg = cls.get_used_registry()
         if img_path.name in reg:
@@ -474,39 +485,6 @@ class DynamicVisualEngine:
         prompt = cls.get_trait_visual_prompt(scene_dict, topic, scene_idx)
         prompt_hash = hashlib.md5(f"{reel_slug}_{scene_idx}_{timestamp_seed}_{prompt}".encode()).hexdigest()[:10]
         target_file = GENERATED_BROLL_DIR / f"{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
-
-        # 0. CHECK PRE-GENERATED DEDICATED SCENE ASSETS IN ARTIFACTS OR ASSETS
-        brain_dir = Path("C:/Users/KRISHNA/.gemini/antigravity/brain/0a5ff966-00bf-4756-8265-ddab3fbea9bd")
-        slug_prefix = reel_slug.split("_")[0] if reel_slug else "neelam"
-        patterns = [
-            f"*{slug_prefix}*sc{scene_idx + 1}*.jpg",
-            f"*sc{scene_idx + 1}*.jpg",
-        ]
-        if "neelam" in (topic or "").lower() or "blue sapphire" in (topic or "").lower():
-            patterns.insert(0, f"neelam_sc{scene_idx + 1}*.jpg")
-        elif "pukhraj" in (topic or "").lower() or "yellow sapphire" in (topic or "").lower():
-            patterns.insert(0, f"pukhraj_sc{scene_idx + 1}*.jpg")
-        elif "panna" in (topic or "").lower() or "emerald" in (topic or "").lower():
-            patterns.insert(0, f"panna_sc{scene_idx + 1}*.jpg")
-        elif "gomed" in (topic or "").lower() or "hessonite" in (topic or "").lower():
-            patterns.insert(0, f"gomed_sc{scene_idx + 1}*.jpg")
-        elif "ruby" in (topic or "").lower() or "manik" in (topic or "").lower():
-            patterns.insert(0, f"ruby_sc{scene_idx + 1}*.jpg")
-
-        for pat in patterns:
-            if brain_dir.exists():
-                matched = list(brain_dir.glob(pat))
-                if matched:
-                    cand = matched[0]
-                    if cand.stat().st_size > 30000 and not cls.is_image_used(cand) and cand not in used_images:
-                        with Image.open(cand) as opened_img:
-                            img = opened_img.convert("RGB")
-                        cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
-                        cls.save_clean_photographic_image(cropped, target_file, quality=95)
-                        cls.register_used_image(target_file)
-                        used_images.add(target_file)
-                        logger.info(f"[DynamicVisualEngine] Using dedicated pre-generated asset -> {cand.name}")
-                        return target_file
 
         # 1. ATTEMPT AI GENERATION (Pollinations AI with custom seed & 1080x1920 9:16 target)
         try:

@@ -147,7 +147,7 @@ def generate_sarvam_speech(
     speaker: str = "arjun",
     language_code: Optional[str] = None,
     model: str = "bulbul:v4-flash",
-    pace: float = 1.00,
+    pace: float = 1.20,
 ) -> Tuple[Path, float, List[Dict[str, Any]]]:
     """
     Generate authentic Indic speech using Sarvam AI Text-to-Speech API.
@@ -289,7 +289,7 @@ def generate_speech(
             elif os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER):
                 speaker_choice = os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER).strip()
 
-            sarvam_pace = float(os.getenv("SARVAM_PACE", SARVAM_PACE or "1.00"))
+            sarvam_pace = float(os.getenv("SARVAM_PACE", SARVAM_PACE or "1.20"))
             logger.info(f"Synthesizing authentic Indic voice with Sarvam AI (Speaker: {speaker_choice}, Pace: {sarvam_pace})...")
             out_p, dur, sents = generate_sarvam_speech(clean_text, output_path, speaker=speaker_choice, pace=sarvam_pace)
             return {

@@ -111,7 +111,7 @@ VOICE_ENGINE = os.getenv("VOICE_ENGINE", "sarvam").strip().lower()
 SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "").strip()
 SARVAM_SPEAKER = os.getenv("SARVAM_SPEAKER", "arjun").strip()
 SARVAM_MODEL = os.getenv("SARVAM_MODEL", "bulbul:v4-flash").strip()
-SARVAM_PACE = float(os.getenv("SARVAM_PACE", "1.00"))
+SARVAM_PACE = float(os.getenv("SARVAM_PACE", "1.20"))
 
 # Brand watermark for Instagram reels
 BRAND_WATERMARK = os.getenv("BRAND_WATERMARK", "@neovibestore.in").strip()

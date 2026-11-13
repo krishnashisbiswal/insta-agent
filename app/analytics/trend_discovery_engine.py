@@ -288,6 +288,12 @@ RECENT HOUSES RECENTLY COVERED: {recent_houses[-3:]}
 
 CRITICAL DIVERSITY MANDATE:
 - DO NOT use generic repetitive templates like '5 Deadly Mistakes' or '5 Fatal Mistakes' unless explicitly requested.
+- STRICT BAN ON REPETITIVE FINANCIAL LOSS TOPICS: DO NOT propose topics about '45 lakhs loss', 'sudden financial collapse', or repetitive gemstone disasters!
+- VARY themes widely across life pillars:
+  * Spiritual Awakening, 3 AM wakeups, intuition & past life debts
+  * Career breakthroughs, Saturn's reality check & hidden 10th house blocks
+  * Relationship karma, 7th house Ketu detachment & emotional peace
+  * Nakshatra frequencies, soul purpose & Vipreet Raj Yoga
 - Create an entirely fresh, unique angle fitting the '{chosen_archetype['name']}' archetype.
 - Make the title fascinating, educational, dignified, and curiosity-inducing.
 
