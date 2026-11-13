@@ -95,7 +95,13 @@ def test_dynamic_point_count_detection():
             pts = 3
         assert pts == expected_points
 
-        if any(w in topic.lower() for w in ["mistake", "error", "bhool", "galti"]):
+        if any(w in topic.lower() for w in ["benefit", "fayde", "laabh", "fayda", "advantage"]):
+            prefix = "BENEFIT"
+        elif any(w in topic.lower() for w in ["guide", "how to", "science", "secret", "shastra", "vidhi"]):
+            prefix = "GUIDE"
+        elif any(w in topic.lower() for w in ["crystal", "rudraksha", "rudraksh", "pyrite", "amethyst", "tourmaline", "citrine"]):
+            prefix = "BENEFIT"
+        elif any(w in topic.lower() for w in ["mistake", "error", "bhool", "galti"]):
             prefix = "MISTAKE"
         elif any(w in topic.lower() for w in ["sign", "symptom", "lakshan", "warning", "awaken", "meaning", "wake"]):
             prefix = "SIGN"
@@ -108,3 +114,80 @@ def test_dynamic_point_count_detection():
         else:
             prefix = "INSIGHT"
         assert prefix == expected_prefix
+
+
+def test_crystal_and_rudraksha_categories_present():
+    engine = TrendDiscoveryEngine()
+    categories = engine.TRENDING_CATEGORIES
+
+    assert "healing_crystals" in categories
+    assert "sacred_rudraksha" in categories
+
+    crystals_cat = categories["healing_crystals"]
+    assert "crystals" in crystals_cat
+    crystal_names = [c["name"] for c in crystals_cat["crystals"]]
+    assert any("Pyrite" in n for n in crystal_names)
+    assert any("Amethyst" in n for n in crystal_names)
+    assert any("Tourmaline" in n for n in crystal_names)
+    assert any("Citrine" in n for n in crystal_names)
+
+    rudraksha_cat = categories["sacred_rudraksha"]
+    assert "beads" in rudraksha_cat
+    bead_names = [b["name"] for b in rudraksha_cat["beads"]]
+    assert any("5 Mukhi" in n for n in bead_names)
+    assert any("7 Mukhi" in n for n in bead_names)
+    assert any("Gauri Shankar" in n for n in bead_names)
+
+    # Ensure archetypes include sacred energy benefits
+    archetype_ids = [a["id"] for a in engine.NARRATIVE_ARCHETYPES]
+    assert "sacred_energy_benefits" in archetype_ids
+    assert "crystal_and_rudraksha_guide" in archetype_ids
+
+
+def test_crystal_and_rudraksha_badges_and_prompts():
+    from app.video.dynamic_visual_engine import DynamicVisualEngine
+    from app.agents.script_agent import resolve_entity_context
+
+    # 1. Resolve Entity Context
+    pyrite_ctx = resolve_entity_context("3 Hidden Benefits of Keeping Pyrite Crystal on Your Work Desk")
+    assert pyrite_ctx is not None
+    assert pyrite_ctx["type"] == "crystal"
+    assert pyrite_ctx["name_en"] == "Pyrite"
+
+    rudraksha_ctx = resolve_entity_context("The Science of 5 Mukhi Rudraksha: How It Regulates Blood Pressure")
+    assert rudraksha_ctx is not None
+    assert rudraksha_ctx["type"] == "rudraksha"
+    assert "5 Mukhi" in rudraksha_ctx["name_en"]
+
+    # 2. Dynamic Visual Engine Prompts
+    pyrite_scene = {
+        "spoken_line": "कार्यस्थल पर पायराइट क्रिस्टल रखने से मानसिक एकाग्रता और सकारात्मक ऊर्जा कैसे बढ़ती है?",
+        "on_screen_text": "PYRITE CRYSTAL BENEFITS",
+        "visual_description": "macro shot of golden pyrite crystal on wooden desk",
+    }
+    p_prompt = DynamicVisualEngine.get_trait_visual_prompt(
+        pyrite_scene, "3 Hidden Benefits of Keeping Pyrite Crystal on Your Work Desk", scene_idx=0
+    )
+    assert "pyrite" in p_prompt.lower()
+    assert "macro" in p_prompt.lower()
+
+    rudraksha_scene = {
+        "spoken_line": "प्राकृतिक पंचमुखी रुद्राक्ष आपके तंत्रिका तंत्र को शांत करने में मदद करता है।",
+        "on_screen_text": "5 MUKHI RUDRAKSHA SCIENCE",
+        "visual_description": "sacred nepali rudraksha bead with water droplets",
+    }
+    r_prompt = DynamicVisualEngine.get_trait_visual_prompt(
+        rudraksha_scene, "The Science of 5 Mukhi Rudraksha", scene_idx=0
+    )
+    assert "rudraksha" in r_prompt.lower()
+
+    # 3. Dynamic Visual Engine Search Queries
+    p_query = DynamicVisualEngine.get_scene_search_query(
+        pyrite_scene, "3 Hidden Benefits of Keeping Pyrite Crystal on Your Work Desk", scene_idx=0
+    )
+    assert "pyrite" in p_query.lower()
+
+    r_query = DynamicVisualEngine.get_scene_search_query(
+        rudraksha_scene, "The Science of 5 Mukhi Rudraksha", scene_idx=0
+    )
+    assert "rudraksha" in r_query.lower()

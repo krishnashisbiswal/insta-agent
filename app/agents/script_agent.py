@@ -72,25 +72,25 @@ def generate_hooks(
         example_json = """{
   "hooks": [
     {
-      "id": "contrarian",
-      "name": "Contrarian Truth",
-      "spoken": "रुकिए! नीलम या कोई भी रत्न पहनने से पहले ये 5 सबसे बड़ी गलतियां जरूर जान लें।",
-      "on_screen": "5 DEADLY GEMSTONE MISTAKES",
-      "why_it_works": "Disrupts conventional assumption with urgent Jyotish warning"
+      "id": "crystal_benefits",
+      "name": "Natural Crystal Benefits",
+      "spoken": "क्या आप जानते हैं कि कार्यस्थल पर पायराइट क्रिस्टल रखने से मानसिक एकाग्रता और सकारात्मक ऊर्जा कैसे बढ़ती है?",
+      "on_screen": "PYRITE CRYSTAL BENEFITS",
+      "why_it_works": "Inspiring and practical benefit discovery for focus and prosperity"
     },
     {
-      "id": "relatable_curiosity",
-      "name": "Relatable Curiosity",
-      "spoken": "क्या रत्न पहनने के बाद अचानक भारी धन हानि या अनिद्रा शुरू हो गई है?",
-      "on_screen": "WEARING WRONG GEMSTONE?",
-      "why_it_works": "Hyper-relatable gemstone side effect identification"
+      "id": "rudraksha_science",
+      "name": "Sacred Rudraksha Science",
+      "spoken": "प्राकृतिक पंचमुखी रुद्राक्ष आपके तंत्रिका तंत्र और मानसिक तनाव को शांत करने में कैसे मदद करता है?",
+      "on_screen": "5 MUKHI RUDRAKSHA SCIENCE",
+      "why_it_works": "Ancient Vedic spiritual science backed by calm bio-electromagnetic harmony"
     },
     {
-      "id": "bold_warning",
-      "name": "Urgent Warning",
-      "spoken": "90% लोग शत्रु ग्रहों के रत्न एक साथ पहनकर अपना भारी नुकसान कर लेते हैं।",
-      "on_screen": "AVOID ENEMY STONES",
-      "why_it_works": "Fear of financial and mental loss"
+      "id": "auric_protection",
+      "name": "Empowering Energy Shield",
+      "spoken": "यदि आप निरंतर मानसिक थकान महसूस करते हैं, तो ब्लैक टूमलाइन और अमेथिस्ट आपके आभामंडल को कैसे शुद्ध करते हैं?",
+      "on_screen": "SHIELD YOUR ENERGY",
+      "why_it_works": "High-value self-care and energetic protection wisdom"
     }
   ]
 }"""
@@ -451,11 +451,215 @@ def resolve_entity_context(topic: str) -> Optional[Dict[str, Any]]:
             "mantra": "ॐ स्रां स्रीं स्रौं सः केतवे नमः",
             "significations": "मोक्ष, वैराग्य, अंतर्ज्ञान, आध्यात्मिक सिद्धि और तंत्र",
         },
+        "pyrite": {
+            "type": "crystal",
+            "name_en": "Pyrite",
+            "name_hi_dev": "पायराइट क्रिस्टल",
+            "name_hi_alt": "पायराइट",
+            "gemstone": "Natural Golden Pyrite Crystal",
+            "gemstone_hi": "पायराइट",
+            "significations": "धन आकर्षण, आत्मविश्वास, इच्छाशक्ति, मानसिक स्पष्टता और कार्यक्षेत्र में सफलता",
+        },
+        "amethyst": {
+            "type": "crystal",
+            "name_en": "Amethyst",
+            "name_hi_dev": "अमेथिस्ट (जामुनिया) क्रिस्टल",
+            "name_hi_alt": "अमेथिस्ट",
+            "gemstone": "Raw Natural Amethyst Geode",
+            "gemstone_hi": "अमेथिस्ट",
+            "significations": "मानसिक शांति, तनाव व चिंता से मुक्ति, गहरी नींद और अंतर्ज्ञान जागृति",
+        },
+        "tourmaline": {
+            "type": "crystal",
+            "name_en": "Black Tourmaline",
+            "name_hi_dev": "ब्लैक टूमलाइन क्रिस्टल",
+            "name_hi_alt": "ब्लैक टूमलाइन",
+            "gemstone": "Natural Black Tourmaline Tower",
+            "gemstone_hi": "ब्लैक टूमलाइन",
+            "significations": "नकारात्मक ऊर्जा और नजर दोष से सुरक्षा, आभामंडल शुद्धि और ग्राउंडिंग",
+        },
+        "citrine": {
+            "type": "crystal",
+            "name_en": "Citrine",
+            "name_hi_dev": "सिट्रीन क्रिस्टल",
+            "name_hi_alt": "सिट्रीन",
+            "gemstone": "Natural Golden Citrine Quartz",
+            "gemstone_hi": "सिट्रीन",
+            "significations": "व्यापार में समृद्धि, आनंद, आशावादिता और सौर चक्र ऊर्जा संतुलन",
+        },
+        "rose quartz": {
+            "type": "crystal",
+            "name_en": "Rose Quartz",
+            "name_hi_dev": "रोज़ क्वार्ट्ज क्रिस्टल",
+            "name_hi_alt": "रोज़ क्वार्ट्ज",
+            "gemstone": "Natural Rose Quartz",
+            "gemstone_hi": "रोज़ क्वार्ट्ज",
+            "significations": "हृदय चक्र संतुलन, रिश्तों में मिठास, आत्म-प्रेम और भावनात्मक उपचार",
+        },
+        "tiger eye": {
+            "type": "crystal",
+            "name_en": "Tiger's Eye",
+            "name_hi_dev": "टाइगर आई क्रिस्टल",
+            "name_hi_alt": "टाइगर आई",
+            "gemstone": "Natural Tiger's Eye",
+            "gemstone_hi": "टाइगर आई",
+            "significations": "निर्भयता, एकाग्रता, साहस और नकारात्मक नजर से रक्षा",
+        },
+        "rudraksha": {
+            "type": "rudraksha",
+            "name_en": "Rudraksha",
+            "name_hi_dev": "पवित्र रुद्राक्ष",
+            "name_hi_alt": "रुद्राक्ष",
+            "gemstone": "Authentic Nepali Rudraksha",
+            "gemstone_hi": "नेपाली रुद्राक्ष",
+            "significations": "भगवान शिव की कृपा, तंत्रिका तंत्र की शांति, रक्तचाप संतुलन और सकारात्मक आभामंडल",
+        },
+        "rudraksh": {
+            "type": "rudraksha",
+            "name_en": "Rudraksha",
+            "name_hi_dev": "पवित्र रुद्राक्ष",
+            "name_hi_alt": "रुद्राक्ष",
+            "gemstone": "Authentic Nepali Rudraksha",
+            "gemstone_hi": "नेपाली रुद्राक्ष",
+            "significations": "भगवान शिव की कृपा, तंत्रिका तंत्र की शांति, रक्तचाप संतुलन और सकारात्मक आभामंडल",
+        },
+        "gauri shankar": {
+            "type": "rudraksha",
+            "name_en": "Gauri Shankar Rudraksha",
+            "name_hi_dev": "गौरी शंकर रुद्राक्ष",
+            "name_hi_alt": "गौरी शंकर",
+            "gemstone": "Natural Gauri Shankar Rudraksha",
+            "gemstone_hi": "गौरी शंकर रुद्राक्ष",
+            "significations": "शिव-शक्ति एकाकार, दांपत्य सुख, पारिवारिक शांति और रिश्तों में सामंजस्य",
+        },
+        "5 mukhi": {
+            "type": "rudraksha",
+            "name_en": "5 Mukhi Rudraksha",
+            "name_hi_dev": "पंचमुखी रुद्राक्ष",
+            "name_hi_alt": "पंचमुखी रुद्राक्ष",
+            "gemstone": "Authentic Nepali 5 Mukhi Rudraksha",
+            "gemstone_hi": "पंचमुखी रुद्राक्ष",
+            "significations": "भगवान कालाग्नि रुद्र की कृपा, रक्तचाप संतुलन, मानसिक शांति और तंत्रिका तंत्र स्थिरता",
+        },
+        "panchmukhi": {
+            "type": "rudraksha",
+            "name_en": "5 Mukhi Rudraksha",
+            "name_hi_dev": "पंचमुखी रुद्राक्ष",
+            "name_hi_alt": "पंचमुखी रुद्राक्ष",
+            "gemstone": "Authentic Nepali 5 Mukhi Rudraksha",
+            "gemstone_hi": "पंचमुखी रुद्राक्ष",
+            "significations": "भगवान कालाग्नि रुद्र की कृपा, रक्तचाप संतुलन, मानसिक शांति और तंत्रिका तंत्र स्थिरता",
+        },
+        "7 mukhi": {
+            "type": "rudraksha",
+            "name_en": "7 Mukhi Rudraksha",
+            "name_hi_dev": "सप्तमुखी रुद्राक्ष",
+            "name_hi_alt": "सप्तमुखी रुद्राक्ष",
+            "gemstone": "Authentic Nepali 7 Mukhi Rudraksha",
+            "gemstone_hi": "सप्तमुखी रुद्राक्ष",
+            "significations": "मां महालक्ष्मी की कृपा, स्थायी धन, अटके हुए आर्थिक मार्ग खोलना और समृद्धि",
+        },
+        "saptamukhi": {
+            "type": "rudraksha",
+            "name_en": "7 Mukhi Rudraksha",
+            "name_hi_dev": "सप्तमुखी रुद्राक्ष",
+            "name_hi_alt": "सप्तमुखी रुद्राक्ष",
+            "gemstone": "Authentic Nepali 7 Mukhi Rudraksha",
+            "gemstone_hi": "सप्तमुखी रुद्राक्ष",
+            "significations": "मां महालक्ष्मी की कृपा, स्थायी धन, अटके हुए आर्थिक मार्ग खोलना और समृद्धि",
+        },
+        "8 mukhi": {
+            "type": "rudraksha",
+            "name_en": "8 Mukhi Rudraksha",
+            "name_hi_dev": "अष्टमुखी रुद्राक्ष",
+            "name_hi_alt": "अष्टमुखी रुद्राक्ष",
+            "gemstone": "Authentic Nepali 8 Mukhi Rudraksha",
+            "gemstone_hi": "अष्टमुखी रुद्राक्ष",
+            "significations": "भगवान श्री गणेश का आशीर्वाद, कार्यों में आ रही अदृश्य बाधाओं का नाश और तीक्ष्ण बुद्धि",
+        },
+        "10 mukhi": {
+            "type": "rudraksha",
+            "name_en": "10 Mukhi Rudraksha",
+            "name_hi_dev": "दशमुखी रुद्राक्ष",
+            "name_hi_alt": "दशमुखी रुद्राक्ष",
+            "gemstone": "Authentic Nepali 10 Mukhi Rudraksha",
+            "gemstone_hi": "दशमुखी रुद्राक्ष",
+            "significations": "भगवान श्री विष्णु की कृपा, दसों दिशाओं से सुरक्षा, नकारात्मक शक्तियों और भय से मुक्ति",
+        },
+        "clear quartz": {
+            "type": "crystal",
+            "name_en": "Clear Quartz",
+            "name_hi_dev": "स्फटिक (क्लियर क्वार्ट्ज)",
+            "name_hi_alt": "स्फटिक",
+            "gemstone": "Natural Clear Quartz Crystal",
+            "gemstone_hi": "स्फटिक",
+            "significations": "चित्त की एकाग्रता, उच्च ऊर्जा कंपन, आभामंडल प्रवर्धन और मानसिक स्पष्टता",
+        },
+        "sphatik": {
+            "type": "crystal",
+            "name_en": "Sphatik (Clear Quartz)",
+            "name_hi_dev": "प्राकृतिक स्फटिक",
+            "name_hi_alt": "स्फटिक",
+            "gemstone": "Natural Sphatik Quartz",
+            "gemstone_hi": "स्फटिक",
+            "significations": "चित्त की एकाग्रता, उच्च ऊर्जा कंपन, आभामंडल प्रवर्धन और मानसिक स्पष्टता",
+        },
+        "5 mukhi rudraksha": {
+            "type": "rudraksha",
+            "name_en": "5 Mukhi Rudraksha",
+            "name_hi_dev": "पंचमुखी रुद्राक्ष",
+            "name_hi_alt": "पंचमुखी रुद्राक्ष",
+            "gemstone": "Authentic Nepali 5 Mukhi Rudraksha",
+            "gemstone_hi": "पंचमुखी रुद्राक्ष",
+            "significations": "भगवान कालाग्नि रुद्र की कृपा, रक्तचाप संतुलन, मानसिक शांति और तंत्रिका तंत्र स्थिरता",
+        },
+        "7 mukhi rudraksha": {
+            "type": "rudraksha",
+            "name_en": "7 Mukhi Rudraksha",
+            "name_hi_dev": "सप्तमुखी रुद्राक्ष",
+            "name_hi_alt": "सप्तमुखी रुद्राक्ष",
+            "gemstone": "Authentic Nepali 7 Mukhi Rudraksha",
+            "gemstone_hi": "सप्तमुखी रुद्राक्ष",
+            "significations": "मां महालक्ष्मी की कृपा, स्थायी धन, अटके हुए आर्थिक मार्ग खोलना और समृद्धि",
+        },
+        "8 mukhi rudraksha": {
+            "type": "rudraksha",
+            "name_en": "8 Mukhi Rudraksha",
+            "name_hi_dev": "अष्टमुखी रुद्राक्ष",
+            "name_hi_alt": "अष्टमुखी रुद्राक्ष",
+            "gemstone": "Authentic Nepali 8 Mukhi Rudraksha",
+            "gemstone_hi": "अष्टमुखी रुद्राक्ष",
+            "significations": "भगवान श्री गणेश का आशीर्वाद, कार्यों में आ रही अदृश्य बाधाओं का नाश और तीक्ष्ण बुद्धि",
+        },
+        "10 mukhi rudraksha": {
+            "type": "rudraksha",
+            "name_en": "10 Mukhi Rudraksha",
+            "name_hi_dev": "दशमुखी रुद्राक्ष",
+            "name_hi_alt": "दशमुखी रुद्राक्ष",
+            "gemstone": "Authentic Nepali 10 Mukhi Rudraksha",
+            "gemstone_hi": "दशमुखी रुद्राक्ष",
+            "significations": "भगवान श्री विष्णु की कृपा, दसों दिशाओं से सुरक्षा, नकारात्मक शक्तियों और भय से मुक्ति",
+        },
+        "gauri shankar rudraksha": {
+            "type": "rudraksha",
+            "name_en": "Gauri Shankar Rudraksha",
+            "name_hi_dev": "गौरी शंकर रुद्राक्ष",
+            "name_hi_alt": "गौरी शंकर",
+            "gemstone": "Natural Gauri Shankar Rudraksha",
+            "gemstone_hi": "गौरी शंकर रुद्राक्ष",
+            "significations": "शिव-शक्ति एकाकार, दांपत्य सुख, पारिवारिक शांति और रिश्तों में सामंजस्य",
+        },
     }
 
-    for k, v in planet_map.items():
+    # Priority: Specific compound terms (mukhi, shankar, blue sapphire, yellow sapphire, black tourmaline, rose quartz)
+    # come before single generic words like "rudraksha", "crystal".
+    def sort_key(key_str: str):
+        is_generic = key_str in ["rudraksha", "rudraksh", "crystal", "gemstone"]
+        return (1 if is_generic else 0, -len(key_str))
+
+    for k in sorted(planet_map.keys(), key=sort_key):
         if re.search(rf"\b{k}\b", t):
-            return v
+            return planet_map[k]
     return None
 
 

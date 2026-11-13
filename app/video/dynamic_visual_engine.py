@@ -122,10 +122,37 @@ class DynamicVisualEngine:
             "cinematic lighting, photorealistic, 9:16 vertical aspect ratio, masterwork"
         )
 
-        # 1. Identify specific celestial/gemstone entity
+        # 1. Identify specific celestial/gemstone/crystal/rudraksha entity
         gem_name = "Vedic Astrological Gemstone"
         planet_name = "Cosmic Celestial Entity"
-        if any(k in entity_context for k in ["neelam", "blue sapphire", "shani", "saturn"]):
+        if any(k in entity_context for k in ["pyrite"]):
+            gem_name = "natural raw golden Pyrite crystal cluster sparkling with metallic brass luster"
+            planet_name = "golden solar abundance aura and sacred geometry"
+        elif any(k in entity_context for k in ["amethyst"]):
+            gem_name = "natural deep violet raw Amethyst geode cluster glowing with sacred purple crystalline light"
+            planet_name = "soothing crown chakra spiritual aura and peaceful starlight"
+        elif any(k in entity_context for k in ["tourmaline"]):
+            gem_name = "raw natural Black Tourmaline crystalline tower with glossy jet-black striated texture"
+            planet_name = "impenetrable auric protective shield and grounding earth energy"
+        elif any(k in entity_context for k in ["citrine"]):
+            gem_name = "warm radiant natural Golden Citrine quartz crystal glowing with amber sunshine"
+            planet_name = "radiant solar plexus chakra energy of manifestation and prosperity"
+        elif any(k in entity_context for k in ["rose quartz"]):
+            gem_name = "delicate translucent pink Rose Quartz raw crystal specimen with soft loving luminescence"
+            planet_name = "gentle anahata heart chakra pink aura of harmony and peace"
+        elif any(k in entity_context for k in ["tiger", "tigers eye", "tiger's eye"]):
+            gem_name = "polished golden-brown Tiger's Eye gemstone revealing silky chatoyant bands of light"
+            planet_name = "fearless courage and grounded inner power"
+        elif any(k in entity_context for k in ["clear quartz", "sphatik"]):
+            gem_name = "flawless prismatic natural Clear Quartz crystal point refracting crystalline rainbow light"
+            planet_name = "pure high-frequency universal light and mental clarity"
+        elif any(k in entity_context for k in ["gauri shankar"]):
+            gem_name = "sacred natural Nepali Gauri Shankar Rudraksha two naturally joined beads with distinct divine grooves"
+            planet_name = "sacred cosmic Shiva-Shakti union and divine grace"
+        elif any(k in entity_context for k in ["rudraksha", "rudraksh", "mukhi"]):
+            gem_name = "authentic sacred Nepali Rudraksha bead with deep natural mukhi grooves and sacred water droplets"
+            planet_name = "calming bio-electromagnetic energy field and Lord Shiva's divine consciousness"
+        elif any(k in entity_context for k in ["neelam", "blue sapphire", "shani", "saturn"]):
             gem_name = "natural certified royal Blue Sapphire (Neelam) gemstone with deep velvety blue luster"
             planet_name = "planet Saturn with majestic dust rings in dark cosmos"
         elif any(k in entity_context for k in ["manik", "ruby", "surya", "sun"]):
@@ -156,6 +183,11 @@ class DynamicVisualEngine:
         # 2. Semantic scene intent matching (strictly derived from THIS SCENE's text & description)
         # Hook / Opener Scene (Scene 1)
         if scene_idx == 0:
+            if any(k in entity_context for k in ["pyrite", "amethyst", "tourmaline", "citrine", "rose quartz", "tiger", "quartz", "crystal", "rudraksh", "mukhi"]):
+                return (
+                    f"cinematic dramatic macro luxury shot of a {gem_name} resting upon a clean dark reflective surface, "
+                    f"soft celestial aura of {planet_name} radiating around it, inspiring high-vibrational sacred lighting, {base_modifiers}"
+                )
             return (
                 f"cinematic dramatic macro luxury shot of a {gem_name} resting upon dark reflective obsidian stone, "
                 f"subtle celestial aura of {planet_name} reflecting above, scroll-stopping high-stakes contrast, {base_modifiers}"
@@ -166,6 +198,34 @@ class DynamicVisualEngine:
             return (
                 f"cinematic sacred sanctum sanctorum of an ancient Vedic temple, multiple glowing brass oil lamps (diyas) "
                 f"casting warm golden radiance on sacred offerings and ancient carved stone pillars, peaceful divine atmosphere, {base_modifiers}"
+            )
+
+        # Calming Nervous System / Meditation / Mental Clarity / Peace
+        if any(k in scene_context for k in ["calm", "nervous system", "peace", "meditat", "focus", "clarity", "anxiety relief", "blood pressure", "एकाग्रता", "शांति", "तंत्रिका", "तनाव", "ध्यान", "फायदे", "राहत"]):
+            return (
+                f"cinematic peaceful shot of a serene person meditating in gentle morning golden sunlight, "
+                f"soft glowing aura of harmonic tranquility, calming sacred atmosphere, warm zen aesthetic, {base_modifiers}"
+            )
+
+        # Aura Cleansing / Energy Shielding / EMF Protection / Negative Energy Absorption
+        if any(k in scene_context for k in ["shield", "aura", "protect", "negative", "absorb", "emf", "psychic", "सुरक्षा", "आभामंडल", "नजर", "नकारात्मक"]):
+            return (
+                f"cinematic visual of a luminous energetic aura shield surrounding a peaceful silhouette, "
+                f"sacred protective crystalline light particles deflecting shadowy negative waves, high vibrational energy, {base_modifiers}"
+            )
+
+        # Wealth Attraction / Abundance / Prosperity / Work Desk Sacred Setup
+        if any(k in scene_context for k in ["attract", "wealth", "abundance", "prosperity", "money", "desk", "office", "धन", "समृद्धि", "आकर्षण", "बरकत", "कार्यस्थल"]):
+            return (
+                f"cinematic macro photograph of a natural golden {gem_name} catching warm morning sunlight on a refined executive wooden desk, "
+                f"subtle golden bokeh, inspiring atmosphere of abundance and success, {base_modifiers}"
+            )
+
+        # Sacred Bio-Electromagnetism / Ancient Vedic Science / Heart & Bodily Harmony
+        if any(k in scene_context for k in ["science", "bio-electric", "electromagnetic", "heart", "frequency", "resonance", "विज्ञान", "हृदय", "रक्तचाप", "ऊर्जा"]):
+            return (
+                f"cinematic sacred macro shot of {gem_name} radiating subtle golden sacred geometric frequency waves, "
+                f"harmonizing bio-energy fields, ancient Vedic spiritual science visualization, {base_modifiers}"
             )
 
         # Warning Against Blind Internet Remedies / Unverified Rules
@@ -229,10 +289,34 @@ class DynamicVisualEngine:
         entity_context = f"{spoken} {on_screen} {vis_desc} {topic.lower()}"
         scene_context = f"{spoken} {on_screen} {vis_desc}".lower()
 
-        # Detect active gemstone/planet
+        # Detect active gemstone/planet/crystal/rudraksha
         gem_kw = "gemstone jewelry"
         planet_kw = "space stars"
-        if any(k in entity_context for k in ["neelam", "blue sapphire", "shani", "saturn"]):
+        if any(k in entity_context for k in ["pyrite"]):
+            gem_kw = "pyrite crystal cluster"
+            planet_kw = "pyrite mineral specimen"
+        elif any(k in entity_context for k in ["amethyst"]):
+            gem_kw = "amethyst geode crystal"
+            planet_kw = "amethyst purple mineral"
+        elif any(k in entity_context for k in ["tourmaline"]):
+            gem_kw = "black tourmaline crystal"
+            planet_kw = "schorl tourmaline mineral"
+        elif any(k in entity_context for k in ["citrine"]):
+            gem_kw = "citrine quartz crystal"
+            planet_kw = "natural citrine mineral"
+        elif any(k in entity_context for k in ["rose quartz"]):
+            gem_kw = "rose quartz crystal mineral"
+            planet_kw = "raw rose quartz stone"
+        elif any(k in entity_context for k in ["tiger", "tigers eye", "tiger's eye"]):
+            gem_kw = "tigers eye mineral gemstone"
+            planet_kw = "tigers eye stone macro"
+        elif any(k in entity_context for k in ["gauri shankar"]):
+            gem_kw = "rudraksha sacred bead"
+            planet_kw = "rudraksha seed nepali"
+        elif any(k in entity_context for k in ["rudraksha", "rudraksh", "mukhi"]):
+            gem_kw = "rudraksha beads close up"
+            planet_kw = "rudraksha seeds prayer"
+        elif any(k in entity_context for k in ["neelam", "blue sapphire", "shani", "saturn"]):
             gem_kw = "blue sapphire gemstone"
             planet_kw = "saturn planet cassini"
         elif any(k in entity_context for k in ["manik", "ruby", "surya", "sun"]):
@@ -263,37 +347,52 @@ class DynamicVisualEngine:
             queries = ["traditional hindu temple oil lamp", "diya lamp temple sanctum", "ancient temple sanctum brass diyas"]
             return queries[scene_idx % len(queries)]
 
-        # 3. Blind Remedies / Internet Mistakes / Ancient Texts
+        # 3. Calming Nervous System / Meditation / Peace
+        if any(k in scene_context for k in ["calm", "nervous system", "peace", "meditat", "focus", "clarity", "anxiety relief", "एकाग्रता", "शांति", "ध्यान"]):
+            queries = ["person meditating sunrise calm", "peaceful meditation zen morning", "peaceful zen stone balance"]
+            return queries[scene_idx % len(queries)]
+
+        # 4. Aura / Protection / Negativity Shield
+        if any(k in scene_context for k in ["shield", "aura", "protect", "negative", "absorb", "emf", "सुरक्षा", "आभामंडल", "नजर"]):
+            queries = [gem_kw, "aurora borealis night sky", "light beam dark space rays"]
+            return queries[scene_idx % len(queries)]
+
+        # 5. Wealth Attraction / Abundance / Office Desk
+        if any(k in scene_context for k in ["attract", "wealth", "abundance", "prosperity", "money", "desk", "office", "धन", "समृद्धि"]):
+            queries = [gem_kw, "pyrite crystal cluster", "morning sunlight office desk"]
+            return queries[scene_idx % len(queries)]
+
+        # 6. Blind Remedies / Internet Mistakes / Ancient Texts
         if any(k in scene_context for k in ["blind", "remedy", "remedies", "unverified", "internet", "नियम", "उपाय"]):
             queries = ["ancient sanskrit manuscript scroll", "antique astrology manuscript", "sacred oil lamp temple"]
             return queries[scene_idx % len(queries)]
 
-        # 4. Birth Chart, Kundli Houses
+        # 7. Birth Chart, Kundli Houses
         if any(k in scene_context for k in ["kundli", "house", "houses", "chart", "horoscope", "भाव", "लग्न", "केंद्र", "त्रिकोण"]):
             queries = ["ancient astrology manuscript chart", "astrolabe celestial horoscope", "zodiac horoscope chart wheel"]
             return queries[scene_idx % len(queries)]
 
-        # 5. Enemy Planets Clashing / Collision
+        # 8. Enemy Planets Clashing / Collision
         if any(k in scene_context for k in ["enemy", "clash", "collision", "opposing", "शत्रु", "टकराव", "विपरीत"]):
             queries = [planet_kw, "galaxy collision space hubble", "nebula explosion cosmos"]
             return queries[scene_idx % len(queries)]
 
-        # 6. Panic, Anxiety, Insomnia, 3 AM Restlessness
+        # 9. Panic, Anxiety, Insomnia, 3 AM Restlessness
         if any(k in scene_context for k in ["panic", "anxiety", "insomnia", "3 am", "sleep", "restless", "तनाव", "घबराहट", "अनिद्रा", "बेचैनी"]):
             queries = ["insomnia stressed dark room", "night darkness window silhouette", "stressed person head in hands"]
             return queries[scene_idx % len(queries)]
 
-        # 7. Career Destruction, Financial Loss, Office Stress
+        # 10. Career Destruction, Financial Loss, Office Stress
         if any(k in scene_context for k in ["career", "financ", "money", "drain", "ruin", "destruct", "loss", "करियर", "नुकसान", "हानि", "कर्ज", "बर्बाद"]):
             queries = ["business executive stress office", "financial crisis stock market", "stock crash chart screen"]
             return queries[scene_idx % len(queries)]
 
-        # 8. Wrong Metal, Wrong Finger, Ring Fitting
+        # 11. Wrong Metal, Wrong Finger, Ring Fitting
         if any(k in scene_context for k in ["metal", "finger", "hand", "wear", "ring", "धातु", "उंगली", "हाथ", "अंगूठी"]):
             queries = [f"{gem_kw} ring", "gemstone jewelry ring fingers", gem_kw]
             return queries[scene_idx % len(queries)]
 
-        # 9. Fallback
+        # 12. Fallback
         return planet_kw
 
     @classmethod

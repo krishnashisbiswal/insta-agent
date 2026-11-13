@@ -726,10 +726,20 @@ def create_cinematic_reel_video(
         if sc_dict.get("badge"):
             return sanitize_ascii_text(sc_dict["badge"]).upper()
 
+        t_low = topic_str.lower()
+
         if scene_idx == 0:
+            if any(w in t_low for w in ["crystal", "rudraksha", "rudraksh", "pyrite", "amethyst", "tourmaline", "citrine", "benefit", "fayde", "science", "guide"]):
+                return "SACRED ENERGY GUIDE"
+            if any(w in t_low for w in ["foundation", "basics", "nakshatra", "pada"]):
+                return "VEDIC FOUNDATION"
+            if any(w in t_low for w in ["career", "saturn", "shani", "sade sati"]):
+                return "CAREER ALIGNMENT"
             return "URGENT WARNING"
 
         if scene_idx == total_scenes - 1:
+            if any(w in t_low for w in ["crystal", "rudraksha", "rudraksh", "pyrite", "amethyst", "benefit", "fayde"]):
+                return "GET ENERGIZED GUIDE • DM US"
             return "CHECK PLACEMENT & DM US"
 
         # Check if on_screen_text has an explicit number like "1.", "2.", "MISTAKE 1", "FOUNDATION 1"
@@ -739,8 +749,13 @@ def create_cinematic_reel_video(
         total_pts = max(3, total_scenes - 2)
         
         # Dynamically determine badge prefix
-        t_low = topic_str.lower()
-        if any(w in t_low for w in ["foundation", "basics", "nakshatra", "pada"]):
+        if any(w in t_low for w in ["benefit", "fayde", "laabh", "fayda", "advantage"]):
+            badge_prefix = "BENEFIT"
+        elif any(w in t_low for w in ["guide", "how to", "science", "secret", "shastra", "vidhi"]):
+            badge_prefix = "GUIDE"
+        elif any(w in t_low for w in ["crystal", "rudraksha", "rudraksh", "pyrite", "amethyst", "tourmaline", "citrine"]):
+            badge_prefix = "BENEFIT"
+        elif any(w in t_low for w in ["foundation", "basics", "nakshatra", "pada"]):
             badge_prefix = "FOUNDATION"
         elif any(w in t_low for w in ["mistake", "error", "galti", "bhool"]):
             badge_prefix = "MISTAKE"
@@ -753,7 +768,7 @@ def create_cinematic_reel_video(
         else:
             badge_prefix = "INSIGHT"
 
-        match = re.search(r"\b(?:MISTAKE|POINT|SIGN|ISSUE|FOUNDATION|PILLAR|RULE|INSIGHT|TRUTH|PLACEMENT)?\s*([1-9])\b", on_screen)
+        match = re.search(r"\b(?:BENEFIT|GUIDE|MISTAKE|POINT|SIGN|ISSUE|FOUNDATION|PILLAR|RULE|INSIGHT|TRUTH|PLACEMENT)?\s*([1-9])\b", on_screen)
         if match:
             pt = match.group(1)
             return f"{badge_prefix} {pt} OF {total_pts}"

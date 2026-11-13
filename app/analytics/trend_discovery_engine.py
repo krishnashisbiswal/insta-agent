@@ -43,6 +43,45 @@ class TrendDiscoveryEngine:
 
     # Comprehensive Sub-Niche Categories & Themes
     TRENDING_CATEGORIES = {
+        "healing_crystals": {
+            "name": "Sacred Healing Crystals: Frequencies, Aura Alignment & Abundance",
+            "crystals": [
+                {"name": "Pyrite (Iron Pyrite)", "energy": "Wealth attraction, mental focus & solar plexus vitality", "best_for": "Work desk, financial confidence, willpower"},
+                {"name": "Raw Amethyst", "energy": "Crown chakra awakening, deep calm & insomnia relief", "best_for": "Bedside, meditation, anxiety shielding"},
+                {"name": "Black Tourmaline", "energy": "EMF shielding, psychic protection & absorbing negativity", "best_for": "Entrance, pockets, heavy energetic spaces"},
+                {"name": "Natural Citrine", "energy": "Merchant stone of abundance, joy & creative manifestation", "best_for": "Cash box, study table, positive mindset"},
+                {"name": "Rose Quartz", "energy": "Heart chakra healing, self-compassion & relationship harmony", "best_for": "Bedroom, emotional reconciliation"},
+                {"name": "Tiger's Eye", "energy": "Root chakra grounding, fearless action & discernment", "best_for": "Decision making, overcoming self-doubt"},
+                {"name": "Clear Quartz", "energy": "Master healer, amplifying intentions & high vibration", "best_for": "Meditation altar, energetic clarity"},
+            ],
+            "themes": [
+                "3 Hidden Benefits of Keeping Pyrite Crystal on Your Work Desk for Money Attraction",
+                "How Raw Amethyst Calms an Overactive Mind and Shields Your Aura from Negative Energy",
+                "3 Ways Black Tourmaline Absorbs Electromagnetic and Envious Negative Energy",
+                "Citrine: The Merchant's Stone That Clears Solar Plexus Energy Blocks",
+                "Rose Quartz & Clear Quartz: How Natural Crystal Frequencies Harmonize Your Home",
+                "3 Real Benefits of Meditating with Tiger's Eye for Unshakable Confidence",
+            ],
+        },
+        "sacred_rudraksha": {
+            "name": "Sacred Rudraksha Beads: Divine Bio-Electromagnetism, Peace & Vitality",
+            "beads": [
+                {"name": "5 Mukhi (Pancha Mukhi) Rudraksha", "deity": "Lord Kalagni Rudra", "energy": "Regulates blood pressure, calms nervous system & mental peace"},
+                {"name": "7 Mukhi (Saptamukhi) Rudraksha", "deity": "Goddess Mahalaxmi", "energy": "Attracts financial stability, opens blocked prosperity channels"},
+                {"name": "Gauri Shankar Rudraksha", "deity": "Shiva & Parvati", "energy": "Harmonizes relationships, marital peace & deep soul-connection"},
+                {"name": "8 Mukhi (Ashtamukhi) Rudraksha", "deity": "Lord Ganesha", "energy": "Removes unseen obstacles in business, enhances wisdom and intellect"},
+                {"name": "10 Mukhi (Dashamukhi) Rudraksha", "deity": "Lord Vishnu", "energy": "Ultimate protective shield against evil eyes and psychological fear"},
+                {"name": "14 Mukhi (Devamani) Rudraksha", "deity": "Lord Shiva & Hanuman", "energy": "Activates third-eye intuition, foresight and fearless leadership"},
+            ],
+            "themes": [
+                "The Science of 5 Mukhi Rudraksha: How It Regulates Blood Pressure and Calms Anxiety",
+                "7 Mukhi Mahalaxmi Rudraksha: Why Ancient Rishis Linked It to Constant Financial Stability",
+                "The Power of Gauri Shankar Rudraksha: Harmonizing Yin-Yang and Soul Relationships",
+                "8 Mukhi Ganesha Rudraksha: How It Eliminates Unseen Obstacles in Career and Business",
+                "10 Mukhi Lord Vishnu Rudraksha: The Ultimate Divine Shield Against Psychic Drain",
+                "Why Wearing Real Nepali Rudraksha Instantly Grounds Your Nervous System",
+            ],
+        },
         "wealth_and_money": {
             "name": "Sudden Wealth, Money Leakage & Rare Dhana Yogas",
             "themes": [
@@ -84,21 +123,19 @@ class TrendDiscoveryEngine:
             ],
         },
         "gemstone_energy": {
-            "name": "Gemstone Energy Clashes & Hidden Dangers",
+            "name": "Gemstone Energy & Cosmic Alignment",
             "gemstones": [
-                {"name": "Yellow Sapphire (Pukhraj)", "gem_type": "yellow_sapphire", "graha": "jupiter", "danger_houses": [6, 8, 12], "safe_ascendants": ["Aries", "Cancer", "Leo", "Scorpio", "Sagittarius", "Pisces"]},
-                {"name": "Blue Sapphire (Neelam)", "gem_type": "blue_sapphire", "graha": "saturn", "danger_houses": [8, 12], "safe_ascendants": ["Taurus", "Gemini", "Virgo", "Libra", "Capricorn", "Aquarius"]},
-                {"name": "Ruby (Manik)", "gem_type": "ruby", "graha": "sun", "danger_houses": [6, 7, 8], "safe_ascendants": ["Aries", "Leo", "Scorpio", "Sagittarius"]},
-                {"name": "Emerald (Panna)", "gem_type": "emerald", "graha": "mercury", "danger_houses": [6, 8], "safe_ascendants": ["Taurus", "Gemini", "Virgo", "Libra", "Capricorn", "Aquarius"]},
-                {"name": "Diamond (Heera)", "gem_type": "diamond", "graha": "venus", "danger_houses": [6, 8], "safe_ascendants": ["Taurus", "Gemini", "Virgo", "Libra", "Capricorn", "Aquarius"]},
-                {"name": "Pearl (Moti)", "gem_type": "pearl", "graha": "moon", "danger_houses": [6, 8], "safe_ascendants": ["Cancer", "Aries", "Scorpio", "Pisces"]},
-                {"name": "Red Coral (Moonga)", "gem_type": "red_coral", "graha": "mars", "danger_houses": [8, 12], "safe_ascendants": ["Aries", "Scorpio", "Cancer", "Leo", "Sagittarius", "Pisces"]},
+                {"name": "Yellow Sapphire (Pukhraj)", "gem_type": "yellow_sapphire", "graha": "jupiter", "safe_ascendants": ["Aries", "Cancer", "Leo", "Scorpio", "Sagittarius", "Pisces"]},
+                {"name": "Blue Sapphire (Neelam)", "gem_type": "blue_sapphire", "graha": "saturn", "safe_ascendants": ["Taurus", "Gemini", "Virgo", "Libra", "Capricorn", "Aquarius"]},
+                {"name": "Ruby (Manik)", "gem_type": "ruby", "graha": "sun", "safe_ascendants": ["Aries", "Leo", "Scorpio", "Sagittarius"]},
+                {"name": "Emerald (Panna)", "gem_type": "emerald", "graha": "mercury", "safe_ascendants": ["Taurus", "Gemini", "Virgo", "Libra", "Capricorn", "Aquarius"]},
+                {"name": "Pearl (Moti)", "gem_type": "pearl", "graha": "moon", "safe_ascendants": ["Cancer", "Aries", "Scorpio", "Pisces"]},
             ],
             "themes": [
-                "5 Deadly Gemstone Mistakes That Trigger Sudden Financial Ruin",
-                "5 Warning Signs You Are Wearing The Wrong Gemstone Right Now",
-                "5 Fatal Mistakes People Make When Wearing Astrological Gemstones",
-                "The 72-Hour Test: 5 Warning Signs A Gemstone Rejects Your Aura",
+                "How Natural Yellow Sapphire (Pukhraj) Expands Wisdom, Divine Grace & Higher Knowledge",
+                "The Subtle Fire of Natural Ruby (Manik): Awakening Leadership, Dignity & Soul Confidence",
+                "The Calming Silver Energy of Natural Pearl (Moti): Balancing Emotional Whirlpools & Intuition",
+                "Emerald (Panna) for Sharp Intellect, Communication Mastery & Business Acumen",
             ],
         },
         "vedic_foundations_basics": {
@@ -153,6 +190,22 @@ class TrendDiscoveryEngine:
             "point_count": 4,
             "badge_prefix": "LESSON",
             "focus": "Practical wisdom learned from consulting charts, avoiding blind remedies, and recognizing chart clashes.",
+        },
+        {
+            "id": "sacred_energy_benefits",
+            "name": "Sacred Energy Benefits & Spiritual Science",
+            "hook_style": "Explains 3 scientifically and spiritually proven benefits of sacred natural tools (Rudraksha, healing crystals, divine frequencies).",
+            "point_count": 3,
+            "badge_prefix": "BENEFIT",
+            "focus": "Uplifting, empowering knowledge on calming the nervous system, sharpening focus, attracting wealth, and shielding personal energy without fear.",
+        },
+        {
+            "id": "crystal_and_rudraksha_guide",
+            "name": "Crystals & Rudraksha Bio-Energy Guide",
+            "hook_style": "Unveils the specific energetic frequency of authentic crystals or Rudraksha Mukhis and how to use them for daily vitality.",
+            "point_count": 3,
+            "badge_prefix": "GUIDE",
+            "focus": "Practical sacred energy benefits: Pyrite for wealth attraction, Amethyst for anxiety, 5/7 Mukhi Rudraksha for heart and bio-electromagnetic harmony.",
         },
     ]
 
@@ -232,11 +285,13 @@ class TrendDiscoveryEngine:
 
         # Cycle category dynamically across all viral pillars to ensure explosive diversity
         category_keys = [
-            "vedic_foundations_basics",
+            "healing_crystals",
+            "sacred_rudraksha",
             "wealth_and_money",
-            "marriage_and_relationships",
-            "career_and_saturn",
             "psychic_and_destiny",
+            "career_and_saturn",
+            "marriage_and_relationships",
+            "vedic_foundations_basics",
             "gemstone_energy",
         ]
         hist = self.load_history()
@@ -289,6 +344,10 @@ RECENT HOUSES RECENTLY COVERED: {recent_houses[-3:]}
 CRITICAL DIVERSITY MANDATE:
 - DO NOT use generic repetitive templates like '5 Deadly Mistakes' or '5 Fatal Mistakes' unless explicitly requested.
 - STRICT BAN ON REPETITIVE FINANCIAL LOSS TOPICS: DO NOT propose topics about '45 lakhs loss', 'sudden financial collapse', or repetitive gemstone disasters!
+- MANDATORY CONTENT EXPANSION (CRYSTALS & RUDRAKSHA INCLUDED):
+  * When category is 'healing_crystals': Focus on natural raw crystals (Pyrite, Amethyst, Black Tourmaline, Citrine, Rose Quartz, Tiger's Eye) and their tangible benefits (focus, anxiety relief, EMF shield, abundance, grounding).
+  * When category is 'sacred_rudraksha': Focus on authentic sacred Rudraksha beads (5 Mukhi, 7 Mukhi Mahalaxmi, 8 Mukhi Ganesh, 10 Mukhi Vishnu, Gauri Shankar) and their ancient bio-electromagnetic and nervous system calming science.
+  * TONE SHIFT: STOP DEFAULTING TO FEAR! Highlight real POSITIVE BENEFITS, sacred science, and energy empowerment.
 - VARY themes widely across life pillars:
   * Spiritual Awakening, 3 AM wakeups, intuition & past life debts
   * Career breakthroughs, Saturn's reality check & hidden 10th house blocks
