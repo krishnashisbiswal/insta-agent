@@ -55,12 +55,12 @@ class TrendDiscoveryEngine:
                 {"name": "Clear Quartz", "energy": "Master healer, amplifying intentions & high vibration", "best_for": "Meditation altar, energetic clarity"},
             ],
             "themes": [
-                "3 Hidden Benefits of Keeping Pyrite Crystal on Your Work Desk for Money Attraction",
-                "How Raw Amethyst Calms an Overactive Mind and Shields Your Aura from Negative Energy",
-                "3 Ways Black Tourmaline Absorbs Electromagnetic and Envious Negative Energy",
-                "Citrine: The Merchant's Stone That Clears Solar Plexus Energy Blocks",
-                "Rose Quartz & Clear Quartz: How Natural Crystal Frequencies Harmonize Your Home",
-                "3 Real Benefits of Meditating with Tiger's Eye for Unshakable Confidence",
+                "5 Hidden Benefits of Keeping Pyrite Crystal on Your Work Desk for Wealth Attraction",
+                "How Raw Amethyst Calms an Overactive Mind: 5 Sacred Secrets for Deep Peace",
+                "5 Ways Black Tourmaline Absorbs Electromagnetic and Envious Negative Energy",
+                "Citrine: 5 Powerful Secrets of the Merchant Stone That Trigger Abundance",
+                "Rose Quartz & Clear Quartz: 5 Ways Crystal Frequencies Harmonize Your Home",
+                "5 Real Benefits of Meditating with Tiger's Eye for Unshakable Confidence",
             ],
         },
         "sacred_rudraksha": {
@@ -74,52 +74,52 @@ class TrendDiscoveryEngine:
                 {"name": "14 Mukhi (Devamani) Rudraksha", "deity": "Lord Shiva & Hanuman", "energy": "Activates third-eye intuition, foresight and fearless leadership"},
             ],
             "themes": [
-                "The Science of 5 Mukhi Rudraksha: How It Regulates Blood Pressure and Calms Anxiety",
-                "7 Mukhi Mahalaxmi Rudraksha: Why Ancient Rishis Linked It to Constant Financial Stability",
-                "The Power of Gauri Shankar Rudraksha: Harmonizing Yin-Yang and Soul Relationships",
-                "8 Mukhi Ganesha Rudraksha: How It Eliminates Unseen Obstacles in Career and Business",
-                "10 Mukhi Lord Vishnu Rudraksha: The Ultimate Divine Shield Against Psychic Drain",
-                "Why Wearing Real Nepali Rudraksha Instantly Grounds Your Nervous System",
+                "The Science of 5 Mukhi Rudraksha: 5 Ways It Regulates Blood Pressure and Calms Anxiety",
+                "7 Mukhi Mahalaxmi Rudraksha: 5 Reasons Ancient Rishis Linked It to Constant Prosperity",
+                "The Power of Gauri Shankar Rudraksha: 5 Secrets for Deep Soul Harmony",
+                "8 Mukhi Ganesha Rudraksha: 5 Ways It Eliminates Unseen Career Obstacles",
+                "10 Mukhi Lord Vishnu Rudraksha: 5 Sacred Shields Against Psychic Drain",
+                "5 Reasons Wearing Real Nepali Rudraksha Instantly Grounds Your Nervous System",
             ],
         },
         "wealth_and_money": {
             "name": "Sudden Wealth, Money Leakage & Rare Dhana Yogas",
             "themes": [
-                "3 Kundli Placements That Drain Your Money No Matter How Much You Earn",
-                "3 Rare Wealth Yogas That Trigger Sudden Riches After Age 28",
-                "3 Signs Rahu in 2nd House Is Creating Mysterious Financial Losses",
-                "3 Kundli Signs You Will Gain Unexpected Wealth Through Inheritance or Trading",
-                "3 Placements That Block You From Buying Property or Building Savings",
+                "5 Kundli Placements That Drain Your Money No Matter How Much You Earn",
+                "5 Rare Wealth Yogas That Trigger Sudden Riches After Age 28",
+                "5 Signs Rahu in 2nd House Is Creating Mysterious Financial Losses",
+                "5 Kundli Signs You Will Gain Unexpected Wealth Through Inheritance or Trading",
+                "5 Placements That Block You From Buying Property or Building Savings",
             ],
         },
         "marriage_and_relationships": {
             "name": "Relationship Karma, Marriage Delays & Soulmate Bonds",
             "themes": [
-                "3 Kundli Placements That Delay Marriage Until Age 30+",
-                "3 Signs You Have a Heavy Past-Life Karmic Debt With Your Partner",
-                "3 Kundli Placements Causing Constant Heartbreak and Misunderstandings",
-                "3 Signs of True Manglik Dosha That Astrologers Never Explain",
-                "The 7th House Ketu Trap: Why You Push Away Pure Love",
+                "5 Kundli Placements That Delay Marriage Until Age 30+",
+                "5 Signs You Have a Heavy Past-Life Karmic Debt With Your Partner",
+                "5 Kundli Placements Causing Constant Heartbreak and Misunderstandings",
+                "5 Signs of True Manglik Dosha That Astrologers Never Explain",
+                "The 7th House Ketu Trap: 5 Reasons You Push Away Pure Love",
             ],
         },
         "career_and_saturn": {
             "name": "Career Breakthroughs, Sade Sati & Karmic Struggles",
             "themes": [
-                "3 Signs Saturn (Shani) Is Preparing You For A Massive Career Jump",
-                "3 Placements That Cause Constant Career Blockages and Stagnation",
-                "3 Signs You Are Experiencing The Peak Phase of Shani Sade Sati",
-                "The 10th House Karmic Lesson: Why Hard Work Alone Never Brings Fame",
-                "Vipreet Raj Yoga: How 6th and 8th Houses Trigger Massive Power",
+                "5 Signs Saturn (Shani) Is Preparing You For A Massive Career Jump",
+                "5 Placements That Cause Constant Career Blockages and Stagnation",
+                "5 Signs You Are Experiencing The Peak Phase of Shani Sade Sati",
+                "The 10th House Karmic Lesson: 5 Reasons Hard Work Alone Never Brings Fame",
+                "Vipreet Raj Yoga: 5 Placements Where 6th and 8th Houses Trigger Massive Power",
             ],
         },
         "psychic_and_destiny": {
             "name": "Psychic Intuition, 3 AM Wakeups & Divine Protection",
             "themes": [
-                "3 Signs You Have Divine Protection (Deva Kripa) in Your Kundli",
-                "3 Hidden Meanings If You Wake Up Between 3:00 AM and 5:00 AM",
-                "3 Placements That Give Uncanny Psychic Dreams and 3rd Eye Intuition",
-                "The Rahu-Moon Eclipse Syndrome: Why Your Anxiety Spikes at Night",
-                "3 Kundli Signs You Have an Old Soul Paying Past-Life Debts",
+                "5 Signs You Have Divine Protection (Deva Kripa) in Your Kundli",
+                "5 Hidden Meanings If You Wake Up Between 3:00 AM and 5:00 AM",
+                "5 Placements That Give Uncanny Psychic Dreams and 3rd Eye Intuition",
+                "The Rahu-Moon Eclipse Syndrome: 5 Reasons Anxiety Spikes at Night",
+                "5 Kundli Signs You Have an Old Soul Paying Past-Life Debts",
             ],
         },
         "gemstone_energy": {
@@ -155,55 +155,55 @@ class TrendDiscoveryEngine:
             "id": "karmic_mystery_deep_dive",
             "name": "Karmic Mystery & Hidden House Trap",
             "hook_style": "Unveils a hidden Kundli mystery, rare yoga or difficult house activation (e.g. 7th house Ketu detachment, 8th house sudden wealth, Vipreet Raj Yoga).",
-            "point_count": 3,
+            "point_count": 5,
             "badge_prefix": "INSIGHT",
             "focus": "Deep astrological placement mechanics, past-life debts, and sudden energetic shifts.",
         },
         {
             "id": "real_life_symptoms",
             "name": "Real-Life Awakening Symptoms & Physical Signs",
-            "hook_style": "Identifies 3 uncanny physical, emotional or circumstantial symptoms (e.g. 3 AM wakeups, money leakage, throat chakra blocks).",
-            "point_count": 3,
+            "hook_style": "Identifies 5 uncanny physical, emotional or circumstantial symptoms (e.g. 3 AM wakeups, money leakage, throat chakra blocks).",
+            "point_count": 5,
             "badge_prefix": "SIGN",
             "focus": "Tangible daily life symptoms that make viewers immediately relate and check their chart.",
         },
         {
             "id": "contrarian_truth",
             "name": "Contrarian Truth & Vedic Myth Buster",
-            "hook_style": "Shatters a common modern astrological myth using authentic Sage Parashara Vedic wisdom.",
-            "point_count": 3,
+            "hook_style": "Shatters a common modern astrological myth using authentic Sage Parashara Vedic wisdom across 5 secrets.",
+            "point_count": 5,
             "badge_prefix": "TRUTH",
             "focus": "Contrasting pop-astrology illusions against deep ancient Vedic reality (e.g. Rashi vs Nakshatra/Pada, Sade Sati cleansing).",
         },
         {
             "id": "planetary_power_code",
             "name": "Planetary Power & Nakshatra Codes",
-            "hook_style": "Explores the raw cosmic frequency of a specific Graha or Nakshatra and how it governs destiny.",
-            "point_count": 3,
+            "hook_style": "Explores the raw cosmic frequency of a specific Graha or Nakshatra and how it governs destiny across 5 pillars.",
+            "point_count": 5,
             "badge_prefix": "CODE",
             "focus": "Celestial mechanics, soul evolution, and understanding planetary signatures in birth charts.",
         },
         {
             "id": "consultation_case_study",
             "name": "Astrologer Consultation Case Study",
-            "hook_style": "Begins with an authentic client consultation case study where a subtle placement changed everything.",
-            "point_count": 4,
+            "hook_style": "Begins with an authentic client consultation case study revealing 5 key chart placement turning points.",
+            "point_count": 5,
             "badge_prefix": "LESSON",
             "focus": "Practical wisdom learned from consulting charts, avoiding blind remedies, and recognizing chart clashes.",
         },
         {
             "id": "sacred_energy_benefits",
             "name": "Sacred Energy Benefits & Spiritual Science",
-            "hook_style": "Explains 3 scientifically and spiritually proven benefits of sacred natural tools (Rudraksha, healing crystals, divine frequencies).",
-            "point_count": 3,
+            "hook_style": "Explains 5 scientifically and spiritually proven benefits of sacred natural tools (Rudraksha, healing crystals, divine frequencies).",
+            "point_count": 5,
             "badge_prefix": "BENEFIT",
             "focus": "Uplifting, empowering knowledge on calming the nervous system, sharpening focus, attracting wealth, and shielding personal energy without fear.",
         },
         {
             "id": "crystal_and_rudraksha_guide",
             "name": "Crystals & Rudraksha Bio-Energy Guide",
-            "hook_style": "Unveils the specific energetic frequency of authentic crystals or Rudraksha Mukhis and how to use them for daily vitality.",
-            "point_count": 3,
+            "hook_style": "Unveils 5 specific energetic frequencies of authentic crystals or Rudraksha Mukhis and how to use them for daily vitality.",
+            "point_count": 5,
             "badge_prefix": "GUIDE",
             "focus": "Practical sacred energy benefits: Pyrite for wealth attraction, Amethyst for anxiety, 5/7 Mukhi Rudraksha for heart and bio-electromagnetic harmony.",
         },
@@ -328,8 +328,8 @@ LANGUAGE: {language}
 CHOSEN SUB-NICHE CATEGORY: {chosen_category} ({self.TRENDING_CATEGORIES.get(chosen_category, {}).get('name', 'Vedic Wisdom')})
 TARGET NARRATIVE ARCHETYPE: {chosen_archetype['name']}
 ARCHETYPE HOOK STYLE: {chosen_archetype['hook_style']}
-TARGET NUMBER OF POINTS: {chosen_archetype['point_count']}
-BADGE STYLE: {chosen_archetype['badge_prefix']} 1 OF {chosen_archetype['point_count']}
+TARGET NUMBER OF POINTS: 5
+BADGE STYLE: Interactive curiosity badge pill (e.g. 'WEALTH MAGNET', 'SECRET FREQUENCY', 'AURA SHIELD', 'INSTANT CALM', 'BIO-ENERGY CODE' - STRICTLY NO '1 OF 5' OR NUMBERING!)
 
 {playbook_ctx}
 
@@ -342,7 +342,8 @@ RECENT GEMSTONES RECENTLY USED (COOLDOWN ACTIVE): {recent_gems[-3:]}
 RECENT HOUSES RECENTLY COVERED: {recent_houses[-3:]}
 
 CRITICAL DIVERSITY MANDATE:
-- DO NOT use generic repetitive templates like '5 Deadly Mistakes' or '5 Fatal Mistakes' unless explicitly requested.
+- MUST PROVIDE EXACTLY 5 POINTS/SECRETS: The script must deliver 5 powerful insights, not 3.
+- STRICT BAN ON NUMBERED BADGES: DO NOT write '1 OF 5', '2 OF 5', 'BENEFIT 1 OF 5', or '1, 2, 3' anywhere in badge text. Use high-curiosity interactive pills that stop the scroll!
 - STRICT BAN ON REPETITIVE FINANCIAL LOSS TOPICS: DO NOT propose topics about '45 lakhs loss', 'sudden financial collapse', or repetitive gemstone disasters!
 - MANDATORY CONTENT EXPANSION (CRYSTALS & RUDRAKSHA INCLUDED):
   * When category is 'healing_crystals': Focus on natural raw crystals (Pyrite, Amethyst, Black Tourmaline, Citrine, Rose Quartz, Tiger's Eye) and their tangible benefits (focus, anxiety relief, EMF shield, abundance, grounding).

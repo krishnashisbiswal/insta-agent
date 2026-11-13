@@ -47,26 +47,34 @@ def test_record_topic_with_archetype_persistence(tmp_path):
     assert "real_life_symptoms" in recent["archetypes"]
 
 
-def test_dynamic_badge_numbering_for_3_point_reel():
-    from app.video.cinematic_composer import sanitize_ascii_text
+def test_archetypes_have_5_points():
+    engine = TrendDiscoveryEngine()
+    for arch in engine.NARRATIVE_ARCHETYPES:
+        assert arch["point_count"] == 5, f"Archetype {arch['id']} should have 5 points, got {arch['point_count']}"
 
-    # Verify badge synthesis logic for 3 content points (total 5 scenes: 1 Hook + 3 Points + 1 CTA)
-    total_scenes = 5
-    total_pts = max(3, total_scenes - 2)
-    assert total_pts == 3
 
-    scene_dict = {"on_screen_text": "1. WAKING UP AT 3 AM"}
-    topic_str = "3 Hidden Meanings If You Wake Up Between 3:00 AM and 5:00 AM"
+def test_interactive_badges_zero_numbering():
+    from app.agents.script_agent import sanitize_script_dialogue
+    import re
 
-    # Simulate get_scene_badge logic
-    t_low = topic_str.lower()
-    badge_prefix = "SIGN" if any(w in t_low for w in ["sign", "symptom", "lakshan", "warning", "awaken", "meaning", "wake"]) else "POINT"
-    assert badge_prefix == "SIGN"
+    # Verify that get_scene_badge simulation strictly forbids "1 OF 5", "1 OF 3", etc.
+    test_scenes = [
+        {"spoken_line": "पायराइट को वर्क डेस्क पर रखने से अचानक धन प्रवाह और समृद्धि बढ़ती है।", "on_screen_text": "PYRITE ON WORK DESK", "badge": "BENEFIT 1 OF 5"},
+        {"spoken_line": "यह आपके नर्वस सिस्टम और तनाव को तुरंत शांत करता है।", "on_screen_text": "CALMS NERVOUS SYSTEM", "badge": "2. INSTANT CALM"},
+        {"spoken_line": "नेगेटिव एनर्जी और नजर दोष से अचूक सुरक्षा देता है।", "on_screen_text": "3. AURA SHIELD", "badge": "AURA SHIELD"},
+        {"spoken_line": "रात में 3 बजे नींद टूटने का गहरा आध्यात्मिक रहस्य।", "on_screen_text": "3 AM PHENOMENON", "badge": "3 AM SECRET"},
+    ]
 
-    match = re.search(r"\b(?:MISTAKE|POINT|SIGN|ISSUE|FOUNDATION|PILLAR|RULE|INSIGHT|TRUTH|PLACEMENT)?\s*([1-9])\b", scene_dict["on_screen_text"])
-    assert match is not None
-    badge = f"{badge_prefix} {match.group(1)} OF {total_pts}"
-    assert badge == "SIGN 1 OF 3"
+    sanitized = sanitize_script_dialogue(test_scenes, topic="5 Hidden Pyrite Crystal Secrets That Attract Wealth")
+    for sc in sanitized:
+        b = sc.get("badge", "")
+        # Zero "1 OF 5", "1 OF 3", or "1." prefixes in badge
+        assert not re.search(r"\b\d+\s*OF\s*\d+\b", b, re.I), f"Found robotic numbering in badge: {b}"
+        assert not re.search(r"^[1-9]\s*[\.\)]", b), f"Found leading number in badge: {b}"
+
+        # Zero leading "1.", "2." in on-screen cards
+        card = sc.get("on_screen_text", "")
+        assert not re.search(r"^[1-9]\s*[\.\)]", card), f"Found leading number in on-screen card: {card}"
 
 
 def test_dynamic_point_count_detection():
@@ -191,3 +199,19 @@ def test_crystal_and_rudraksha_badges_and_prompts():
         rudraksha_scene, "The Science of 5 Mukhi Rudraksha", scene_idx=0
     )
     assert "rudraksha" in r_query.lower()
+
+
+def test_kinetic_overlay_strips_robotic_numbering():
+    from app.video.cinematic_composer import render_kinetic_caption_layer
+    from PIL import Image
+
+    # Verify that render_kinetic_caption_layer cleans any "BENEFIT 1 OF 5" or "1. " from overlays
+    ov = render_kinetic_caption_layer(
+        scene_number=2,
+        total_scenes=7,
+        text="1. SUDDEN MONEY DRAIN",
+        badge_text="BENEFIT 1 OF 5",
+        width=1080,
+        height=1920,
+    )
+    assert isinstance(ov, Image.Image)

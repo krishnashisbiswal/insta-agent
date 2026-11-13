@@ -439,17 +439,23 @@ def render_kinetic_caption_layer(
     else:
         # 3. SCENES 2-7: SLEEK MICRO-BADGE (Above) + FLOATING KINETIC SUBTITLE (Below)
         clean_badge = sanitize_ascii_text(badge_text).upper().strip()
-        sub_text = sanitize_ascii_text(text).upper().strip()
+        # Strictly purge any "1 OF 5", "2 OF 5", "1 OF 3" or numbered prefix from badge
+        clean_badge = re.sub(r"\b(?:BENEFIT|GUIDE|MISTAKE|POINT|SIGN|ISSUE|RULE|INSIGHT|TRUTH|PLACEMENT|LESSON)?\s*\d+\s*(?:OF|/)\s*\d+\b", "", clean_badge, flags=re.I).strip()
+        clean_badge = re.sub(r"^[1-9]\s*[\.\)]\s*", "", clean_badge).strip()
 
-        # Prevent duplicate badge/subtitle overlap (e.g. badge "MISTAKE 1 OF 5" and subtitle "MISTAKE 1 OF 5")
-        norm_badge = re.sub(r"^\d+[\.\)]\s*", "", clean_badge).strip()
+        sub_text = sanitize_ascii_text(text).upper().strip()
+        # Strictly purge any "1. ", "2. ", "3. " numbering from subtitles
+        sub_text = re.sub(r"^[1-9]\s*[\.\)]\s*", "", sub_text).strip()
+
+        # Prevent duplicate badge/subtitle overlap
+        norm_badge = clean_badge.strip()
         if norm_badge == sub_text or clean_badge == sub_text:
             fallback_phrases = {
-                2: "1. SUDDEN MONEY DRAIN",
-                3: "2. 3 AM PANIC ATTACKS",
-                4: "3. ENEMY STONES CLASH",
-                5: "4. FAKE TREATED GLASS",
-                6: "5. UNENERGIZED STONE",
+                2: "SUDDEN MONEY DRAIN",
+                3: "3 AM PANIC ATTACKS",
+                4: "ENEMY STONES CLASH",
+                5: "FAKE TREATED GLASS",
+                6: "UNENERGIZED STONE",
                 7: "SAVE REEL • DM US",
             }
             sub_text = fallback_phrases.get(scene_number, "CRITICAL VEDIC RULE")
@@ -723,58 +729,56 @@ def create_cinematic_reel_video(
     used_scene_images: Set[Path] = set()
 
     def get_scene_badge(sc_dict: Dict[str, Any], scene_idx: int, topic_str: str) -> str:
-        if sc_dict.get("badge"):
-            return sanitize_ascii_text(sc_dict["badge"]).upper()
+        raw_badge = sc_dict.get("badge", "")
+        if raw_badge:
+            clean_b = re.sub(r"\b(?:BENEFIT|GUIDE|MISTAKE|POINT|SIGN|ISSUE|RULE|INSIGHT|TRUTH|PLACEMENT|LESSON)?\s*\d+\s*(?:OF|/)\s*\d+\b", "", raw_badge, flags=re.I).strip()
+            clean_b = re.sub(r"^[1-9]\s*[\.\)]\s*", "", clean_b).strip()
+            if clean_b and len(clean_b) >= 3 and not re.search(r"\b\d+\s*of\s*\d+\b", clean_b, re.I):
+                return sanitize_ascii_text(clean_b).upper()
 
         t_low = topic_str.lower()
+        sc_context = f"{sc_dict.get('spoken_line', '')} {sc_dict.get('on_screen_text', '')}".lower()
 
         if scene_idx == 0:
-            if any(w in t_low for w in ["crystal", "rudraksha", "rudraksh", "pyrite", "amethyst", "tourmaline", "citrine", "benefit", "fayde", "science", "guide"]):
-                return "SACRED ENERGY GUIDE"
-            if any(w in t_low for w in ["foundation", "basics", "nakshatra", "pada"]):
-                return "VEDIC FOUNDATION"
+            if any(w in t_low for w in ["crystal", "rudraksha", "rudraksh", "pyrite", "amethyst", "tourmaline", "citrine", "benefit"]):
+                return "SACRED ENERGY SECRET"
             if any(w in t_low for w in ["career", "saturn", "shani", "sade sati"]):
-                return "CAREER ALIGNMENT"
-            return "URGENT WARNING"
+                return "CAREER BREAKTHROUGH"
+            return "WATCH CLOSELY"
 
         if scene_idx == total_scenes - 1:
-            if any(w in t_low for w in ["crystal", "rudraksha", "rudraksh", "pyrite", "amethyst", "benefit", "fayde"]):
-                return "GET ENERGIZED GUIDE • DM US"
-            return "CHECK PLACEMENT & DM US"
+            return "SAVE REEL • COMMENT BELOW"
 
-        # Check if on_screen_text has an explicit number like "1.", "2.", "MISTAKE 1", "FOUNDATION 1"
-        on_screen = sc_dict.get("on_screen_text", "").upper()
-        
-        # Calculate dynamic point count
-        total_pts = max(3, total_scenes - 2)
-        
-        # Dynamically determine badge prefix
-        if any(w in t_low for w in ["benefit", "fayde", "laabh", "fayda", "advantage"]):
-            badge_prefix = "BENEFIT"
-        elif any(w in t_low for w in ["guide", "how to", "science", "secret", "shastra", "vidhi"]):
-            badge_prefix = "GUIDE"
-        elif any(w in t_low for w in ["crystal", "rudraksha", "rudraksh", "pyrite", "amethyst", "tourmaline", "citrine"]):
-            badge_prefix = "BENEFIT"
-        elif any(w in t_low for w in ["foundation", "basics", "nakshatra", "pada"]):
-            badge_prefix = "FOUNDATION"
-        elif any(w in t_low for w in ["mistake", "error", "galti", "bhool"]):
-            badge_prefix = "MISTAKE"
-        elif any(w in t_low for w in ["sign", "symptom", "lakshan", "warning", "awaken", "meaning", "wake"]):
-            badge_prefix = "SIGN"
-        elif any(w in t_low for w in ["truth", "myth", "lie", "reality"]):
-            badge_prefix = "TRUTH"
-        elif any(w in t_low for w in ["house", "placement", "bhav"]):
-            badge_prefix = "PLACEMENT"
+        # Content scenes (Scenes 1 to 5): Ultra-interactive curiosity pills that stop the scroll!
+        if any(w in sc_context for w in ["money", "wealth", "financ", "cash", "abundance", "prosperity", "attract", "धन", "समृद्धि", "बरकत"]):
+            return "WEALTH MAGNET"
+        elif any(w in sc_context for w in ["calm", "nervous system", "anxiety", "peace", "relax", "तनाव", "शांति", "तंत्रिका"]):
+            return "INSTANT CALM"
+        elif any(w in sc_context for w in ["shield", "aura", "protect", "negative", "absorb", "emf", "psychic", "सुरक्षा", "आभामंडल", "नजर"]):
+            return "AURA SHIELD"
+        elif any(w in sc_context for w in ["focus", "clarity", "mind", "brain", "concentration", "एकाग्रता", "मस्तिष्क"]):
+            return "DEEP FOCUS"
+        elif any(w in sc_context for w in ["sleep", "insomnia", "3 am", "night", "restless", "अनिद्रा", "नींद"]):
+            return "3 AM SECRET"
+        elif any(w in sc_context for w in ["heart", "love", "relationship", "marriage", "soul", "प्रेम", "रिश्ते", "दांपत्य"]):
+            return "HEART CHAKRA"
+        elif any(w in sc_context for w in ["science", "bio-electric", "electromagnetic", "frequency", "resonance", "विज्ञान", "ऊर्जा"]):
+            return "BIO-ENERGY CODE"
+        elif any(w in sc_context for w in ["career", "business", "job", "saturn", "shani", "success", "करियर", "व्यापार"]):
+            return "CAREER SHIFT"
+        elif any(w in sc_context for w in ["kundli", "house", "chart", "horoscope", "bhav", "लग्न", "भाव"]):
+            return "KUNDLI SECRET"
+        elif any(w in sc_context for w in ["truth", "myth", "lie", "reality", "सच", "रहस्य"]):
+            return "SHOCKING TRUTH"
         else:
-            badge_prefix = "INSIGHT"
-
-        match = re.search(r"\b(?:BENEFIT|GUIDE|MISTAKE|POINT|SIGN|ISSUE|FOUNDATION|PILLAR|RULE|INSIGHT|TRUTH|PLACEMENT)?\s*([1-9])\b", on_screen)
-        if match:
-            pt = match.group(1)
-            return f"{badge_prefix} {pt} OF {total_pts}"
-
-        # Default fallback for inner content scenes
-        return f"{badge_prefix} {scene_idx} OF {total_pts}"
+            interactive_fallbacks = [
+                "SECRET FREQUENCY",
+                "TRY THIS TODAY",
+                "ENERGY SHIFT",
+                "RARE PHENOMENON",
+                "HIGH VIBRATION",
+            ]
+            return interactive_fallbacks[(scene_idx - 1) % len(interactive_fallbacks)]
 
     # 3. Generate Per-Scene Audio & Synchronized Video Clips
     video_clips = []

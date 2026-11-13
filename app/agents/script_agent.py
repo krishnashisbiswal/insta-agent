@@ -779,6 +779,9 @@ def sanitize_script_dialogue(scenes: List[Dict[str, Any]], topic: str = "") -> L
         if detected_graha:
             clean_card = re.sub(r"\bTHIS PLANET\b", detected_graha["en"].upper(), clean_card, flags=re.I)
             clean_card = re.sub(r"\bYEH GRAH\b", detected_graha["dev"], clean_card, flags=re.I)
+        # Purge any robotic "1. ", "2. ", "3. " or "BENEFIT 1" from on-screen cards
+        clean_card = re.sub(r"^[1-9]\s*[\.\)]\s*", "", clean_card).strip()
+        clean_card = re.sub(r"\b(?:BENEFIT|POINT|SIGN|MISTAKE|RULE)\s*[1-9]\b", "", clean_card, flags=re.I).strip()
         card_words = clean_card.split()
         if len(card_words) > 6:
             item["on_screen_text"] = " ".join(card_words[:6])
@@ -787,6 +790,9 @@ def sanitize_script_dialogue(scenes: List[Dict[str, Any]], topic: str = "") -> L
 
         if "badge" in item:
             badge_text = clean_and_humanize_text(item["badge"]).upper()
+            # Strictly purge any "1 OF 5", "2 OF 5", "1 OF 3" or numbered prefix from badge
+            badge_text = re.sub(r"\b(?:BENEFIT|GUIDE|MISTAKE|POINT|SIGN|ISSUE|RULE|INSIGHT|TRUTH|PLACEMENT|LESSON)?\s*\d+\s*(?:OF|/)\s*\d+\b", "", badge_text, flags=re.I).strip()
+            badge_text = re.sub(r"^[1-9]\s*[\.\)]\s*", "", badge_text).strip()
             badge_text = re.sub(r"\bVEDIC REMEDY & ADVICE\b", "CHECK PLACEMENT & DM US", badge_text)
             badge_text = re.sub(r"\b(?:REMEDY|REMEDIES|UPAY|MANTRA)\b", "PLACEMENT", badge_text)
             item["badge"] = badge_text
@@ -851,32 +857,12 @@ INSTAGRAM ALGORITHM SEO & EXPLORER SEARCH INDEXING:
     is_hindi = "hindi" in language.lower() or "hi" in language.lower()
 
     if is_hindi:
-        # Dynamically determine point count from topic (prioritizing leading numbers or number+noun)
-        m_pts = re.search(r"^\s*([345])\b", topic) or re.search(r"\b([345])\s*(?:points?|signs?|mistakes?|flaws?|reasons?|placements?|yogas?|rules?|insights?|secrets?|meanings?|ways?|lessons?|bhav|galti|lakshan)\b", topic, re.I)
+        # Dynamically determine point count from topic (defaults to 5 points for viral retention)
+        m_pts = re.search(r"^\s*([456])\b", topic) or re.search(r"\b([456])\s*(?:points?|signs?|mistakes?|flaws?|reasons?|placements?|yogas?|rules?|insights?|secrets?|meanings?|ways?|lessons?|bhav|galti|lakshan)\b", topic, re.I)
         if m_pts:
             num_points = int(m_pts.group(1))
-        elif re.search(r"\b5\b", topic) and not re.search(r"\b5(?::00|\s*am|\s*pm)\b", topic, re.I):
-            num_points = 5
-        elif re.search(r"\b4\b", topic) and not re.search(r"\b4(?::00|\s*am|\s*pm)\b", topic, re.I):
-            num_points = 4
-        elif re.search(r"\b3\b", topic) and not re.search(r"\b3(?::00|\s*am|\s*pm)\b", topic, re.I):
-            num_points = 3
         else:
-            num_points = 3  # default 3 points for crisp 25s viral reel
-
-        # Dynamically determine badge keyword
-        if any(w in topic.lower() for w in ["mistake", "error", "bhool", "galti"]):
-            badge_kw = "MISTAKE"
-        elif any(w in topic.lower() for w in ["sign", "symptom", "lakshan", "warning", "awaken", "meaning", "wake"]):
-            badge_kw = "SIGN"
-        elif any(w in topic.lower() for w in ["truth", "myth", "lie", "reality"]):
-            badge_kw = "TRUTH"
-        elif any(w in topic.lower() for w in ["house", "placement", "bhav"]):
-            badge_kw = "PLACEMENT"
-        elif any(w in topic.lower() for w in ["foundation", "basics", "nakshatra", "pada"]):
-            badge_kw = "FOUNDATION"
-        else:
-            badge_kw = "INSIGHT"
+            num_points = 5  # default 5 high-voltage points for maximum Instagram engagement
 
         total_scenes_target = num_points + 2
 
@@ -884,8 +870,10 @@ INSTAGRAM ALGORITHM SEO & EXPLORER SEARCH INDEXING:
 CRITICAL LANGUAGE & PRONUNCIATION MANDATE (100% PURE DEVANAGARI HINDI FOR VOICE):
 - ALL SCENES "spoken_line": MUST be written strictly in 100% pure, natural, respectful HINDI in Devanagari script (हिंदी लिपि).
   DO NOT write spoken lines in Roman English or Hinglish! Pure Devanagari guarantees native Indian neural voice models pronounce every Vedic term with 100% sacred, human-grade perfection.
-- ALL SCENES "on_screen_text": Write in clean, bold ALL CAPS plain ASCII ENGLISH (3-5 words, e.g. "1. TOPIC ASPECT", "2. TOPIC ASPECT", ...).
-- EVERY POINT SCENE MUST HAVE ITS NUMBER SYNCED (1 to {num_points}) on both "on_screen_text" and "badge" (e.g. "{badge_kw} 1 OF {num_points}", "{badge_kw} 2 OF {num_points}", ...).
+- ALL SCENES "on_screen_text": Write in clean, bold ALL CAPS plain ASCII ENGLISH (2-4 words, e.g. "PYRITE ON WORK DESK", "CALMS NERVOUS SYSTEM", "SHIELDS NEGATIVE EMF").
+  * STRICT BAN: DO NOT prefix with "1.", "2.", "3." or "1 OF 5". Keep on-screen text punchy, curious, and immediate!
+- ALL SCENES "badge": High-curiosity interactive badge pill (e.g. "WEALTH MAGNET", "SECRET FREQUENCY", "AURA SHIELD", "INSTANT CALM", "BIO-ENERGY CODE", "DEEP FOCUS").
+  * STRICT BAN: NEVER write "1 OF 5", "2 OF 5", "BENEFIT 1 OF 5", or "1 OF 3". The audience hates robotic "1 OF X" text!
 
 CRITICAL TONE & ASTROLOGER IDENTITY MANDATE (CALM, GENTLE & DIVERSE CLIENT CASE STUDIES):
 - TONE: Calm, gentle, soothing, poised, compassionate and respectful. Absolutely NO aggressive, shouty, attacking, or accusatory delivery!
@@ -902,19 +890,19 @@ STRICT MANDATE - ZERO REMEDIES & ZERO MANTRAS (ABSOLUTELY CRITICAL):
 - DO NOT recommend ANY remedies (no gemstones to wear, no rituals, no havan, no donations, no fasting).
 - DO NOT provide ANY mantras, beej mantras, or chants (no 'ॐ...', no mantra text whatsoever).
 - INSTEAD: Focus entirely on teaching the planet/nakshatra's karmic energy, warning symptoms, and key Kundli house placements.
-- CALL TO ACTION (CTA): Ask viewers to check their house placement, comment their placement below, and DM us for a personalized Kundli consultation!
+- CALL TO ACTION (CTA): Ask viewers to check their house placement, comment below, and DM us for a personalized Kundli consultation!
 
 NEGATIVE CONSTRAINT - COMPLETE BAN ON DEGREE JARGON:
 - STRICTLY DO NOT USE the words "degree", "degrees", "डिग्री", "अंश", or "dead degrees" anywhere in spoken or on-screen text!
 - Avoid boring astrological math. Viewers on Instagram care about REAL-LIFE IMPACT: emotional state, financial stability, health warnings, relationship harmony, and personal Kundli placements.
 
-DYNAMIC SCENE STRUCTURE (EXACTLY {total_scenes_target} SCENES: HOOK + {num_points} NUMBERED POINTS + CTA):
+DYNAMIC SCENE STRUCTURE (EXACTLY {total_scenes_target} SCENES: HOOK + {num_points} INTERACTIVE POINTS + CTA):
 - Write exactly {total_scenes_target} scenes tailored 100% specifically to "{topic}":
-  * Scene 1 (Hook): Scroll-stopping opener (0-3s). Badge: "CORE VEDIC TRUTH" or "URGENT WARNING".
-  * Scene 2 (Point 1): Spoken: "पहला मुख्य संकेत / कारण..." | On-Screen: "1. [BESPOKE TOPIC TITLE]" | Badge: "{badge_kw} 1 OF {num_points}"
-  * Scene 3 (Point 2): Spoken: "दूसरा गहरा प्रभाव..." | On-Screen: "2. [BESPOKE TOPIC TITLE]" | Badge: "{badge_kw} 2 OF {num_points}"
+  * Scene 1 (Hook): Scroll-stopping opener (0-3s) asking a hypnotic question or revealing an irresistible curiosity hook. Badge: "SACRED ENERGY SECRET" or "WATCH CLOSELY".
+  * Scene 2 (Point 1): Spoken: "पहला मुख्य संकेत / रहस्य..." | On-Screen: "[BESPOKE 2-4 WORD TITLE]" | Badge: "[INTERACTIVE CURIOSITY BADGE]"
+  * Scene 3 (Point 2): Spoken: "दूसरा गहरा प्रभाव..." | On-Screen: "[BESPOKE 2-4 WORD TITLE]" | Badge: "[INTERACTIVE CURIOSITY BADGE]"
   * Scene 4 to {num_points + 1}: Remaining points through {num_points}
-  * Scene {total_scenes_target} (CTA): Save + Share + Comment placement + DM for consultation | On-Screen: "SAVE REEL • DM US" | Badge: "CHECK PLACEMENT & DM US"
+  * Scene {total_scenes_target} (CTA): Save + Share + Comment placement + DM for consultation | On-Screen: "SAVE REEL • COMMENT BELOW" | Badge: "SAVE REEL • COMMENT BELOW"
 
 CRITICAL DIVERSITY MANDATE:
 - Every point title and spoken line MUST be completely unique and specific to "{topic}".
