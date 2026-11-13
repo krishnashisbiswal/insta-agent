@@ -912,39 +912,39 @@ CRITICAL DIVERSITY MANDATE:
       "scene_num": 1,
       "spoken_line": "{selected_hook['spoken']}",
       "on_screen_text": "{selected_hook['on_screen']}",
-      "badge": "CORE VEDIC TRUTH",
+      "badge": "SACRED ENERGY SECRET",
       "visual_description": "Scroll-stopping opener matching {profile.visual_style}",
       "estimated_seconds": 3
     }},
     {{
       "scene_num": 2,
       "spoken_line": "पहला मुख्य रहस्य जो इस कुंडली स्थिति की वास्तविकता बताता है...",
-      "on_screen_text": "1. PRIMARY MANIFESTATION",
-      "badge": "{badge_kw} 1 OF {num_points}",
+      "on_screen_text": "PRIMARY MANIFESTATION",
+      "badge": "AURA SHIELD",
       "visual_description": "Ancient Vedic manuscript or cosmic celestial visual",
       "estimated_seconds": 4
     }},
     {{
       "scene_num": 3,
       "spoken_line": "दूसरा गहरा प्रभाव, जब यह ऊर्जा जीवन में विशेष परिणाम देती है...",
-      "on_screen_text": "2. DEEPER KARMIC REASON",
-      "badge": "{badge_kw} 2 OF {num_points}",
+      "on_screen_text": "DEEPER KARMIC REASON",
+      "badge": "SECRET FREQUENCY",
       "visual_description": "Visual matching the planetary energy or Kundli houses",
       "estimated_seconds": 4
     }},
     {{
       "scene_num": 4,
       "spoken_line": "तीसरा सबसे महत्वपूर्ण पहलू, जिसे समझने के लिए अपनी कुंडली के भाव देखें...",
-      "on_screen_text": "3. KUNDLI HOUSE SECRET",
-      "badge": "{badge_kw} 3 OF {num_points}",
+      "on_screen_text": "KUNDLI HOUSE SECRET",
+      "badge": "BIO-ENERGY CODE",
       "visual_description": "Ancient temple sanctum or celestial planetary alignment",
       "estimated_seconds": 4
     }},
     {{
       "scene_num": {total_scenes_target},
       "spoken_line": "यह रील तुरंत सेव करें। अपनी कुंडली में इसकी स्थिति नीचे कमेंट करें और व्यक्तिगत विश्लेषण के लिए हमें तुरंत डीएम करें।",
-      "on_screen_text": "SAVE REEL • DM US",
-      "badge": "CHECK PLACEMENT & DM US",
+      "on_screen_text": "SAVE REEL • COMMENT BELOW",
+      "badge": "SAVE REEL • COMMENT BELOW",
       "visual_description": "Ancient temple sanctum sanctorum with brass lamps",
       "estimated_seconds": 4
     }}"""
