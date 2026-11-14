@@ -107,10 +107,14 @@ def get_font(size: int, bold: bool = True, family: str = "impact", text: str = "
     """Prioritize high-impact viral fonts with family selection and Devanagari Hindi support."""
     if text and re.search(r"[\u0900-\u097F]", text):
         devanagari_paths = [
+            str(PROJECT_ROOT / "assets" / "fonts" / "NirmalaB.ttf"),
+            str(PROJECT_ROOT / "assets" / "fonts" / "Nirmala.ttf"),
             "C:/Windows/Fonts/NirmalaB.ttf",
             "C:/Windows/Fonts/Nirmala.ttf",
             "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf",
             "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+            "/usr/share/fonts/opentype/noto/NotoSansDevanagari-Bold.otf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
         ]
         for p in devanagari_paths:
             if os.path.exists(p):

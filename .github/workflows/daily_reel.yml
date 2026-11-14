@@ -15,11 +15,16 @@ on:
       force:
         description: 'Force publish today (bypasses daily frequency limiter & timing gate)'
         required: false
-        default: 'false'
+        default: 'true'
         type: choice
         options:
           - 'true'
           - 'false'
+      category:
+        description: 'Optional content category override (e.g. healing_crystals, sacred_rudraksha)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -44,12 +49,12 @@ jobs:
       - name: Verify FFmpeg and Fonts
         run: |
           sudo apt-get update -o Acquire::http::Timeout="10" -o Acquire::Retries="2" || true
-          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-core fonts-deva || true
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-core fonts-deva fonts-noto-extra || true
           ffmpeg -version | head -n 1
 
       - name: Install Python Dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
       - name: Run Daily Algorithm Publisher
@@ -68,23 +73,37 @@ jobs:
           VOICE_GENDER: "male"
           BRAND_WATERMARK: "@neodivinestore.in"
           TIMEZONE: "Asia/Kolkata"
+          CI: "true"
+          GITHUB_ACTIONS: "true"
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then
-            echo "⚡ Manual forced publication requested by operator."
-            python app/autonomous/daily_algorithm_publisher.py --force
+          EXTRA_ARGS=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.force }}" = "true" ]; then
+              EXTRA_ARGS="--force"
+              echo "⚡ Manual forced publication requested by operator."
+            fi
+            if [ -n "${{ inputs.category }}" ]; then
+              EXTRA_ARGS="$EXTRA_ARGS --category ${{ inputs.category }}"
+              echo "🎯 Specific category requested: ${{ inputs.category }}"
+            fi
           else
-            echo "🤖 Autonomous algorithmic run - Agent Brain evaluating optimal window & daily limit."
-            python app/autonomous/daily_algorithm_publisher.py
+            echo "🤖 Scheduled algorithmic trigger: evaluating daily limit and generating today's reel."
           fi
+          python app/autonomous/daily_algorithm_publisher.py $EXTRA_ARGS
 
       - name: Commit Tracking History & State
-        if: success()
+        if: always()
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -f storage/daily_post_tracker.json storage/trend_history.json storage/algorithm_intelligence.json 2>/dev/null || true
-          git commit -m "chore(autonomous): sync post tracker & trend history [skip ci]" || echo "No tracking changes to commit"
-          git push || echo "Push skipped or not needed"
+          if ! git diff --staged --quiet; then
+            git commit -m "chore(autonomous): sync post tracker & trend history [skip ci]" || echo "No changes to commit"
+            git pull --rebase origin main || true
+            git push origin main || echo "Push skipped or not needed"
+          else
+            echo "No tracking changes to commit."
+          fi
 
       - name: Save Generated Reel Package as Artifact
         if: always()
