@@ -350,7 +350,7 @@ class DailyAlgorithmPublisher:
                         print("\n[STORAGE AUTO-PURGE] Purging intermediate files to clear space...")
                         try:
                             from app.utils.storage_cleaner import StorageCleaner
-                            clean_stats = StorageCleaner.clean_post_publishing_data(keep_latest_reel=False)
+                            clean_stats = StorageCleaner.clean_post_publishing_data(keep_latest_reel=True)
                             print(f" -> 🧹 Space Cleared: Reclaimed {clean_stats['freed_mb']} MB across {clean_stats['files_removed']} files.")
                         except Exception as ce:
                             logger.warning(f"Storage purge notice: {ce}")

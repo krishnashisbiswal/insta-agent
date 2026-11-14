@@ -1,23 +1,23 @@
 {
-  "topic": "Consultation case study: how a client's 4th house Moon and Saturn affliction caused chronic chest heaviness and sleep terror, decoded through 5 hidden bio-electric turning points of 7 Mukhi Rudraksha.",
+  "topic": "5 scientifically and spiritually proven energy shifts of authentic Pyrite crystal on your solar plexus and abundance aura",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 5.8,
+  "agent_evolution_level": 5.9,
   "hook": {
-    "id": "fourth_house_affliction",
-    "name": "Cost Confession",
-    "spoken": "चौथे भाव में शनि-चंद्रमा का विष योग छाती की जकड़न और रातों की दहशत का कारण बनता है।",
-    "on_screen": "SATURN MOON CHRONIC TERROR",
-    "why_it_works": "Directly reveals the hidden astrological cause behind intense physical and emotional distress without any exaggerated money claims.",
+    "id": "pyrite_abundance_aura",
+    "name": "Natural Crystal Benefits",
+    "spoken": "अथक परिश्रम के बाद भी हमारे एक क्लाइंट की वित्तीय प्रगति बार-बार क्यों रुक रही थी?",
+    "on_screen": "FIX YOUR AURA NOW",
+    "why_it_works": "Addresses career and financial stagnation through a tailored client case study, evoking immediate curiosity.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
         "score": 80,
-        "detail": "4 words, 26 chars, ~1.5s spoken (want 5-12 words)"
+        "detail": "4 words, 17 chars, ~1.5s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
         "score": 15.0,
@@ -32,8 +32,8 @@
         "detail": "no payload word anywhere in the line"
       },
       "ADDRESS": {
-        "score": 35.0,
-        "detail": "third person, nobody in the room"
+        "score": 100.0,
+        "detail": "speaks to the viewer"
       }
     }
   },
@@ -47,7 +47,7 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "83 chars (Target: <=125)"
+        "detail": "82 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
@@ -63,9 +63,9 @@
       }
     }
   },
-  "duration_seconds": 40.47,
-  "generated_at": "2026-11-14 00:49:12",
-  "algorithm_phase": "Algorithmic Indexing & Quiet Hours",
+  "duration_seconds": 38.48,
+  "generated_at": "2026-11-14 13:53:28",
+  "algorithm_phase": "Midday Spiritual Reset & Chart Curiosity",
   "daily_post_enforced": true,
   "comment_consultations_handled": 0,
   "q_reward_score": 0.922
