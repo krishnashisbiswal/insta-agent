@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-11-14 13:44:15",
+  "timestamp": "2026-11-15 00:04:15",
   "timezone": "Asia/Kolkata",
-  "algorithm_velocity_score": 89.1,
-  "is_high_velocity_window": true,
-  "active_phase": "Midday Spiritual Reset & Chart Curiosity",
+  "algorithm_velocity_score": 40.0,
+  "is_high_velocity_window": false,
+  "active_phase": "Algorithmic Indexing & Quiet Hours",
   "ai_indexing_lead_time_minutes": 15,
   "core_ranking_vectors": {
     "watch_time_multiplier": 1.45,
