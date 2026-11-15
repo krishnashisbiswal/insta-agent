@@ -10,7 +10,7 @@ import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 
 logger = logging.getLogger("DynamicVisualEngine")
@@ -46,6 +46,9 @@ class DynamicVisualEngine:
        - Layer 4: Procedural atmospheric celestial compositor.
     """
 
+    _session_used_urls: Set[str] = set()
+    _session_used_hashes: Set[str] = set()
+
     @classmethod
     def get_used_registry(cls) -> Set[str]:
         """Loads all globally used image paths/names across videos."""
@@ -78,7 +81,10 @@ class DynamicVisualEngine:
         """
         STRICT MANDATE: Purges all old generated b-roll and temporary frame renders
         from disk before a new Reel starts generation, guaranteeing 100% fresh assets.
+        Also resets session in-memory caches.
         """
+        cls._session_used_urls.clear()
+        cls._session_used_hashes.clear()
         purged = 0
         if GENERATED_BROLL_DIR.exists():
             for f in GENERATED_BROLL_DIR.glob("*.*"):
@@ -111,36 +117,100 @@ class DynamicVisualEngine:
         return purged
 
     @classmethod
-    def register_used_image(cls, img_path: Path) -> None:
-        """Records an image as used so it is never reused in future videos."""
+    def register_used_image(cls, identifier: Any, file_bytes: Optional[bytes] = None) -> None:
+        """Records an image as used (by path, filename, URL, or MD5 hash) so it is never reused in future videos."""
         reg = cls.get_used_registry()
-        try:
-            rel = str(img_path.resolve().relative_to(PROJECT_ROOT.resolve())).replace("\\", "/")
-            reg.add(rel)
-        except Exception:
-            pass
-        reg.add(img_path.name)
+
+        if file_bytes:
+            h = f"hash:{hashlib.md5(file_bytes).hexdigest()}"
+            reg.add(h)
+            cls._session_used_hashes.add(h.lower())
+
+        if isinstance(identifier, Path):
+            try:
+                rel = str(identifier.resolve().relative_to(PROJECT_ROOT.resolve())).replace("\\", "/")
+                reg.add(rel)
+            except Exception:
+                pass
+            reg.add(identifier.name)
+            if identifier.exists():
+                try:
+                    with open(identifier, "rb") as f:
+                        fh = f"hash:{hashlib.md5(f.read()).hexdigest()}"
+                    reg.add(fh)
+                    cls._session_used_hashes.add(fh.lower())
+                except Exception:
+                    pass
+        elif isinstance(identifier, str):
+            clean = identifier.strip()
+            if clean:
+                reg.add(clean)
+                if clean.startswith("http"):
+                    base_url = clean.split("?")[0].lower()
+                    reg.add(base_url)
+                    cls._session_used_urls.add(clean.lower())
+                    cls._session_used_urls.add(base_url)
+                elif clean.startswith("hash:"):
+                    cls._session_used_hashes.add(clean.lower())
+
         cls.save_used_registry(reg)
 
     @classmethod
-    def is_image_used(cls, img_path: Path) -> bool:
-        """Checks if this image has ever been used in this or past videos."""
-        name = img_path.name.lower()
-        if name in BANNED_IMAGE_NAMES:
-            return True
-        # Permanently block any legacy static artifact b-roll or repeated files
-        if any(pat in name for pat in ["neelam_sc", "pukhraj_sc", "panna_sc", "gomed_sc", "ruby_sc", "sample_"]):
-            return True
-        reg = cls.get_used_registry()
-        reg_lower = {x.lower() for x in reg}
-        if img_path.name in reg or name in reg_lower:
-            return True
-        try:
-            rel = str(img_path.resolve().relative_to(PROJECT_ROOT.resolve())).replace("\\", "/")
-            if rel in reg or rel.lower() in reg_lower:
+    def is_image_used(cls, identifier: Any, file_bytes: Optional[bytes] = None) -> bool:
+        """Checks if this image (by Path, filename, URL, or MD5 hash) has ever been used in this or past videos."""
+        if file_bytes:
+            h = f"hash:{hashlib.md5(file_bytes).hexdigest()}".lower()
+            if h in cls._session_used_hashes:
                 return True
-        except Exception:
-            pass
+            reg = cls.get_used_registry()
+            if h in {x.lower() for x in reg}:
+                return True
+
+        if isinstance(identifier, Path):
+            name = identifier.name.lower()
+            if name in BANNED_IMAGE_NAMES:
+                return True
+            # Permanently block any legacy static artifact b-roll or repeated files
+            if any(pat in name for pat in ["neelam_sc", "pukhraj_sc", "panna_sc", "gomed_sc", "ruby_sc", "sample_"]):
+                return True
+
+            reg = cls.get_used_registry()
+            reg_lower = {x.lower() for x in reg}
+
+            if identifier.name in reg or name in reg_lower:
+                return True
+            try:
+                rel = str(identifier.resolve().relative_to(PROJECT_ROOT.resolve())).replace("\\", "/").lower()
+                if rel in reg_lower:
+                    return True
+            except Exception:
+                pass
+            if identifier.exists():
+                try:
+                    with open(identifier, "rb") as f:
+                        fh = f"hash:{hashlib.md5(f.read()).hexdigest()}".lower()
+                    if fh in cls._session_used_hashes or fh in reg_lower:
+                        return True
+                except Exception:
+                    pass
+            return False
+
+        elif isinstance(identifier, str):
+            clean = identifier.strip().lower()
+            if not clean:
+                return False
+            if clean in cls._session_used_urls or clean in cls._session_used_hashes:
+                return True
+            reg = cls.get_used_registry()
+            reg_lower = {x.lower() for x in reg}
+            if clean in reg_lower:
+                return True
+            if clean.startswith("http"):
+                base_url = clean.split("?")[0].lower()
+                if base_url in cls._session_used_urls or base_url in reg_lower:
+                    return True
+            return False
+
         return False
 
     @classmethod
@@ -331,100 +401,140 @@ class DynamicVisualEngine:
         spoken = scene_dict.get("spoken_line", "").lower()
         on_screen = scene_dict.get("on_screen_text", "").lower()
         vis_desc = scene_dict.get("visual_description", "").lower()
-        entity_context = f"{spoken} {on_screen} {vis_desc} {topic.lower()}"
         scene_context = f"{spoken} {on_screen} {vis_desc}".lower()
+        topic_lower = (topic or "").lower()
+
+        # Prioritize scene_context over topic_lower if specific entity words appear in this scene
+        known_entities = [
+            "pyrite", "पायराइट", "amethyst", "कटेला", "जामुनिया", "tourmaline", "टूमलाइन",
+            "citrine", "सिट्रीन", "rose quartz", "aventurine", "एवेंट्यूरिन", "tiger",
+            "sphatik", "स्फटिक", "selenite", "सेलेनाइट", "carnelian", "कार्नेलियन",
+            "labradorite", "लैब्राडोराइट", "rudraksha", "रुद्राक्ष", "mukhi", "मुख",
+            "neelam", "blue sapphire", "नीलम", "pukhraj", "yellow sapphire", "पुखराज",
+            "panna", "emerald", "पन्ना", "manik", "ruby", "माणिक", "moti", "pearl", "मोती",
+            "moonga", "coral", "मूंगा", "heera", "diamond", "हीरा", "gomed", "hessonite",
+            "lehsuniya", "cat's eye", "shani", "saturn", "शनि", "chandra", "moon", "चंद्रमा",
+            "surya", "sun", "सूर्य", "guru", "jupiter", "गुरु", "mangal", "mars", "मंगल",
+            "shukra", "venus", "शुक्र", "budh", "mercury", "बुध", "rahu", "राहु", "ketu", "केतु",
+            "kundli", "कुंडली", "yantra", "यंत्र"
+        ]
+        if any(k in scene_context for k in known_entities):
+            target_context = scene_context
+        else:
+            target_context = f"{scene_context} {topic_lower}"
 
         # Detect active gemstone/planet/crystal/rudraksha
         gem_kw = "gemstone jewelry"
-        planet_kw = "space stars"
-        if any(k in entity_context for k in ["pyrite"]):
-            gem_kw = "pyrite crystal cluster"
-            planet_kw = "pyrite mineral specimen"
-        elif any(k in entity_context for k in ["amethyst"]):
-            gem_kw = "amethyst geode crystal"
-            planet_kw = "amethyst purple mineral"
-        elif any(k in entity_context for k in ["tourmaline"]):
-            gem_kw = "black tourmaline crystal"
-            planet_kw = "black tourmaline mineral"
-        elif any(k in entity_context for k in ["citrine"]):
-            gem_kw = "citrine quartz crystal"
-            planet_kw = "citrine mineral"
-        elif any(k in entity_context for k in ["rose quartz"]):
-            gem_kw = "rose quartz crystal mineral"
-            planet_kw = "raw rose quartz stone"
-        elif any(k in entity_context for k in ["tiger", "tigers eye", "tiger's eye"]):
-            gem_kw = "tigers eye mineral gemstone"
-            planet_kw = "tigers eye stone macro"
-        elif any(k in entity_context for k in ["selenite"]):
-            gem_kw = "selenite crystal"
-            planet_kw = "selenite mineral"
-        elif any(k in entity_context for k in ["gauri shankar"]):
-            gem_kw = "rudraksha sacred bead"
-            planet_kw = "rudraksha seed nepali"
-        elif any(k in entity_context for k in ["rudraksha", "rudraksh", "mukhi"]):
-            gem_kw = "rudraksha beads close up"
-            planet_kw = "rudraksha seeds prayer"
-        elif any(k in entity_context for k in ["neelam", "blue sapphire", "shani", "saturn"]):
-            gem_kw = "blue sapphire gemstone"
-            planet_kw = "blue sapphire mineral"
-        elif any(k in entity_context for k in ["manik", "ruby", "surya", "sun"]):
-            gem_kw = "ruby gemstone jewelry"
-            planet_kw = "ruby mineral corundum"
-        elif any(k in entity_context for k in ["pukhraj", "yellow sapphire", "guru", "jupiter"]):
-            gem_kw = "yellow sapphire gemstone"
-            planet_kw = "yellow sapphire corundum"
-        elif any(k in entity_context for k in ["panna", "emerald", "budh", "mercury"]):
-            gem_kw = "emerald gemstone jewelry"
-            planet_kw = "emerald beryl mineral"
-        elif any(k in entity_context for k in ["moti", "pearl", "chandra", "moon"]):
-            gem_kw = "natural pearl gemstone"
-            planet_kw = "pearl oyster jewelry"
-        elif any(k in entity_context for k in ["moonga", "coral", "mangal", "mars"]):
-            gem_kw = "red coral gemstone"
-            planet_kw = "red coral mineral"
-        elif any(k in entity_context for k in ["heera", "diamond", "shukra", "venus"]):
-            gem_kw = "diamond gemstone jewelry"
-            planet_kw = "raw diamond crystal"
-        elif any(k in entity_context for k in ["gomed", "hessonite", "rahu"]):
-            gem_kw = "hessonite garnet gemstone"
-            planet_kw = "hessonite mineral"
-        elif any(k in entity_context for k in ["lehsuniya", "cat's eye", "ketu"]):
-            gem_kw = "chrysoberyl cats eye gemstone"
-            planet_kw = "chrysoberyl mineral"
+        if any(k in target_context for k in ["pyrite"]):
+            queries = ["pyrite crystal cluster", "raw golden pyrite mineral", "sparkling pyrite cube specimen", "iron pyrite rock cluster"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["amethyst", "कटेला", "जामुनिया"]):
+            queries = ["amethyst geode crystal", "raw purple amethyst cluster", "deep violet amethyst mineral specimen", "amethyst crystal point"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["tourmaline"]):
+            queries = ["black tourmaline crystal", "raw black tourmaline tower", "schorl tourmaline mineral specimen", "striated black tourmaline"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["citrine"]):
+            queries = ["citrine quartz crystal", "golden citrine cluster", "raw amber citrine mineral", "yellow citrine specimen"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["rose quartz"]):
+            queries = ["rose quartz crystal mineral", "raw pink rose quartz", "translucent rose quartz stone", "pink quartz specimen"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["tiger", "tigers eye", "tiger's eye"]):
+            queries = ["tigers eye gemstone mineral", "golden brown tigers eye stone", "chatoyant tigers eye specimen", "tigers eye rock"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["selenite"]):
+            queries = ["selenite crystal tower", "white selenite mineral specimen", "raw selenite gypsum crystal", "selenite wand crystal"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["rudraksha", "rudraksh", "मुख", "mukhi"]):
+            queries = ["rudraksha beads prayer mala", "nepalese rudraksha seed macro", "sacred rudraksha japa mala", "rudraksha tree bead"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["neelam", "blue sapphire", "shani", "saturn"]):
+            queries = ["blue sapphire gemstone", "raw blue corundum sapphire", "natural blue sapphire crystal", "ceylon blue sapphire mineral"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["manik", "ruby", "surya", "sun"]):
+            queries = ["ruby gemstone jewelry", "raw ruby corundum mineral", "natural red ruby crystal", "burma ruby stone"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["pukhraj", "yellow sapphire", "guru", "jupiter"]):
+            queries = ["yellow sapphire gemstone", "natural yellow sapphire corundum", "yellow sapphire mineral", "raw yellow sapphire"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["panna", "emerald", "budh", "mercury"]):
+            queries = ["emerald gemstone jewelry", "raw green emerald beryl", "colombian emerald crystal specimen", "natural emerald stone"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["moti", "pearl", "chandra", "moon"]):
+            queries = ["natural pearl gemstone", "south sea white pearl", "basra pearl jewelry", "pearl oyster shell"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["moonga", "coral", "mangal", "mars"]):
+            queries = ["red coral gemstone", "natural red coral mineral", "mediterranean red coral specimen", "italian red coral stone"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["heera", "diamond", "shukra", "venus"]):
+            queries = ["diamond gemstone jewelry", "raw uncut diamond crystal", "rough diamond octahedral mineral", "sparkling diamond gemstone"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["gomed", "hessonite", "rahu"]):
+            queries = ["hessonite garnet gemstone", "raw hessonite garnet mineral", "cinnamon stone hessonite", "hessonite crystal"]
+            gem_kw = queries[scene_idx % len(queries)]
+        elif any(k in target_context for k in ["lehsuniya", "cat's eye", "ketu"]):
+            queries = ["chrysoberyl cats eye gemstone", "natural cats eye chrysoberyl mineral", "chrysoberyl cabochon stone", "cymophane cats eye"]
+            gem_kw = queries[scene_idx % len(queries)]
 
         # 1. Hook (Scene 0)
         if scene_idx == 0:
             return f"{gem_kw} macro"
 
         # 2. CTA / DM Consultation / Sacred Temple
-        if any(k in scene_context for k in ["dm", "save", "consultation", "परामर्श", "कमेंट", "booking", "message"]):
-            queries = [f"{gem_kw} temple sacred altar", f"{gem_kw} brass diya", f"{gem_kw} altar"]
-            return queries[scene_idx % len(queries)]
+        if any(k in scene_context for k in ["dm", "consultation", "परामर्श", "कमेंट", "booking"]):
+            cta_queries = [
+                "hindu temple sanctum oil lamp brass diya",
+                "sacred brass diya flame temple altar",
+                "hindu puja altar brass lamps sanctum",
+                "sacred temple oil lamps golden light",
+            ]
+            return cta_queries[scene_idx % len(cta_queries)]
 
         # 3. Calming Nervous System / Meditation / Peace
-        if any(k in scene_context for k in ["calm", "nervous system", "peace", "meditat", "focus", "clarity", "anxiety relief", "एकाग्रता", "शांति", "ध्यान"]):
-            queries = [f"{gem_kw} meditation stone", f"{gem_kw} zen harmony", f"{gem_kw} healing"]
-            return queries[scene_idx % len(queries)]
+        if any(k in scene_context for k in ["calm", "nervous system", "peace", "meditat", "focus", "clarity", "anxiety relief", "एकाग्रता", "शांति", "ध्यान", "हृदय", "heartbeat"]):
+            calm_queries = [
+                f"{gem_kw} meditation calm",
+                f"{gem_kw} zen harmony",
+                f"{gem_kw} soothing specimen",
+            ]
+            return calm_queries[scene_idx % len(calm_queries)]
 
-        # 4. Aura / Protection / Negativity Shield
-        if any(k in scene_context for k in ["shield", "aura", "protect", "negative", "absorb", "emf", "सुरक्षा", "आभामंडल", "नजर"]):
-            queries = [f"{gem_kw} raw mineral specimen", f"{gem_kw} energy crystal", f"{gem_kw} specimen"]
-            return queries[scene_idx % len(queries)]
+        # 4. Aura / Protection / Negativity Shield / Frequency
+        if any(k in scene_context for k in ["shield", "aura", "protect", "negative", "absorb", "emf", "सुरक्षा", "आभामंडल", "frequency", "resonance"]):
+            aura_queries = [
+                f"{gem_kw} energy resonance",
+                "sacred geometry energy frequency yantra",
+                f"{gem_kw} raw natural specimen",
+            ]
+            return aura_queries[scene_idx % len(aura_queries)]
 
         # 5. Wealth Attraction / Abundance / Office Desk
         if any(k in scene_context for k in ["attract", "wealth", "abundance", "prosperity", "money", "desk", "office", "धन", "समृद्धि"]):
-            queries = [f"{gem_kw} mineral crystal cluster", f"{gem_kw} desk stone", f"{gem_kw} specimen"]
-            return queries[scene_idx % len(queries)]
+            wealth_queries = [
+                f"{gem_kw} prosperity mineral",
+                f"{gem_kw} executive desk stone",
+                f"{gem_kw} cluster specimen",
+            ]
+            return wealth_queries[scene_idx % len(wealth_queries)]
 
-        # 6. Blind Remedies / Internet Mistakes / Ancient Texts
-        if any(k in scene_context for k in ["blind", "remedy", "remedies", "unverified", "internet", "नियम", "उपाय"]):
-            queries = [f"{gem_kw} natural gemstone specimen", f"{gem_kw} antique manuscript", f"{gem_kw} sacred"]
-            return queries[scene_idx % len(queries)]
+        # 6. Blind Remedies / Caution / Unverified Claims
+        if any(k in scene_context for k in ["blind", "remedy", "remedies", "unverified", "internet", "सावधानी", "नकली"]):
+            caution_queries = [
+                "ancient sanskrit vedic manuscript parchment",
+                "antique vedic scripture astrology scroll",
+                f"{gem_kw} natural authenticity verification",
+            ]
+            return caution_queries[scene_idx % len(caution_queries)]
 
         # 7. Birth Chart, Kundli Houses
         if any(k in scene_context for k in ["kundli", "house", "houses", "chart", "horoscope", "भाव", "लग्न", "केंद्र", "त्रिकोण"]):
-            queries = [f"{gem_kw} astrology chart", f"{gem_kw} sacred stone", f"{gem_kw} crystal"]
-            return queries[scene_idx % len(queries)]
+            kundli_queries = [
+                "authentic vedic kundli astrology chart manuscript",
+                "ancient vedic astrology horoscope scroll",
+                "handwritten kundli birth chart parchment",
+            ]
+            return kundli_queries[scene_idx % len(kundli_queries)]
 
         # 8. Enemy Planets Clashing / Collision
         if any(k in scene_context for k in ["enemy", "clash", "collision", "opposing", "शत्रु", "टकराव", "विपरीत"]):
@@ -471,6 +581,7 @@ class DynamicVisualEngine:
         out_path: Path,
         width: int = 1080,
         height: int = 1920,
+        seed: Optional[int] = None,
     ) -> Path:
         """
         Creates an original, rich, cinematic 9:16 photographic canvas using multi-layered
@@ -548,7 +659,8 @@ class DynamicVisualEngine:
         canvas.paste(geo_layer, (0, 0), geo_layer)
 
         # 4. Soft Golden Bokeh Particles (warm motes, not sharp stars)
-        rng = random.Random(int(time.time() * 1000) % 999999)
+        calc_seed = seed if seed is not None else int(time.time() * 1000000) % 999999
+        rng = random.Random(calc_seed)
         bokeh_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         bokeh_draw = ImageDraw.Draw(bokeh_layer)
         for _ in range(45):
@@ -587,16 +699,15 @@ class DynamicVisualEngine:
         cls,
         query: str,
         target_file: Path,
-        used_urls: Optional[Set[str]] = None,
     ) -> Optional[Path]:
         """
         Searches Openverse API for high-resolution Creative Commons photographs
         of authentic crystals, minerals, and sacred items.
+        Enforces strict anti-repetition: checks URLs and content hashes against both
+        session memory and the persistent used visuals registry.
         """
-        if used_urls is None:
-            used_urls = set()
         clean_q = urllib.parse.quote(query)
-        url = f"https://api.openverse.org/v1/images/?q={clean_q}&page_size=8"
+        url = f"https://api.openverse.org/v1/images/?q={clean_q}&page_size=15"
         req = urllib.request.Request(
             url,
             headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"},
@@ -607,7 +718,12 @@ class DynamicVisualEngine:
             results = data.get("results", [])
             for res in results:
                 img_url = res.get("url")
-                if not img_url or img_url in used_urls:
+                if not img_url:
+                    continue
+                clean_url = img_url.split("?")[0].lower()
+                if img_url in cls._session_used_urls or clean_url in cls._session_used_urls:
+                    continue
+                if cls.is_image_used(img_url) or cls.is_image_used(clean_url):
                     continue
                 try:
                     ir = urllib.request.urlopen(
@@ -616,10 +732,19 @@ class DynamicVisualEngine:
                     )
                     img_bytes = ir.read(6 * 1024 * 1024)
                     if len(img_bytes) > 12000:
+                        if cls.is_image_used(clean_url, file_bytes=img_bytes):
+                            continue
                         img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+                        w, h = img.size
+                        if w < 200 or h < 200:
+                            continue
                         cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
                         cls.save_clean_photographic_image(cropped, target_file, quality=95)
-                        used_urls.add(img_url)
+                        cls._session_used_urls.add(img_url)
+                        cls._session_used_urls.add(clean_url)
+                        cls.register_used_image(img_url, file_bytes=img_bytes)
+                        cls.register_used_image(clean_url)
+                        cls.register_used_image(target_file)
                         logger.info(f"[DynamicVisualEngine] Sourced authentic Openverse photo ('{query}') -> {target_file.name}")
                         return target_file
                 except Exception:
@@ -633,34 +758,44 @@ class DynamicVisualEngine:
         """
         Searches live online open photo repositories (NASA API & Wikimedia Commons)
         and crops the image to professional 1080x1920 (9:16 vertical) resolution.
+        Enforces strict anti-repetition: checks URLs and content hashes against both
+        session memory and the persistent used visuals registry.
         """
         # 1. Check NASA API for celestial / space queries
-        if any(w in query.lower() for w in ["moon", "saturn", "jupiter", "mars", "nebula", "space", "eclipse", "sun", "stars"]):
+        if any(w in query.lower() for w in ["moon", "saturn", "jupiter", "mars", "nebula", "space", "eclipse", "sun", "stars", "cosmos"]):
             try:
                 nasa_url = f"https://images-api.nasa.gov/search?q={urllib.parse.quote(query)}&media_type=image"
                 req = urllib.request.Request(nasa_url, headers={"User-Agent": "Mozilla/5.0"})
                 with urllib.request.urlopen(req, timeout=4) as r:
                     nasa_data = json.loads(r.read())
                 items = nasa_data.get("collection", {}).get("items", [])
-                for item in items[:4]:
+                for item in items[:15]:
                     links = item.get("links", [])
                     if links:
                         img_url = links[0].get("href")
-                        if img_url:
-                            # Prefer medium image for fast, reliable download
-                            med_url = img_url.replace("~thumb.jpg", "~medium.jpg")
-                            try:
-                                ir = urllib.request.urlopen(urllib.request.Request(med_url, headers={"User-Agent": "Mozilla/5.0"}), timeout=5)
-                                data_bytes = ir.read(6 * 1024 * 1024)
-                            except Exception:
-                                ir = urllib.request.urlopen(urllib.request.Request(img_url, headers={"User-Agent": "Mozilla/5.0"}), timeout=5)
-                                data_bytes = ir.read(6 * 1024 * 1024)
-                            if len(data_bytes) > 10000:
-                                img = Image.open(io.BytesIO(data_bytes)).convert("RGB")
-                                cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
-                                cls.save_clean_photographic_image(cropped, target_file, quality=95)
-                                logger.info(f"[DynamicVisualEngine] Sourced authentic NASA photograph -> {target_file.name}")
-                                return target_file
+                        if not img_url or img_url in cls._session_used_urls or cls.is_image_used(img_url):
+                            continue
+                        med_url = img_url.replace("~thumb.jpg", "~medium.jpg")
+                        try:
+                            ir = urllib.request.urlopen(urllib.request.Request(med_url, headers={"User-Agent": "Mozilla/5.0"}), timeout=5)
+                            data_bytes = ir.read(6 * 1024 * 1024)
+                        except Exception:
+                            ir = urllib.request.urlopen(urllib.request.Request(img_url, headers={"User-Agent": "Mozilla/5.0"}), timeout=5)
+                            data_bytes = ir.read(6 * 1024 * 1024)
+                        if len(data_bytes) > 10000:
+                            if cls.is_image_used(img_url, file_bytes=data_bytes):
+                                continue
+                            img = Image.open(io.BytesIO(data_bytes)).convert("RGB")
+                            w, h = img.size
+                            if w < 200 or h < 200:
+                                continue
+                            cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
+                            cls.save_clean_photographic_image(cropped, target_file, quality=95)
+                            cls._session_used_urls.add(img_url)
+                            cls.register_used_image(img_url, file_bytes=data_bytes)
+                            cls.register_used_image(target_file)
+                            logger.info(f"[DynamicVisualEngine] Sourced authentic NASA photograph -> {target_file.name}")
+                            return target_file
             except Exception as e:
                 logger.debug(f"[DynamicVisualEngine] NASA search notice: {e}")
 
@@ -669,14 +804,14 @@ class DynamicVisualEngine:
         tokens = [t for t in query.split() if t.lower() not in ["macro", "specimen", "cluster", "sacred", "raw", "altar", "temple", "stone", "close", "up"]]
         if len(tokens) >= 2:
             candidate_queries.append(" ".join(tokens[:2]))
-        if len(tokens) >= 1:
+        if len(tokens) >= 1 and tokens[0] != query:
             candidate_queries.append(tokens[0])
 
         for c_query in candidate_queries:
             try:
                 # Strictly filter out scanned books, PDF pages, treatises, and archive documents
                 clean_search_query = f"{c_query} filetype:bitmap -pdf -djvu -book -text -treatise -ia -page"
-                wiki_url = f"https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch={urllib.parse.quote(clean_search_query)}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|size&iiurlwidth=1080&format=json"
+                wiki_url = f"https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch={urllib.parse.quote(clean_search_query)}&gsrnamespace=6&gsrlimit=20&prop=imageinfo&iiprop=url|size&iiurlwidth=1080&format=json"
                 req = urllib.request.Request(wiki_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
                 with urllib.request.urlopen(req, timeout=4) as r:
                     data = json.loads(r.read())
@@ -688,20 +823,44 @@ class DynamicVisualEngine:
 
                     ii = pdata.get("imageinfo", [{}])[0]
                     dl_url = ii.get("thumburl") or ii.get("url")
-                    if dl_url:
-                        clean_url = dl_url.split("?")[0].lower()
-                        if any(bad in clean_url for bad in [".pdf", ".djvu", ".tif", "page1", "ia_"]):
-                            continue
-                        if clean_url.endswith((".jpg", ".jpeg", ".png")):
-                            img_req = urllib.request.Request(dl_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
-                            with urllib.request.urlopen(img_req, timeout=5) as ir:
-                                img_bytes = ir.read(5 * 1024 * 1024)
-                            if len(img_bytes) > 10000:
-                                img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-                                cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
-                                cls.save_clean_photographic_image(cropped, target_file, quality=95)
-                                logger.info(f"[DynamicVisualEngine] Sourced authentic photographic asset via Wikimedia ('{c_query}') -> {target_file.name}")
-                                return target_file
+                    if not dl_url:
+                        continue
+                    clean_url = dl_url.split("?")[0].lower()
+                    if any(bad in clean_url for bad in [".pdf", ".djvu", ".tif", "page1", "ia_"]):
+                        continue
+                    if not clean_url.endswith((".jpg", ".jpeg", ".png")):
+                        continue
+
+                    # STRICT ANTI-REPETITION CHECK
+                    if dl_url in cls._session_used_urls or clean_url in cls._session_used_urls:
+                        continue
+                    if cls.is_image_used(dl_url) or cls.is_image_used(clean_url):
+                        continue
+
+                    img_req = urllib.request.Request(dl_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
+                    with urllib.request.urlopen(img_req, timeout=5) as ir:
+                        img_bytes = ir.read(5 * 1024 * 1024)
+                    if len(img_bytes) < 10000:
+                        continue
+
+                    # Check MD5 hash of downloaded bytes against session and registry
+                    if cls.is_image_used(clean_url, file_bytes=img_bytes):
+                        continue
+
+                    img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+                    w, h = img.size
+                    if w < 200 or h < 200:
+                        continue
+
+                    cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
+                    cls.save_clean_photographic_image(cropped, target_file, quality=95)
+                    cls._session_used_urls.add(dl_url)
+                    cls._session_used_urls.add(clean_url)
+                    cls.register_used_image(dl_url, file_bytes=img_bytes)
+                    cls.register_used_image(clean_url)
+                    cls.register_used_image(target_file)
+                    logger.info(f"[DynamicVisualEngine] Sourced authentic photographic asset via Wikimedia ('{c_query}') -> {target_file.name}")
+                    return target_file
             except Exception as e:
                 logger.debug(f"[DynamicVisualEngine] Wikimedia search notice ('{c_query}'): {e}")
 
@@ -875,8 +1034,8 @@ class DynamicVisualEngine:
             theme_palette = "citrine"
 
         # 2. Build Ranked Scene Candidates Matching THIS Scene Content
-        is_last_scene = (scene_idx == total_scenes - 1) or any(k in scene_txt for k in ["dm", "save", "booking", "message", "सेव", "कमेंट", "परामर्श के लिए", "मंदिर"])
-        is_caution_scene = (scene_idx == total_scenes - 2) or any(k in scene_txt for k in ["blind", "remedy", "remedies", "अंधाधुंध", "warning", "विपरीत", "सावधानी", "नियम"])
+        is_last_scene = (scene_idx == total_scenes - 1)
+        is_caution_scene = (scene_idx == total_scenes - 2)
         is_hook_scene = (scene_idx == 0)
 
         is_crystal_or_rudraksha = any(k in full_context for k in [
@@ -1064,7 +1223,8 @@ class DynamicVisualEngine:
         # Tier 5: Procedural luxury studio photographic canvas
         if not chosen_cand:
             proc_file = GENERATED_BROLL_DIR / f"proc_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
-            cls.generate_procedural_photorealistic_image(theme_key=theme_palette, out_path=proc_file)
+            proc_seed = int(hashlib.md5(f"{reel_slug}_{scene_idx}_{time.time()}".encode()).hexdigest()[:8], 16)
+            cls.generate_procedural_photorealistic_image(theme_key=theme_palette, out_path=proc_file, seed=proc_seed)
             chosen_cand = proc_file
 
         if chosen_cand and chosen_cand.exists():
@@ -1086,7 +1246,8 @@ class DynamicVisualEngine:
 
         # Fallback: Procedural luxury studio canvas
         proc_file = GENERATED_BROLL_DIR / f"proc_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
-        cls.generate_procedural_photorealistic_image(theme_key=theme_palette, out_path=proc_file)
+        proc_seed = int(hashlib.md5(f"{reel_slug}_fallback_{scene_idx}_{time.time()}".encode()).hexdigest()[:8], 16)
+        cls.generate_procedural_photorealistic_image(theme_key=theme_palette, out_path=proc_file, seed=proc_seed)
         used_images.add(proc_file)
         cls.register_used_image(proc_file)
         return proc_file

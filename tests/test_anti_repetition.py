@@ -5,6 +5,7 @@ Tests for Anti-Repetition Mandates:
 3. Verifies Sarvam AI speech pace defaults to 1.20x.
 """
 
+import hashlib
 import os
 import sys
 from pathlib import Path
@@ -104,6 +105,8 @@ def test_zero_image_repetition_and_in_context_pyrite():
     # 1. Strict Anti-Repetition Assertion
     assert len(assigned) == 7
     assert len(set(assigned)) == 7, f"Duplicates detected in assigned images: {[p.name for p in assigned]}"
+    hashes = [hashlib.md5(p.read_bytes()).hexdigest() for p in assigned]
+    assert len(set(hashes)) == 7, f"Duplicate content hashes detected across Pyrite scenes: {hashes}"
 
     # 2. Strict In-Context Assertion: Zero Saturn, Kundli parchment, or hardcoded havan/temple in Pyrite video
     for p in assigned:
@@ -144,6 +147,8 @@ def test_zero_image_repetition_and_in_context_rudraksha():
     # 1. Strict Anti-Repetition Assertion
     assert len(assigned) == 7
     assert len(set(assigned)) == 7, f"Duplicates detected in assigned images: {[p.name for p in assigned]}"
+    hashes = [hashlib.md5(p.read_bytes()).hexdigest() for p in assigned]
+    assert len(set(hashes)) == 7, f"Duplicate content hashes detected across Pyrite scenes: {hashes}"
 
     # 2. Strict In-Context Assertion: Zero out-of-context planetary or hardcoded assets
     for p in assigned:
@@ -201,3 +206,26 @@ def test_no_repetition_of_last_two_images_across_consecutive_videos():
     assert "sacred_havan" not in vid2_assigned[5].name.lower()
     assert "sacred_temple" not in vid1_assigned[6].name.lower()
     assert "sacred_temple" not in vid2_assigned[6].name.lower()
+
+
+def test_content_hash_and_url_repetition_blocked():
+    """Verify that identical source URLs and content byte hashes are permanently blocked."""
+    test_url = "https://commons.wikimedia.org/wiki/Special:FilePath/Sample_Amethyst_Specimen.jpg?width=1080"
+    test_bytes = b"unique_amethyst_photograph_test_bytes_987654"
+
+    # Before registration
+    assert DynamicVisualEngine.is_image_used(test_url, file_bytes=test_bytes) is False
+
+    # Register
+    DynamicVisualEngine.register_used_image(test_url, file_bytes=test_bytes)
+
+    # 1. Exact URL matches
+    assert DynamicVisualEngine.is_image_used(test_url) is True
+
+    # 2. Base URL (without query params) matches
+    base_url = "https://commons.wikimedia.org/wiki/Special:FilePath/Sample_Amethyst_Specimen.jpg"
+    assert DynamicVisualEngine.is_image_used(base_url) is True
+
+    # 3. Content hash matches even if path is completely different
+    different_filename = Path("completely_different_scene_filename.jpg")
+    assert DynamicVisualEngine.is_image_used(different_filename, file_bytes=test_bytes) is True
