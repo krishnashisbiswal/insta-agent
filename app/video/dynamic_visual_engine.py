@@ -132,11 +132,12 @@ class DynamicVisualEngine:
         if any(pat in name for pat in ["neelam_sc", "pukhraj_sc", "panna_sc", "gomed_sc", "ruby_sc", "sample_"]):
             return True
         reg = cls.get_used_registry()
-        if img_path.name in reg:
+        reg_lower = {x.lower() for x in reg}
+        if img_path.name in reg or name in reg_lower:
             return True
         try:
             rel = str(img_path.resolve().relative_to(PROJECT_ROOT.resolve())).replace("\\", "/")
-            if rel in reg:
+            if rel in reg or rel.lower() in reg_lower:
                 return True
         except Exception:
             pass
@@ -878,27 +879,50 @@ class DynamicVisualEngine:
         is_caution_scene = (scene_idx == total_scenes - 2) or any(k in scene_txt for k in ["blind", "remedy", "remedies", "अंधाधुंध", "warning", "विपरीत", "सावधानी", "नियम"])
         is_hook_scene = (scene_idx == 0)
 
+        is_crystal_or_rudraksha = any(k in full_context for k in [
+            "pyrite", "पायराइट", "amethyst", "कटेला", "जामुनिया", "tourmaline", "टूमलाइन",
+            "citrine", "सिट्रीन", "rose quartz", "aventurine", "एवेंट्यूरिन", "tiger",
+            "sphatik", "स्फटिक", "selenite", "सेलेनाइट", "carnelian", "कार्नेलियन",
+            "labradorite", "लैब्राडोराइट", "rudraksha", "रुद्राक्ष", "mukhi"
+        ])
+
         candidates: List[Path] = []
 
         # (A) Call to Action / DM Consultation / Temple Sanctum (Scene 7)
         if is_last_scene:
-            cta_pool = [
-                CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
-                CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
-                CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-            ]
+            if is_crystal_or_rudraksha:
+                cta_pool = [
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                ]
+            else:
+                cta_pool = [
+                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                    CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                ]
             rot_idx = int(hashlib.md5(f"{topic}_cta".encode()).hexdigest(), 16) % len(cta_pool)
             candidates.extend(cta_pool[rot_idx:] + cta_pool[:rot_idx])
 
         # (B) Caution against Blind Remedies / Warning / Fire Altar (Scene 6)
         elif is_caution_scene:
-            caution_pool = [
-                CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
-                CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-                CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
-                CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
-            ]
+            if is_crystal_or_rudraksha:
+                caution_pool = [
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_black_tourmaline.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                ]
+            else:
+                caution_pool = [
+                    CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
+                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
+                ]
             rot_idx = int(hashlib.md5(f"{topic}_caution".encode()).hexdigest(), 16) % len(caution_pool)
             candidates.extend(caution_pool[rot_idx:] + caution_pool[:rot_idx])
 
@@ -984,42 +1008,85 @@ class DynamicVisualEngine:
             if curated_master_plate:
                 candidates.append(curated_master_plate)
 
-            # Universal diverse library fallbacks (all high-res, distinct, authentic)
-            candidates.extend([
-                CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-                CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-                CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
-                CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
-                CINEMATIC_BROLL_DIR / "planet_moon.jpg",
-                CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
-                CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
-            ])
+            # Universal diverse library fallbacks (strictly segregated by niche to avoid mismatch)
+            if is_crystal_or_rudraksha:
+                candidates.extend([
+                    CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_carnelian.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                ])
+            else:
+                candidates.extend([
+                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                    CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
+                    CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
+                    CINEMATIC_BROLL_DIR / "planet_moon.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+                ])
 
-        # Pick the FIRST candidate that exists and hasn't been used yet in THIS video reel
+        # Pick the FIRST candidate that exists, hasn't been used in THIS reel, AND hasn't been used in past reels
         chosen_cand: Optional[Path] = None
         for cand in candidates:
             if cand.exists() and cand not in used_images:
+                # If this image was already used globally in past videos, skip it to prevent repeating!
+                if cls.is_image_used(cand):
+                    continue
                 chosen_cand = cand
                 break
 
-        # If all candidates were used in this reel, generate a unique macro focal crop
+        # Tier 2: Search live online photographic repositories (Wikimedia Commons & NASA API)
+        # Sourcing fresh, never-used authentic photographs directly from museum/space archives
+        search_query = cls.get_scene_search_query(scene_dict, topic, scene_idx)
+        if not chosen_cand:
+            online_asset = cls.search_online_photographic_asset(search_query, target_file)
+            if online_asset and online_asset.exists() and not cls.is_image_used(online_asset):
+                chosen_cand = online_asset
+
+        # Tier 3: Search Openverse Creative Commons photographic repository
+        if not chosen_cand:
+            ov_asset = cls.search_openverse_photographic_asset(search_query, target_file)
+            if ov_asset and ov_asset.exists() and not cls.is_image_used(ov_asset):
+                chosen_cand = ov_asset
+
+        # Tier 4: Dynamic macro focal cutaway of master plate (unique perspective + grading)
         if not chosen_cand and curated_master_plate and curated_master_plate.exists():
             macro_file = GENERATED_BROLL_DIR / f"{reel_slug}_macro_sc{scene_idx + 1}_{prompt_hash}.jpg"
-            cls.create_macro_focal_crop(curated_master_plate, macro_file, crop_index=scene_idx)
-            if macro_file.exists() and macro_file not in used_images:
+            cls.create_macro_focal_crop(curated_master_plate, macro_file, crop_index=scene_idx, theme_key=theme_palette)
+            if macro_file.exists() and not cls.is_image_used(macro_file):
                 chosen_cand = macro_file
 
+        # Tier 5: Procedural luxury studio photographic canvas
+        if not chosen_cand:
+            proc_file = GENERATED_BROLL_DIR / f"proc_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
+            cls.generate_procedural_photorealistic_image(theme_key=theme_palette, out_path=proc_file)
+            chosen_cand = proc_file
+
         if chosen_cand and chosen_cand.exists():
-            with Image.open(chosen_cand) as c_img:
-                cropped = ImageOps.fit(c_img.convert("RGB"), (1080, 1920), method=Image.Resampling.LANCZOS)
-            cls.save_clean_photographic_image(cropped, target_file, quality=95)
+            if chosen_cand != target_file:
+                with Image.open(chosen_cand) as c_img:
+                    cropped = ImageOps.fit(c_img.convert("RGB"), (1080, 1920), method=Image.Resampling.LANCZOS)
+                cls.save_clean_photographic_image(cropped, target_file, quality=95)
+
+            # Record in current reel's memory
             used_images.add(chosen_cand)
             used_images.add(target_file)
-            logger.info(f"[DynamicVisualEngine] Scene {scene_idx + 1}: Sourced authentic visual ({chosen_cand.name}) -> {target_file.name}")
+
+            # PERSISTENT STORAGE: Record in global registry so it is NEVER reused in future videos
+            cls.register_used_image(chosen_cand)
+            cls.register_used_image(target_file)
+
+            logger.info(f"[DynamicVisualEngine] Scene {scene_idx + 1}: Sourced and registered unique visual ({chosen_cand.name}) -> {target_file.name}")
             return target_file
 
         # Fallback: Procedural luxury studio canvas
         proc_file = GENERATED_BROLL_DIR / f"proc_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
         cls.generate_procedural_photorealistic_image(theme_key=theme_palette, out_path=proc_file)
         used_images.add(proc_file)
+        cls.register_used_image(proc_file)
         return proc_file

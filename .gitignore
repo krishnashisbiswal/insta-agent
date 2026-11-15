@@ -19,6 +19,7 @@ scratch/
 *.mp4.jpg
 !output/.gitkeep
 !storage/.gitkeep
+!storage/used_visuals_registry.json
 
 # Logs
 logs/
