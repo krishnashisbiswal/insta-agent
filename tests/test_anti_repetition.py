@@ -52,9 +52,11 @@ def test_banned_static_assets_never_reused():
         Path("neelam_sc2_career_crash.jpg"),
         Path("pukhraj_sc1_gemstone.jpg"),
         Path("pukhraj_sc4_kundli.jpg"),
-        Path("gemstone_blue_sapphire.jpg"),
-        Path("gemstone_yellow_sapphire.jpg"),
-        Path("temple_sanctum_golden_diyas.jpg"),
+        Path("1_gemstone_hook.jpg"),
+        Path("2_kundli_chart.jpg"),
+        Path("3_shani_saturn.jpg"),
+        Path("4_sacred_havan.jpg"),
+        Path("5_temple_sanctum.jpg"),
     ]
 
     for cand in legacy_candidates:
