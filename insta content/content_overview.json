@@ -1,39 +1,39 @@
 {
-  "topic": "5 scientifically and spiritually proven energy shifts of authentic Pyrite crystal on your solar plexus and abundance aura",
+  "topic": "The hidden 6th house Saturn-Rahu karmic clash that creates chronic nervous exhaustion and body fatigue, decoded through 5 bio-electric turning points of 5 mukhi rudraksha.",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 5.9,
+  "agent_evolution_level": 6.0,
   "hook": {
-    "id": "pyrite_abundance_aura",
-    "name": "Natural Crystal Benefits",
-    "spoken": "अथक परिश्रम के बाद भी हमारे एक क्लाइंट की वित्तीय प्रगति बार-बार क्यों रुक रही थी?",
-    "on_screen": "FIX YOUR AURA NOW",
-    "why_it_works": "Addresses career and financial stagnation through a tailored client case study, evoking immediate curiosity.",
+    "id": "hook_1",
+    "name": "Wrong Way, Right Way",
+    "spoken": "षष्ठ भाव के शनि राहु का यह चक्र आपके शरीर को लगातार क्यों थकाता है?",
+    "on_screen": "6TH HOUSE SATURN RAHU CLASH",
+    "why_it_works": "Directly targets the root astrological cause of chronic physical and nervous exhaustion without panic.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
-        "score": 80,
-        "detail": "4 words, 17 chars, ~1.5s spoken (want 5-12 words)"
+        "score": 100.0,
+        "detail": "5 words, 27 chars, ~1.8s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 15.0,
-        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
+        "score": 75,
+        "detail": "1 concrete marker(s): 6"
       },
       "STAKES": {
         "score": 20.0,
         "detail": "0 tension marker(s) - nothing is at stake in this line"
       },
       "FRONTLOAD": {
-        "score": 30.0,
-        "detail": "no payload word anywhere in the line"
+        "score": 100.0,
+        "detail": "payload at word 1"
       },
       "ADDRESS": {
-        "score": 100.0,
-        "detail": "speaks to the viewer"
+        "score": 35.0,
+        "detail": "third person, nobody in the room"
       }
     }
   },
@@ -47,7 +47,7 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "82 chars (Target: <=125)"
+        "detail": "67 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
@@ -63,9 +63,9 @@
       }
     }
   },
-  "duration_seconds": 38.48,
-  "generated_at": "2026-11-14 13:53:28",
-  "algorithm_phase": "Midday Spiritual Reset & Chart Curiosity",
+  "duration_seconds": 39.68,
+  "generated_at": "2026-11-15 10:33:25",
+  "algorithm_phase": "Morning Devotion & Karma Awakening",
   "daily_post_enforced": true,
   "comment_consultations_handled": 0,
   "q_reward_score": 0.922
