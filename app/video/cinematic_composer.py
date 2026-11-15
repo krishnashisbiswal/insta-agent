@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import math
 import os
@@ -699,18 +700,15 @@ def create_cinematic_reel_video(
     audio_path: Optional[str] = None,
     voice: Optional[str] = None,
     output_filename: Optional[str] = None,
+    scene_image_paths: Optional[List[Path]] = None,
 ) -> Path:
     """
-    Builds a professional, human-edited Instagram Reel with:
-    - 100% FRAME-PERFECT PER-SCENE AUDIO-VIDEO SYNCHRONIZATION:
-      Each scene generates its own vocal speech track, its video clip duration is set
-      to the EXACT spoken duration (+ 0.18s natural breath pause), and the audio is
-      attached directly to that scene clip. Cuts happen at the exact millisecond speech ends!
-    - Real photorealistic cinematic B-Roll footage/shots
-    - Continuous Ken Burns camera push-in zoom (1.0x -> 1.10x)
-    - Real atmospheric blending (film grain, light leaks, vignette)
-    - Kinetic viral subtitles in lower chest area with yellow highlights (no ugly boxes)
-    - Sub-bass impact boom at t=0 + 44.1kHz ambient mystical Vedic drone pad mixed underneath
+    Builds a professional, human-edited Instagram Reel with a strict two-stage process:
+    STAGE 1: Dedicated Script-Driven Visual Asset Generation
+             Each scene image is freshly generated/resolved based on the script info
+             (visual_description, spoken_line, on_screen_text) BEFORE video editing begins.
+    STAGE 2: Frame-Synchronized Editing & Cinematic Video Composition
+             Ken Burns camera motion, kinetic 2-beat subtitles, audio mixing & rendering.
     """
     scenes = script_data.get("scenes", [])
     if not scenes:
@@ -728,13 +726,57 @@ def create_cinematic_reel_video(
         else:
             active_voice = "en-IN-PrabhatNeural"
 
-    # 2. Dynamic 4K visual generation engine with 100% unique per-scene assets
+    # =========================================================================
+    # STAGE 1: DEDICATED SCRIPT-DRIVEN VISUAL ASSET GENERATION
+    # All scene images MUST be generated/resolved based on script info before editing!
+    # =========================================================================
     reel_slug = re.sub(r"[^\w]", "_", topic.lower())[:24].strip("_")
     from app.video.dynamic_visual_engine import DynamicVisualEngine
-    # STRICT RULE: Purge all old intermediate b-roll and frame renders before starting new reel
-    DynamicVisualEngine.purge_old_generated_images()
-    used_scene_images: Set[Path] = set()
+
+    print(f"\n[STAGE 1/2: SCRIPT-DRIVEN IMAGE GENERATION] Resolving dedicated visual assets for all {total_scenes} scenes...")
     assigned_scene_images: List[Path] = []
+    used_scene_images: Set[Path] = set()
+
+    if scene_image_paths and len(scene_image_paths) == total_scenes:
+        for idx, p in enumerate(scene_image_paths):
+            p = Path(p)
+            if not p.exists():
+                raise FileNotFoundError(f"Provided scene image does not exist: {p}")
+            assigned_scene_images.append(p)
+            used_scene_images.add(p)
+            DynamicVisualEngine.register_used_image(p)
+            print(f" -> Scene {idx + 1}/{total_scenes}: Visual loaded based on script info: {p.name}")
+    else:
+        # STRICT MANDATE: Purge old intermediate b-roll and frame renders before starting fresh generation
+        DynamicVisualEngine.purge_old_generated_images()
+        for idx, sc in enumerate(scenes):
+            img_file = DynamicVisualEngine.get_or_generate_scene_image(
+                scene_dict=sc,
+                topic=topic,
+                scene_idx=idx,
+                total_scenes=total_scenes,
+                reel_slug=reel_slug,
+                used_images=used_scene_images,
+            )
+            assigned_scene_images.append(img_file)
+            used_scene_images.add(img_file)
+            print(f" -> Scene {idx + 1}/{total_scenes}: Fresh visual generated based on script info: {img_file.name}")
+
+    # Verify that all assigned images are 100% unique (distinct file paths & hashes)
+    unique_assigned = set(str(p.resolve()) for p in assigned_scene_images)
+    if len(unique_assigned) != len(assigned_scene_images):
+        raise RuntimeError(
+            f"Strict Anti-Repetition Rule Broken: {len(assigned_scene_images)} scenes but only {len(unique_assigned)} unique images! "
+            f"Duplicated files: {[str(p.name) for p in assigned_scene_images]}"
+        )
+    unique_hashes: Set[str] = set()
+    for p in assigned_scene_images:
+        with open(p, "rb") as f:
+            h = hashlib.md5(f.read()).hexdigest()
+        if h in unique_hashes:
+            raise ValueError(f"CRITICAL REPETITION ERROR: Duplicate image content hash ({h}) detected across scenes!")
+        unique_hashes.add(h)
+    print(f"[STAGE 1 COMPLETE] All {total_scenes} scene images generated, verified 100% unique & diverse.")
 
     def get_scene_badge(sc_dict: Dict[str, Any], scene_idx: int, topic_str: str) -> str:
         raw_badge = sc_dict.get("badge", "")
@@ -788,12 +830,15 @@ def create_cinematic_reel_video(
             ]
             return interactive_fallbacks[(scene_idx - 1) % len(interactive_fallbacks)]
 
-    # 3. Generate Per-Scene Audio & Synchronized Video Clips
+    # =========================================================================
+    # STAGE 2: EDITING & COMPOSITION
+    # Per-scene speech audio sync, kinetic subtitles, Ken Burns motion, and timeline cuts
+    # =========================================================================
     video_clips = []
     audio_clips_to_close = []
     scene_audio_paths = []
 
-    print(f"\n[CINEMATIC COMPOSER] Generating frame-synchronized audio & video for {total_scenes} scenes ({active_voice})...")
+    print(f"\n[STAGE 2/2: EDITING & COMPOSITION] Assembling timeline, subtitles, audio sync, and rendering ({active_voice})...")
 
     for idx, sc in enumerate(scenes):
         scene_num = idx + 1
@@ -824,17 +869,7 @@ def create_cinematic_reel_video(
 
         print(f" -> Scene {scene_num}/{total_scenes}: {speech_dur:.2f}s speech -> {scene_dur:.2f}s clip | \"{screen_text}\"")
 
-        # Route all scenes through DynamicVisualEngine to guarantee 100% unique, non-repeating visuals
-        from app.video.dynamic_visual_engine import DynamicVisualEngine
-        img_file = DynamicVisualEngine.get_or_generate_scene_image(
-            scene_dict=sc,
-            topic=topic,
-            scene_idx=idx,
-            total_scenes=total_scenes,
-            reel_slug=reel_slug,
-            used_images=used_scene_images,
-        )
-        assigned_scene_images.append(img_file)
+        img_file = assigned_scene_images[idx]
         badge = get_scene_badge(sc, idx, topic)
 
         # Dynamic zoom rates per scene for punchy, modern video pacing
@@ -851,6 +886,10 @@ def create_cinematic_reel_video(
             badge_text=badge,
             zoom_rate=z_rate,
         )
+
+        # Attach this scene's vocal audio directly to the scene clip
+        clip = clip.with_audio(sc_audio_clip)
+        video_clips.append(clip)
 
         # Attach this scene's vocal audio directly to the scene clip
         clip = clip.with_audio(sc_audio_clip)

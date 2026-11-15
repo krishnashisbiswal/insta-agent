@@ -118,8 +118,18 @@ class DynamicVisualEngine:
 
     @classmethod
     def register_used_image(cls, identifier: Any, file_bytes: Optional[bytes] = None) -> None:
-        """Records an image as used (by path, filename, URL, or MD5 hash) so it is never reused in future videos."""
+        """Records an image as used (by path, filename, URL, or MD5/SHA256 hash) so it is never reused in future videos."""
         reg = cls.get_used_registry()
+
+        # Connect to PermanentVisualMemory for perceptual & cryptographic durability
+        try:
+            from app.storage.permanent_visual_memory import PermanentVisualMemory
+            if isinstance(identifier, Path) and identifier.exists():
+                PermanentVisualMemory.record_used_visual(identifier, source_identity=identifier.name)
+            elif file_bytes:
+                PermanentVisualMemory.record_used_visual(file_bytes, source_identity=str(identifier) if isinstance(identifier, str) else "")
+        except Exception as e:
+            logger.debug(f"PermanentVisualMemory registration notice: {e}")
 
         if file_bytes:
             h = f"hash:{hashlib.md5(file_bytes).hexdigest()}"
@@ -157,7 +167,27 @@ class DynamicVisualEngine:
 
     @classmethod
     def is_image_used(cls, identifier: Any, file_bytes: Optional[bytes] = None) -> bool:
-        """Checks if this image (by Path, filename, URL, or MD5 hash) has ever been used in this or past videos."""
+        """Checks if this image (by Path, filename, URL, or MD5/pHash/dHash) has ever been used in this or past videos."""
+        # 0. Check PermanentVisualMemory for exact or near-duplicate matches
+        try:
+            from app.storage.permanent_visual_memory import PermanentVisualMemory
+            if isinstance(identifier, Path) and identifier.exists():
+                is_dup, reason, _ = PermanentVisualMemory.check_duplicate(identifier, source_identity=identifier.name)
+                if is_dup:
+                    logger.debug(f"[DynamicVisualEngine] Permanent memory rejected duplicate: {reason}")
+                    return True
+            elif file_bytes:
+                is_dup, reason, _ = PermanentVisualMemory.check_duplicate(file_bytes, source_identity=str(identifier) if isinstance(identifier, str) else "")
+                if is_dup:
+                    logger.debug(f"[DynamicVisualEngine] Permanent memory rejected byte duplicate: {reason}")
+                    return True
+            elif isinstance(identifier, str):
+                is_dup, reason, _ = PermanentVisualMemory.check_duplicate(None, source_identity=identifier)
+                if is_dup:
+                    return True
+        except Exception as e:
+            logger.debug(f"PermanentVisualMemory duplicate check notice: {e}")
+
         if file_bytes:
             h = f"hash:{hashlib.md5(file_bytes).hexdigest()}".lower()
             if h in cls._session_used_hashes:
@@ -680,7 +710,8 @@ class DynamicVisualEngine:
         v_draw = ImageDraw.Draw(vignette)
         max_dist = math.sqrt((width / 2) ** 2 + (height / 2) ** 2)
         for r_step in range(int(width * 0.35), int(max_dist), 20):
-            alpha = int(230 * ((r_step - width * 0.35) / (max_dist - width * 0.35)) ** 1.6)
+            frac = max(0.0, (r_step - width * 0.35) / max(1.0, (max_dist - width * 0.35)))
+            alpha = int(230 * (frac ** 1.6))
             alpha = min(245, max(0, alpha))
             v_draw.ellipse(
                 [width // 2 - r_step, height // 2 - r_step, width // 2 + r_step, height // 2 + r_step],
@@ -950,7 +981,8 @@ class DynamicVisualEngine:
             vignette = Image.new("RGBA", (width, height), (0, 0, 0, 0))
             v_draw = ImageDraw.Draw(vignette)
             for r_step in range(int(width * 0.38), int(width * 0.72), 16):
-                alpha = int(160 * ((r_step - width * 0.38) / (width * 0.34)) ** 1.5)
+                frac = max(0.0, (r_step - width * 0.38) / max(1.0, (width * 0.34)))
+                alpha = int(160 * (frac ** 1.5))
                 v_draw.rectangle([width // 2 - r_step, height // 2 - int(r_step * 1.5), width // 2 + r_step, height // 2 + int(r_step * 1.5)], outline=(60, 40, 20, min(210, alpha)), width=16)
             canvas.paste(vignette, (0, 0), vignette)
 
@@ -1071,7 +1103,8 @@ class DynamicVisualEngine:
         v_draw = ImageDraw.Draw(vignette)
         max_dist = math.sqrt((width / 2) ** 2 + (height / 2) ** 2)
         for r_step in range(int(width * 0.35), int(max_dist), 20):
-            alpha = int(220 * ((r_step - width * 0.35) / (max_dist - width * 0.35)) ** 1.6)
+            frac = max(0.0, (r_step - width * 0.35) / max(1.0, (max_dist - width * 0.35)))
+            alpha = int(220 * (frac ** 1.6))
             alpha = min(240, max(0, alpha))
             v_draw.ellipse(
                 [width // 2 - r_step, height // 2 - r_step, width // 2 + r_step, height // 2 + r_step],

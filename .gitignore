@@ -20,6 +20,7 @@ scratch/
 !output/.gitkeep
 !storage/.gitkeep
 !storage/used_visuals_registry.json
+!storage/permanent_visual_registry.json
 
 # Logs
 logs/

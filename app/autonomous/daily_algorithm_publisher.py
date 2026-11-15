@@ -160,14 +160,15 @@ class DailyAlgorithmPublisher:
         dry_run: bool = False,
         topic_override: Optional[str] = None,
         category: Optional[str] = None,
+        scene_image_paths: Optional[List[Path]] = None,
     ) -> Dict[str, Any]:
         """
-        Executes complete production of a fresh trending viral reel:
+        Executes complete production of a fresh trending viral reel with a strict two-stage process:
         - Self-Learning Daily Upgrade
         - Hot Trend Discovery (anti-fatigue, zero repetition)
         - 5-Beat Viral Retention Script with Replay Loop
-        - Expressive Studio Neural Voiceover
-        - Real Human-Edited Cinematic Composition (Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles)
+        - STAGE 1: Dedicated Script-Driven Image Generation (Visuals generated based on script info)
+        - STAGE 2: Frame-Synchronized Editing & Cinematic Composition (MoviePy editing, audio sync, kinetic subtitles)
         - Explore SEO Package & Multi-file Delivery
         """
         print("\n" + "=" * 75)
@@ -242,17 +243,34 @@ class DailyAlgorithmPublisher:
         print(f"    On-Screen Title:  \"{hook['on_screen']}\"")
         print(f"    Hook Score:       {hook.get('score', 'N/A')}/100 [{hook.get('verdict', 'OK')}]")
 
-        # 4 & 5. Studio Neural Voiceover & Frame-Synchronized Cinematic Composition
-        print(f"\n[STEP 4 & 5/6] Composing cinematic reel with frame-synchronized audio & video ({active_voice})...")
-        from app.video.dynamic_visual_engine import DynamicVisualEngine
-        DynamicVisualEngine.purge_old_generated_images()
+        # Initialize Asset Lifecycle Tracking Job
+        from app.storage.asset_lifecycle_manager import AssetLifecycleManager, JobState
+        script_id = script_data.get("script_id") or f"script_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        lifecycle_job_id = AssetLifecycleManager.create_job(
+            topic=topic,
+            script_id=script_id,
+            script_data=script_data,
+            scene_images=scene_image_paths,
+        )
+
+        # 4 & 5. Stage 1: Script-Driven Image Generation & Stage 2: Editing & Composition
+        print(f"\n[STEP 4 & 5/6] Generating images based on script info, then executing frame-synchronized editing ({active_voice})...")
         output_filename = f"daily_reel_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
         video_path = create_cinematic_reel_video(
             script_data=script_data,
             voice=active_voice,
             output_filename=output_filename,
+            scene_image_paths=scene_image_paths,
         )
         print(f" -> Rendered MP4:     {video_path}")
+
+        # Update lifecycle to VALIDATED
+        AssetLifecycleManager.update_job_state(
+            job_id=lifecycle_job_id,
+            new_state=JobState.VALIDATED,
+            message="Video composition and frame sync complete",
+            metadata={"video_path": str(video_path)},
+        )
 
         # Clean intermediate audio and frame generation chunks to save disk space
         try:
@@ -333,11 +351,21 @@ class DailyAlgorithmPublisher:
         if dry_run:
             print("\n[STEP 7/7] Dry run mode enabled. Video safely packaged into insta content/ ready for review.")
             res_info["instagram_upload"] = {"status": "dry_run", "message": "Video generated ready for review in insta content/"}
+            AssetLifecycleManager.update_job_state(
+                job_id=lifecycle_job_id,
+                new_state=JobState.VALIDATED,
+                message="Dry-run completed. Package preserved in insta content/ for review.",
+            )
         else:
             uploader = InstagramUploader()
             if uploader.has_credentials():
                 print("\n[STEP 7/7] Publishing Reel to Instagram live account...")
                 try:
+                    AssetLifecycleManager.update_job_state(
+                        job_id=lifecycle_job_id,
+                        new_state=JobState.UPLOADING,
+                        message="Uploading Reel to Instagram",
+                    )
                     full_post_caption = final_caption + "\n\n" + " ".join(hashtags)
                     upload_res = uploader.upload_reel(
                         video_path=final_video_dest,
@@ -346,21 +374,45 @@ class DailyAlgorithmPublisher:
                     print(f" -> Instagram Post Status: {upload_res.get('status', 'OK')} [ID: {upload_res.get('media_id', 'N/A')}]")
                     res_info["instagram_upload"] = upload_res
 
-                    # Auto-purge video and intermediate broll from disk to clear space once published
-                    if upload_res.get("status") == "PUBLISHED" or upload_res.get("media_id"):
+                    # Production-Grade Verified Cleanup once published
+                    media_id = upload_res.get("media_id")
+                    if upload_res.get("status") == "PUBLISHED" or media_id:
                         print(f"\n[INSTAGRAM SUCCESS] Reel published successfully! Link: {upload_res.get('media_url')}")
-                        print("\n[STORAGE AUTO-PURGE] Purging intermediate files to clear space...")
+                        AssetLifecycleManager.record_published(
+                            job_id=lifecycle_job_id,
+                            media_id=str(media_id),
+                            media_code=upload_res.get("media_code", ""),
+                            media_url=upload_res.get("media_url", ""),
+                        )
+                        AssetLifecycleManager.mark_verified(
+                            job_id=lifecycle_job_id,
+                            verified_source="instagram_upload_response",
+                        )
+
+                        print("\n[PERMANENT VISUAL MEMORY & AUTO-CLEANUP] Executing production verified asset lifecycle...")
                         try:
-                            from app.utils.storage_cleaner import StorageCleaner
-                            clean_stats = StorageCleaner.clean_post_publishing_data(keep_latest_reel=True)
-                            print(f" -> 🧹 Space Cleared: Reclaimed {clean_stats['freed_mb']} MB across {clean_stats['files_removed']} files.")
+                            clean_stats = AssetLifecycleManager.run_cleanup_job(
+                                job_id=lifecycle_job_id,
+                                clean_reels=False,  # Keep latest reel in insta content/
+                            )
+                            print(f" -> 🧹 Reclaimed: {clean_stats['storage_reclaimed_mb']} MB across {clean_stats['assets_deleted_count']} files.")
+                            print(f" -> 🧠 Permanent Visual Memory: {clean_stats['fingerprints_retained']} visual fingerprints preserved in durable storage.")
+                            res_info["cleanup_report"] = clean_stats
                         except Exception as ce:
-                            logger.warning(f"Storage purge notice: {ce}")
+                            logger.warning(f"Lifecycle cleanup notice: {ce}")
                     else:
                         print(f"\n[INSTAGRAM NOTICE] Live upload did not return confirmed media_id: {upload_res}")
+                        AssetLifecycleManager.mark_failed(
+                            job_id=lifecycle_job_id,
+                            error_message=f"Live upload did not return confirmed media_id: {upload_res}",
+                        )
                 except Exception as e:
                     print(f" -> ⚠️ Instagram Upload Notice: {e}. Video safely delivered to insta content/.")
                     res_info["instagram_upload_error"] = str(e)
+                    AssetLifecycleManager.mark_failed(
+                        job_id=lifecycle_job_id,
+                        error_message=f"Instagram upload exception: {e}",
+                    )
             else:
                 print("\n[STEP 7/7] ⚠️ No live Instagram credentials in .env / Secrets. Video safely delivered to insta content/ and artifacts.")
 
