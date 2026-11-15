@@ -103,12 +103,14 @@ def test_zero_image_repetition_and_in_context_pyrite():
     assert len(assigned) == 7
     assert len(set(assigned)) == 7, f"Duplicates detected in assigned images: {[p.name for p in assigned]}"
 
-    # 2. Strict In-Context Assertion: Zero Saturn or Kundli parchment allowed in Pyrite video
+    # 2. Strict In-Context Assertion: Zero Saturn, Kundli parchment, or hardcoded havan/temple in Pyrite video
     for p in assigned:
         fname = p.name.lower()
         assert "planet_saturn" not in fname, f"Out-of-context Saturn visual found in Pyrite video: {fname}"
         assert "kundli_parchment" not in fname, f"Out-of-context Kundli chart found in Pyrite video: {fname}"
         assert "consultation_scroll" not in fname, f"Out-of-context Consultation scroll found in Pyrite video: {fname}"
+        assert "sacred_havan" not in fname, f"Hardcoded repetitive havan altar found in Pyrite video: {fname}"
+        assert "sacred_temple" not in fname, f"Hardcoded repetitive temple lamps found in Pyrite video: {fname}"
 
 
 def test_zero_image_repetition_and_in_context_rudraksha():
@@ -141,8 +143,59 @@ def test_zero_image_repetition_and_in_context_rudraksha():
     assert len(assigned) == 7
     assert len(set(assigned)) == 7, f"Duplicates detected in assigned images: {[p.name for p in assigned]}"
 
-    # 2. Strict In-Context Assertion: Zero out-of-context planetary assets
+    # 2. Strict In-Context Assertion: Zero out-of-context planetary or hardcoded assets
     for p in assigned:
         fname = p.name.lower()
         assert "planet_saturn" not in fname, f"Out-of-context Saturn visual found in Rudraksha video: {fname}"
         assert "planet_mars" not in fname, f"Out-of-context Mars visual found in Rudraksha video: {fname}"
+        assert "sacred_havan" not in fname, f"Hardcoded repetitive havan altar found in Rudraksha video: {fname}"
+        assert "sacred_temple" not in fname, f"Hardcoded repetitive temple lamps found in Rudraksha video: {fname}"
+
+
+def test_no_repetition_of_last_two_images_across_consecutive_videos():
+    """Verify that Scene 6 and Scene 7 do NOT repeat identical images across consecutive videos."""
+    pyrite_scenes = [
+        {"spoken_line": "पायराइट हुक", "on_screen_text": "PYRITE HOOK"},
+        {"spoken_line": "पायराइट 1", "on_screen_text": "PYRITE 1"},
+        {"spoken_line": "पायराइट 2", "on_screen_text": "PYRITE 2"},
+        {"spoken_line": "पायराइट 3", "on_screen_text": "PYRITE 3"},
+        {"spoken_line": "पायराइट 4", "on_screen_text": "PYRITE 4"},
+        {"spoken_line": "सावधानी: बिना जांचे न लें", "on_screen_text": "CAUTION"},
+        {"spoken_line": "अभी कमेंट करें", "on_screen_text": "COMMENT"},
+    ]
+    amethyst_scenes = [
+        {"spoken_line": "कटेला जामुनिया हुक", "on_screen_text": "AMETHYST HOOK"},
+        {"spoken_line": "कटेला 1", "on_screen_text": "AMETHYST 1"},
+        {"spoken_line": "कटेला 2", "on_screen_text": "AMETHYST 2"},
+        {"spoken_line": "कटेला 3", "on_screen_text": "AMETHYST 3"},
+        {"spoken_line": "कटेला 4", "on_screen_text": "AMETHYST 4"},
+        {"spoken_line": "सावधानी: नकली कांच से बचें", "on_screen_text": "CAUTION"},
+        {"spoken_line": "अभी संपर्क करें", "on_screen_text": "COMMENT"},
+    ]
+
+    vid1_assigned = []
+    used_v1 = set()
+    for i, sc in enumerate(pyrite_scenes):
+        img = DynamicVisualEngine.get_or_generate_scene_image(
+            scene_dict=sc, topic="Pyrite Crystal Benefits", scene_idx=i, total_scenes=7, reel_slug="pyrite_v1", used_images=used_v1
+        )
+        vid1_assigned.append(img)
+
+    vid2_assigned = []
+    used_v2 = set()
+    for i, sc in enumerate(amethyst_scenes):
+        img = DynamicVisualEngine.get_or_generate_scene_image(
+            scene_dict=sc, topic="Amethyst Crystal Healing", scene_idx=i, total_scenes=7, reel_slug="amethyst_v2", used_images=used_v2
+        )
+        vid2_assigned.append(img)
+
+    # Assert Scene 6 is different across videos
+    assert vid1_assigned[5].name != vid2_assigned[5].name
+    # Assert Scene 7 is different across videos
+    assert vid1_assigned[6].name != vid2_assigned[6].name
+
+    # Neither video should end with the hardcoded havan or temple lamps
+    assert "sacred_havan" not in vid1_assigned[5].name.lower()
+    assert "sacred_havan" not in vid2_assigned[5].name.lower()
+    assert "sacred_temple" not in vid1_assigned[6].name.lower()
+    assert "sacred_temple" not in vid2_assigned[6].name.lower()

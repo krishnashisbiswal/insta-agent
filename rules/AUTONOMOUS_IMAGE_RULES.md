@@ -43,6 +43,19 @@
    - Custom synthesized canvas tailored to the exact mineral/bead color palette (e.g. Pyrite gold, Amethyst violet, Rudraksha terracotta) with randomized sacred geometry, bokeh particles, and vignette.
    - Guaranteed 100% unique per scene with distinct random seeds.
 
-## RULE 5: AUTOMATED DISK HYGIENE
+## RULE 5: PERMANENT BAN ON HARDCODED ENDING IMAGES (ZERO REPEATED ENDINGS)
+1. **Scene 6 (Caution/Verification)**:
+   - MUST NEVER use a hardcoded generic havan altar (`sacred_havan_flame_altar.jpg` / `4_sacred_havan.jpg`).
+   - For Crystals: Must depict mineral authenticity verification, natural growth striations, or gemological inspection macro crops (testing genuine crystal vs fake glass).
+   - For Rudraksha: Must depict authentic Nepali mukhi groove inspection (distinguishing real seeds from glued/carved replicas).
+   - For Astrology: Must depict Vedic birth chart parchment inspection.
+2. **Scene 7 (Call to Action / Consultation)**:
+   - MUST NEVER use hardcoded generic temple lamps (`sacred_temple_oil_lamps.jpg` / `5_temple_sanctum.jpg`).
+   - For Crystals & Rudraksha: Must feature the consecrated subject specimen resting on dark luxury silk / velvet ground with golden bokeh motes.
+   - For Astrology: Must feature an antique consultation parchment scroll (`astrology_consultation_scroll.jpg`) or sacred yantra.
+3. **Across Consecutive Videos**:
+   - Scene 6 and Scene 7 must NEVER be identical between consecutive videos. Every video must have unique, topic-anchored ending visuals.
+
+## RULE 6: AUTOMATED DISK HYGIENE
 1. `DynamicVisualEngine.purge_old_generated_images()` must be called automatically at the start of video generation.
 2. Post-upload auto-purge must remove heavy video files and intermediate temporary frames once confirmed live on Instagram.

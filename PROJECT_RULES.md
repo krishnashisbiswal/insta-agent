@@ -13,6 +13,7 @@
 - **Rule IMG-2: Zero Image Repetition**:
   - Every scene in a Reel MUST have a 100% unique, distinct image file.
   - No two scenes in the same video may ever share or display the same image.
+  - Scene 6 and Scene 7 MUST NEVER repeat the same generic Havan altar and Temple oil lamps across videos.
   - An automated verification assertion (`len(set(scene_images)) == len(scene_images)`) strictly halts composition if any duplicate is detected.
 - **Rule IMG-3: 100% Contextual Relevance (Zero Out-of-Context Images)**:
   - Every visual MUST feature the specific crystal, rudraksha, or gemstone being discussed.

@@ -1,27 +1,27 @@
 {
-  "topic": "The hidden 6th house Saturn-Rahu karmic clash that creates chronic nervous exhaustion and body fatigue, decoded through 5 bio-electric turning points of 5 mukhi rudraksha.",
+  "topic": "5 uncanny physical and emotional signs your 7th house Ketu placement is creating sudden emotional detachment and ghosting in relationships",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 6.0,
+  "agent_evolution_level": 6.2,
   "hook": {
-    "id": "hook_1",
-    "name": "Wrong Way, Right Way",
-    "spoken": "षष्ठ भाव के शनि राहु का यह चक्र आपके शरीर को लगातार क्यों थकाता है?",
-    "on_screen": "6TH HOUSE SATURN RAHU CLASH",
-    "why_it_works": "Directly targets the root astrological cause of chronic physical and nervous exhaustion without panic.",
+    "id": "ketu_seventh_house_detachment",
+    "name": "Numbered With A Favourite",
+    "spoken": "सातवें भाव में केतु होने पर जातक अचानक रिश्ते क्यों तोड़ देता है? पांचवां संकेत चौंका देगा।",
+    "on_screen": "7TH HOUSE KETU GHOSTING",
+    "why_it_works": "Leverages the curiosity of numbered signs and profound 7th house karmic detachment psychology.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
-        "score": 100.0,
-        "detail": "5 words, 27 chars, ~1.8s spoken (want 5-12 words)"
+        "score": 80,
+        "detail": "4 words, 23 chars, ~1.5s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
         "score": 75,
-        "detail": "1 concrete marker(s): 6"
+        "detail": "1 concrete marker(s): 7"
       },
       "STAKES": {
         "score": 20.0,
@@ -47,7 +47,7 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "67 chars (Target: <=125)"
+        "detail": "90 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
@@ -63,9 +63,9 @@
       }
     }
   },
-  "duration_seconds": 39.68,
-  "generated_at": "2026-11-15 10:33:25",
-  "algorithm_phase": "Morning Devotion & Karma Awakening",
+  "duration_seconds": 35.54,
+  "generated_at": "2026-11-15 12:45:33",
+  "algorithm_phase": "Midday Spiritual Reset & Chart Curiosity",
   "daily_post_enforced": true,
   "comment_consultations_handled": 0,
   "q_reward_score": 0.922

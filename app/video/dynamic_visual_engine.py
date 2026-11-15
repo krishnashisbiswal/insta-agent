@@ -23,13 +23,13 @@ USED_REGISTRY_FILE = PROJECT_ROOT / "storage" / "used_visuals_registry.json"
 
 # Permanently blacklisted static assets that caused repetitive output
 BANNED_IMAGE_NAMES: Set[str] = {
+    "1_gemstone_hook.jpg",
     "2_kundli_chart.jpg",
+    "3_shani_saturn.jpg",
     "4_sacred_havan.jpg",
     "5_temple_sanctum.jpg",
-    "gemstone_blue_sapphire.jpg",
-    "gemstone_yellow_sapphire.jpg",
-    "gemstone_ruby.jpg",
-    "gemstone_emerald.jpg",
+    "sacred_havan_flame_altar.jpg",
+    "sacred_temple_oil_lamps.jpg",
     "temple_sanctum_golden_diyas.jpg",
     "vedic_astrology_parchment_chart.jpg",
     "sacred_vedic_fire_altar.jpg",
@@ -727,22 +727,26 @@ class DynamicVisualEngine:
             img = orig.convert("RGB")
         w, h = img.size
 
+        # 8 distinct cinematic camera perspectives & macro focal boxes
         crop_boxes = [
-            (int(w * 0.15), int(h * 0.10), int(w * 0.85), int(h * 0.70)),   # Upper facet zoom
-            (int(w * 0.10), int(h * 0.28), int(w * 0.90), int(h * 0.85)),   # Central core crystalline structure
-            (int(w * 0.20), int(h * 0.38), int(w * 0.80), int(h * 0.95)),   # Lower reflection angle
-            (int(w * 0.05), int(h * 0.15), int(w * 0.75), int(h * 0.75)),   # Left angle facet macro
-            (int(w * 0.25), int(h * 0.15), int(w * 0.95), int(h * 0.75)),   # Right angle specular reflection
-            (int(w * 0.12), int(h * 0.22), int(w * 0.88), int(h * 0.78)),   # Deep tight core macro
+            (int(w * 0.12), int(h * 0.08), int(w * 0.88), int(h * 0.68)),   # 0: Upper facet macro zoom
+            (int(w * 0.08), int(h * 0.22), int(w * 0.92), int(h * 0.82)),   # 1: Central core crystalline structure
+            (int(w * 0.16), int(h * 0.35), int(w * 0.84), int(h * 0.95)),   # 2: Lower reflection angle with deep shadow
+            (int(w * 0.04), int(h * 0.12), int(w * 0.72), int(h * 0.72)),   # 3: Left angle facet structure
+            (int(w * 0.28), int(h * 0.12), int(w * 0.96), int(h * 0.72)),   # 4: Right angle specular crystal highlight
+            (int(w * 0.15), int(h * 0.18), int(w * 0.85), int(h * 0.78)),   # 5: Natural inclusions & authentic striations macro
+            (int(w * 0.06), int(h * 0.30), int(w * 0.94), int(h * 0.90)),   # 6: Base facet grounding view on dark velvet
+            (int(w * 0.20), int(h * 0.15), int(w * 0.80), int(h * 0.80)),   # 7: Tightest ultra-macro specimen core
         ]
         box = crop_boxes[crop_index % len(crop_boxes)]
         cropped = img.crop(box)
         resized = ImageOps.fit(cropped, (1080, 1920), method=Image.Resampling.LANCZOS)
 
+        # Dynamic optical grade based on scene index for rich cinematic contrast
         enhancer = ImageEnhance.Contrast(resized)
-        enhanced = enhancer.enhance(1.08)
+        enhanced = enhancer.enhance(1.08 + (crop_index % 3) * 0.03)
         color_enhancer = ImageEnhance.Color(enhanced)
-        enhanced = color_enhancer.enhance(1.05)
+        enhanced = color_enhancer.enhance(1.05 + (crop_index % 2) * 0.04)
 
         cls.save_clean_photographic_image(enhanced, target_path, quality=95)
         logger.info(f"[DynamicVisualEngine] Generated unique macro focal crop ({source_path.name} -> crop {crop_index}) -> {target_path.name}")
@@ -775,76 +779,134 @@ class DynamicVisualEngine:
         vis_desc = scene_dict.get("visual_description", "").lower()
         scene_txt = f"{spoken} {on_screen} {vis_desc}".lower()
         t_lower = (topic or "").lower()
+        full_context = f"{t_lower} {scene_txt}"
 
-        # 1. Identify Topic Category & Specific Entity Anchor
-        is_crystal = any(k in t_lower or k in spoken for k in [
-            "pyrite", "पायराइट", "amethyst", "कटेला", "जामुनिया", "tourmaline", "टूमलाइन",
-            "citrine", "सिट्रीन", "rose quartz", "गुलाबी क्वार्ट्ज", "quartz", "sphatik",
-            "selenite", "selenit", "tiger", "tigers eye", "carnelian", "obsidian",
-            "labradorite", "jade", "aventurine", "crystal", "क्रिस्टल"
-        ])
-        is_rudraksha = any(k in t_lower or k in spoken for k in [
-            "rudraksha", "rudraksh", "रुद्राक्ष", "mukhi", "पंचमुखी", "सात मुखी", "gauri shankar"
-        ])
-
-        # 2. Strict Subject Identification & Theme Palette
+        # 1. Strict Subject Identification & Curated Master Plate Selection
         primary_entity_key = "crystal"
         curated_master_plate: Optional[Path] = None
         theme_palette = "pyrite"
 
-        if any(k in t_lower or k in scene_txt for k in ["pyrite", "पायराइट"]):
+        # Check full context for exact entity
+        if any(k in full_context for k in ["pyrite", "पायराइट", "fool's gold"]):
             primary_entity_key = "pyrite"
             curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_pyrite_cluster.jpg"
             theme_palette = "pyrite"
-        elif any(k in t_lower or k in scene_txt for k in ["amethyst", "कटेला", "जामुनिया"]):
+        elif any(k in full_context for k in ["amethyst", "कटेला", "जामुनिया", "jamunia"]):
             primary_entity_key = "amethyst"
             curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_amethyst_cluster.jpg"
             theme_palette = "amethyst"
-        elif any(k in t_lower or k in scene_txt for k in ["tourmaline", "टूमलाइन"]):
+        elif any(k in full_context for k in ["tourmaline", "टूमलाइन", "black tourmaline"]):
             primary_entity_key = "tourmaline"
             curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_black_tourmaline.jpg"
             theme_palette = "tourmaline"
-        elif any(k in t_lower or k in scene_txt for k in ["citrine", "सिट्रीन"]):
+        elif any(k in full_context for k in ["citrine", "सिट्रीन"]):
             primary_entity_key = "citrine"
             curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg"
             theme_palette = "citrine"
-        elif any(k in t_lower or k in scene_txt for k in ["rose quartz", "गुलाबी क्वार्ट्ज"]):
+        elif any(k in full_context for k in ["rose quartz", "गुलाबी क्वार्ट्ज"]):
             primary_entity_key = "rose quartz"
             curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_rose_quartz.jpg"
             theme_palette = "tourmaline"
-        elif any(k in t_lower or k in scene_txt for k in ["rudraksha", "rudraksh", "रुद्राक्ष", "mukhi"]):
+        elif any(k in full_context for k in ["aventurine", "एवेंट्यूरिन", "green aventurine", "jade"]):
+            primary_entity_key = "aventurine"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg"
+            theme_palette = "emerald"
+        elif any(k in full_context for k in ["tiger", "tigers eye", "टाइगर"]):
+            primary_entity_key = "tigers eye"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg"
+            theme_palette = "citrine"
+        elif any(k in full_context for k in ["sphatik", "स्फटिक", "clear quartz", "quartz"]):
+            primary_entity_key = "quartz"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg"
+            theme_palette = "sapphire"
+        elif any(k in full_context for k in ["selenite", "selenit", "सेलेनाइट"]):
+            primary_entity_key = "selenite"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_selenite.jpg"
+            theme_palette = "sapphire"
+        elif any(k in full_context for k in ["carnelian", "कार्नेलियन"]):
+            primary_entity_key = "carnelian"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_carnelian.jpg"
+            theme_palette = "ruby"
+        elif any(k in full_context for k in ["labradorite", "लैब्राडोराइट"]):
+            primary_entity_key = "labradorite"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "crystal_labradorite.jpg"
+            theme_palette = "deep"
+        elif any(k in full_context for k in ["rudraksha", "rudraksh", "रुद्राक्ष", "mukhi", "मुख"]):
             primary_entity_key = "rudraksha"
             curated_master_plate = CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg"
             theme_palette = "rudraksha"
-        elif any(k in t_lower or k in scene_txt for k in ["neelam", "blue sapphire", "नीलम"]):
+        elif any(k in full_context for k in ["neelam", "blue sapphire", "नीलम"]):
             primary_entity_key = "blue sapphire"
             curated_master_plate = CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg"
             theme_palette = "sapphire"
-        elif any(k in t_lower or k in scene_txt for k in ["pukhraj", "yellow sapphire", "पुखराज"]):
+        elif any(k in full_context for k in ["pukhraj", "yellow sapphire", "पुखराज"]):
             primary_entity_key = "yellow sapphire"
             curated_master_plate = CINEMATIC_BROLL_DIR / "gemstone_yellow_sapphire.jpg"
             theme_palette = "citrine"
-        elif any(k in t_lower or k in scene_txt for k in ["panna", "emerald", "पन्ना"]):
+        elif any(k in full_context for k in ["panna", "emerald", "पन्ना"]):
             primary_entity_key = "emerald"
             curated_master_plate = CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg"
             theme_palette = "emerald"
-        elif any(k in t_lower or k in scene_txt for k in ["manik", "ruby", "माणिक"]):
+        elif any(k in full_context for k in ["manik", "ruby", "माणिक"]):
             primary_entity_key = "ruby"
             curated_master_plate = CINEMATIC_BROLL_DIR / "gemstone_ruby.jpg"
             theme_palette = "ruby"
-        elif any(k in t_lower or k in scene_txt for k in ["shani", "saturn", "शनि"]):
+        elif any(k in full_context for k in ["heera", "diamond", "हीरा"]):
+            primary_entity_key = "diamond"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "gemstone_diamond.jpg"
+            theme_palette = "sapphire"
+        elif any(k in full_context for k in ["moti", "pearl", "मोती"]):
+            primary_entity_key = "pearl"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "gemstone_pearl.jpg"
+            theme_palette = "sapphire"
+        elif any(k in full_context for k in ["moonga", "red coral", "coral", "मूंगा"]):
+            primary_entity_key = "red coral"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "gemstone_red_coral.jpg"
+            theme_palette = "ruby"
+        elif any(k in full_context for k in ["shani", "saturn", "शनि", "sade sati", "साढ़े साती"]):
             primary_entity_key = "saturn"
             curated_master_plate = CINEMATIC_BROLL_DIR / "planet_saturn.jpg"
             theme_palette = "deep"
-        elif any(k in t_lower or k in scene_txt for k in ["chandra", "moon", "चंद्रमा"]):
+        elif any(k in full_context for k in ["chandra", "moon", "चंद्रमा", "चन्द्र", "rohini", "रोहिणी"]):
             primary_entity_key = "moon"
             curated_master_plate = CINEMATIC_BROLL_DIR / "planet_moon.jpg"
             theme_palette = "sapphire"
+        elif any(k in full_context for k in ["surya", "sun", "सूर्य", "aditya"]):
+            primary_entity_key = "sun"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "planet_sun.jpg"
+            theme_palette = "citrine"
+        elif any(k in full_context for k in ["guru", "brihaspati", "jupiter", "गुरु", "बृहस्पति"]):
+            primary_entity_key = "jupiter"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "planet_jupiter.jpg"
+            theme_palette = "citrine"
+        elif any(k in full_context for k in ["mangal", "mars", "मंगल", "manglik"]):
+            primary_entity_key = "mars"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "planet_mars.jpg"
+            theme_palette = "ruby"
+        elif any(k in full_context for k in ["shukra", "venus", "शुक्र"]):
+            primary_entity_key = "venus"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "planet_venus.jpg"
+            theme_palette = "citrine"
+        elif any(k in full_context for k in ["budh", "mercury", "बुध"]):
+            primary_entity_key = "mercury"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "planet_mercury.jpg"
+            theme_palette = "emerald"
+        elif any(k in full_context for k in ["rahu", "राहु"]):
+            primary_entity_key = "rahu"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "planet_rahu.jpg"
+            theme_palette = "deep"
+        elif any(k in full_context for k in ["ketu", "केतु"]):
+            primary_entity_key = "ketu"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "planet_ketu.jpg"
+            theme_palette = "deep"
+        elif any(k in full_context for k in ["kundli", "कुंडली", "जन्मपत्रिका", "chart", "horoscope"]):
+            primary_entity_key = "kundli"
+            curated_master_plate = CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg"
+            theme_palette = "citrine"
 
         # ---------------------------------------------------------------------
-        # TIER 1: SCENE-SPECIFIC CURATED MATCHING ASSETS (STRICT RELEVANCE ONLY)
+        # TIER 1: SCENE 0 (HOOK) - FULL CURATED MASTER PLATE
         # ---------------------------------------------------------------------
-        # Hook (Scene 0): The Full Curated Master Plate (if unused)
         if scene_idx == 0 and curated_master_plate and curated_master_plate.exists() and curated_master_plate not in used_images:
             with Image.open(curated_master_plate) as m_img:
                 cropped = ImageOps.fit(m_img.convert("RGB"), (1080, 1920), method=Image.Resampling.LANCZOS)
@@ -854,49 +916,47 @@ class DynamicVisualEngine:
             logger.info(f"[DynamicVisualEngine] Scene 1 Hook: Sourced master plate ({curated_master_plate.name}) -> {target_file.name}")
             return target_file
 
-        # CTA / Temple Altar (Last Scene): Temple Sanctum diyas ONLY if unused
-        if scene_idx == total_scenes - 1 or any(k in scene_txt for k in ["dm", "save", "booking", "message", "सेव", "कमेंट", "परामर्श के लिए", "मंदिर"]):
-            temple_asset = CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg"
-            if temple_asset.exists() and temple_asset not in used_images:
-                with Image.open(temple_asset) as t_img:
-                    cropped = ImageOps.fit(t_img.convert("RGB"), (1080, 1920), method=Image.Resampling.LANCZOS)
-                cls.save_clean_photographic_image(cropped, target_file, quality=95)
-                used_images.add(temple_asset)
-                used_images.add(target_file)
-                logger.info(f"[DynamicVisualEngine] Scene {scene_idx + 1} CTA: Sourced sacred temple oil lamps -> {target_file.name}")
-                return target_file
-
-        # Caution / Authenticity / Fire Altar (Scene 6): Sacred Altar ONLY if unused and not crystal-exclusive
-        if any(k in scene_txt for k in ["blind", "remedy", "remedies", "अंधाधुंध", "warning", "विपरीत"]):
-            havan_asset = CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg"
-            if havan_asset.exists() and havan_asset not in used_images and not is_crystal:
-                with Image.open(havan_asset) as h_img:
-                    cropped = ImageOps.fit(h_img.convert("RGB"), (1080, 1920), method=Image.Resampling.LANCZOS)
-                cls.save_clean_photographic_image(cropped, target_file, quality=95)
-                used_images.add(havan_asset)
-                used_images.add(target_file)
-                logger.info(f"[DynamicVisualEngine] Scene {scene_idx + 1} Caution: Sourced havan flame altar -> {target_file.name}")
-                return target_file
-
         # ---------------------------------------------------------------------
-        # TIER 2: LIVE OPENVERSE & WIKIMEDIA PHOTOGRAPHIC SEARCH
+        # TIER 2: SCENE-SPECIFIC SECONDARY DIALOGUE ENTITY DISCOVERY
         # ---------------------------------------------------------------------
-        search_query = cls.get_scene_search_query(scene_dict, topic, scene_idx)
-        ov_asset = cls.search_openverse_photographic_asset(search_query, target_file)
-        if ov_asset and ov_asset.exists() and ov_asset not in used_images:
-            used_images.add(ov_asset)
-            return ov_asset
+        # If this scene explicitly references another specific Vedic/mineral asset,
+        # source that authentic asset directly:
+        secondary_plate: Optional[Path] = None
+        is_crystal_or_rudraksha = any(k in primary_entity_key for k in [
+            "pyrite", "amethyst", "tourmaline", "citrine", "rose quartz", "aventurine",
+            "tigers eye", "quartz", "selenite", "carnelian", "labradorite", "rudraksha"
+        ])
 
-        wiki_asset = cls.search_online_photographic_asset(search_query, target_file)
-        if wiki_asset and wiki_asset.exists() and wiki_asset not in used_images:
-            used_images.add(wiki_asset)
-            return wiki_asset
+        # Astrological Kundli parchment (ONLY if not a pure crystal or rudraksha video)
+        if not is_crystal_or_rudraksha and any(k in scene_txt for k in ["kundli", "कुंडली", "birth chart", "भाव", "लग्न", "house", "केंद्र", "त्रिकोण"]):
+            chart_asset = CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg"
+            if chart_asset.exists() and chart_asset not in used_images:
+                secondary_plate = chart_asset
+        # Sacred geometric yantra (frequency, vibration, resonance)
+        elif any(k in scene_txt for k in ["yantra", "यंत्र", "frequency", "vibration", "तरंग", "रेजोनेंस"]):
+            yantra_asset = CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg"
+            if yantra_asset.exists() and yantra_asset not in used_images:
+                secondary_plate = yantra_asset
+        # Consultation scroll for Astrological CTA scene
+        elif not is_crystal_or_rudraksha and scene_idx == total_scenes - 1 and any(k in full_context for k in ["consultation", "परामर्श", "scroll"]):
+            scroll_asset = CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg"
+            if scroll_asset.exists() and scroll_asset not in used_images:
+                secondary_plate = scroll_asset
+
+        if secondary_plate and secondary_plate.exists() and secondary_plate not in used_images:
+            with Image.open(secondary_plate) as s_img:
+                cropped = ImageOps.fit(s_img.convert("RGB"), (1080, 1920), method=Image.Resampling.LANCZOS)
+            cls.save_clean_photographic_image(cropped, target_file, quality=95)
+            used_images.add(secondary_plate)
+            used_images.add(target_file)
+            logger.info(f"[DynamicVisualEngine] Scene {scene_idx + 1}: Sourced secondary dialogue asset ({secondary_plate.name}) -> {target_file.name}")
+            return target_file
 
         # ---------------------------------------------------------------------
-        # TIER 3: DYNAMIC MACRO FOCAL CROP OF CURATED MASTER PLATE
+        # TIER 3: DYNAMIC OPTICAL MACRO FOCAL CROPS (100% IN CONTEXT & ZERO REPETITION)
         # ---------------------------------------------------------------------
-        # If we have a master plate for this topic (e.g. Pyrite, Rudraksha, Citrine),
-        # generate a unique, non-repeating macro cutaway focusing on crystalline facets
+        # Every scene gets a unique, beautiful camera cutaway of the subject:
+        # facet zoom, core crystalline structure, reflection angle, specular highlight, inclusion test
         if curated_master_plate and curated_master_plate.exists():
             macro_crop_file = GENERATED_BROLL_DIR / f"{reel_slug}_macro_crop_sc{scene_idx + 1}_{prompt_hash}.jpg"
             cls.create_macro_focal_crop(
@@ -910,7 +970,16 @@ class DynamicVisualEngine:
                 return macro_crop_file
 
         # ---------------------------------------------------------------------
-        # TIER 4: PROCEDURAL LUXURY STUDIO PHOTOGRAPHIC CANVAS (GUARANTEED UNIQUE)
+        # TIER 4: LIVE ONLINE PHOTOGRAPHIC SEARCH (WIKIMEDIA COMMONS & NASA API)
+        # ---------------------------------------------------------------------
+        search_query = cls.get_scene_search_query(scene_dict, topic, scene_idx)
+        wiki_asset = cls.search_online_photographic_asset(search_query, target_file)
+        if wiki_asset and wiki_asset.exists() and wiki_asset not in used_images:
+            used_images.add(wiki_asset)
+            return wiki_asset
+
+        # ---------------------------------------------------------------------
+        # TIER 5: PROCEDURAL LUXURY STUDIO PHOTOGRAPHIC CANVAS (GUARANTEED UNIQUE)
         # ---------------------------------------------------------------------
         proc_file = GENERATED_BROLL_DIR / f"proc_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
         cls.generate_procedural_photorealistic_image(theme_key=theme_palette, out_path=proc_file)
