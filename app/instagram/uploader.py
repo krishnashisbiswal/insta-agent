@@ -185,11 +185,10 @@ class InstagramUploader:
 
         cl = self._init_direct_client()
 
-        # 2. Upload clip as an Instagram Reel with explicit non-AI creation flag
+        # 2. Upload clip as an authentic Reel without artificial AI disclosure flags
         media = cl.clip_upload(
             path=str(video_path),
             caption=caption,
-            extra_data={"is_created_with_ai": "0"},
         )
 
         media_id = getattr(media, "id", str(media.pk if hasattr(media, "pk") else "uploaded"))
