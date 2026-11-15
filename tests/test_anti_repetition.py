@@ -59,3 +59,90 @@ def test_banned_static_assets_never_reused():
 
     for cand in legacy_candidates:
         assert DynamicVisualEngine.is_image_used(cand) is True, f"Asset {cand} should be banned from reuse"
+
+
+def test_purge_old_generated_images():
+    """Verify pre-generation purge deletes all temporary intermediate files."""
+    test_file = PROJECT_ROOT / "assets" / "generated_broll" / "test_dummy_old_frame.jpg"
+    test_file.parent.mkdir(parents=True, exist_ok=True)
+    test_file.write_text("test_old_bytes")
+    assert test_file.exists()
+
+    purged_count = DynamicVisualEngine.purge_old_generated_images()
+    assert purged_count >= 1
+    assert not test_file.exists(), "Old generated image should be purged before new video generation"
+
+
+def test_zero_image_repetition_and_in_context_pyrite():
+    """Verify 7-scene Pyrite reel produces 7 completely unique images with ZERO planetary/kundli mismatch."""
+    topic = "5 scientific and spiritual energy shifts of Pyrite Crystal"
+    scenes = [
+        {"spoken_line": "क्या आप जानते हैं कि पाइराइट क्रिस्टल आपकी ऊर्जा को कैसे बदलता है?", "on_screen_text": "PYRITE CRYSTAL REVEALED"},
+        {"spoken_line": "पहला लाभ: यह आपके नर्वस सिस्टम को शांति और गहरी स्थिरता प्रदान करता है।", "on_screen_text": "INSTANT NERVOUS STABILITY"},
+        {"spoken_line": "दूसरा लाभ: कार्यस्थल पर यह एकाग्रता और समृद्धि की ऊर्जा आकर्षित करता है।", "on_screen_text": "EXECUTIVE DESK ABUNDANCE"},
+        {"spoken_line": "तीसरा लाभ: यह आपके आभामंडल को नकारात्मक ऊर्जा से सुरक्षित रखता है।", "on_screen_text": "AURA PROTECTION SHIELD"},
+        {"spoken_line": "चौथा लाभ: इसकी बायो-इलेक्ट्रिक फ्रीक्वेंसी शरीर में ऊर्जा का संतुलन बनाती है।", "on_screen_text": "BIO-ENERGY BALANCE"},
+        {"spoken_line": "सावधानी: नकली पत्थरों के बजाय केवल प्राकृतिक लैब-प्रमाणित पाइराइट ही पहनें।", "on_screen_text": "AUTHENTICITY VERIFICATION"},
+        {"spoken_line": "पूर्ण विवरण के लिए अभी 'पायराइट' कमेंट करें और अपनी ऊर्जा को सक्रिय करें।", "on_screen_text": "SAVE REEL • COMMENT PYRITE"},
+    ]
+
+    used_images = set()
+    assigned = []
+    for idx, sc in enumerate(scenes):
+        img_p = DynamicVisualEngine.get_or_generate_scene_image(
+            scene_dict=sc,
+            topic=topic,
+            scene_idx=idx,
+            total_scenes=len(scenes),
+            reel_slug="test_pyrite_anti_rep",
+            used_images=used_images,
+        )
+        assigned.append(img_p)
+
+    # 1. Strict Anti-Repetition Assertion
+    assert len(assigned) == 7
+    assert len(set(assigned)) == 7, f"Duplicates detected in assigned images: {[p.name for p in assigned]}"
+
+    # 2. Strict In-Context Assertion: Zero Saturn or Kundli parchment allowed in Pyrite video
+    for p in assigned:
+        fname = p.name.lower()
+        assert "planet_saturn" not in fname, f"Out-of-context Saturn visual found in Pyrite video: {fname}"
+        assert "kundli_parchment" not in fname, f"Out-of-context Kundli chart found in Pyrite video: {fname}"
+        assert "consultation_scroll" not in fname, f"Out-of-context Consultation scroll found in Pyrite video: {fname}"
+
+
+def test_zero_image_repetition_and_in_context_rudraksha():
+    """Verify 7-scene 5 Mukhi Rudraksha reel produces 7 unique images with 100% relevant visuals."""
+    topic = "5 bio-electric turning points of 5 Mukhi Rudraksha"
+    scenes = [
+        {"spoken_line": "नेपाली पंचमुखी रुद्राक्ष आपके शरीर और मन पर क्या चमत्कारी प्रभाव डालता है?", "on_screen_text": "5 MUKHI RUDRAKSHA"},
+        {"spoken_line": "पहला बिंदु: यह मानसिक तनाव और चिंता को तुरंत शांत करता है।", "on_screen_text": "DEEP MENTAL PEACE"},
+        {"spoken_line": "दूसरा बिंदु: हृदय गति और रक्तचाप के संतुलन में सहायक होता है।", "on_screen_text": "HEART & BLOOD PRESSURE"},
+        {"spoken_line": "तीसरा बिंदु: ध्यान और एकाग्रता को कई गुना बढ़ा देता है।", "on_screen_text": "FOCUSED MEDITATION"},
+        {"spoken_line": "चौथा बिंदु: यह सूक्ष्म आभामंडल को पवित्र ऊर्जा से भर देता है।", "on_screen_text": "SACRED AURA GLOW"},
+        {"spoken_line": "सावधानी: नक्काशीदार नकली मोतियों के बजाय प्राकृतिक मुखी रेखाएं देखकर ही लें।", "on_screen_text": "NATURAL MUKHI GROOVES"},
+        {"spoken_line": "अपने जीवन में सकारात्मक बदलाव के लिए अभी 'शिव' कमेंट करें।", "on_screen_text": "SAVE REEL • COMMENT SHIVA"},
+    ]
+
+    used_images = set()
+    assigned = []
+    for idx, sc in enumerate(scenes):
+        img_p = DynamicVisualEngine.get_or_generate_scene_image(
+            scene_dict=sc,
+            topic=topic,
+            scene_idx=idx,
+            total_scenes=len(scenes),
+            reel_slug="test_rudraksha_anti_rep",
+            used_images=used_images,
+        )
+        assigned.append(img_p)
+
+    # 1. Strict Anti-Repetition Assertion
+    assert len(assigned) == 7
+    assert len(set(assigned)) == 7, f"Duplicates detected in assigned images: {[p.name for p in assigned]}"
+
+    # 2. Strict In-Context Assertion: Zero out-of-context planetary assets
+    for p in assigned:
+        fname = p.name.lower()
+        assert "planet_saturn" not in fname, f"Out-of-context Saturn visual found in Rudraksha video: {fname}"
+        assert "planet_mars" not in fname, f"Out-of-context Mars visual found in Rudraksha video: {fname}"

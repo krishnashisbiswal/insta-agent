@@ -244,6 +244,8 @@ class DailyAlgorithmPublisher:
 
         # 4 & 5. Studio Neural Voiceover & Frame-Synchronized Cinematic Composition
         print(f"\n[STEP 4 & 5/6] Composing cinematic reel with frame-synchronized audio & video ({active_voice})...")
+        from app.video.dynamic_visual_engine import DynamicVisualEngine
+        DynamicVisualEngine.purge_old_generated_images()
         output_filename = f"daily_reel_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
         video_path = create_cinematic_reel_video(
             script_data=script_data,

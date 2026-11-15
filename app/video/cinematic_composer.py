@@ -730,7 +730,11 @@ def create_cinematic_reel_video(
 
     # 2. Dynamic 4K visual generation engine with 100% unique per-scene assets
     reel_slug = re.sub(r"[^\w]", "_", topic.lower())[:24].strip("_")
+    from app.video.dynamic_visual_engine import DynamicVisualEngine
+    # STRICT RULE: Purge all old intermediate b-roll and frame renders before starting new reel
+    DynamicVisualEngine.purge_old_generated_images()
     used_scene_images: Set[Path] = set()
+    assigned_scene_images: List[Path] = []
 
     def get_scene_badge(sc_dict: Dict[str, Any], scene_idx: int, topic_str: str) -> str:
         raw_badge = sc_dict.get("badge", "")
@@ -830,6 +834,7 @@ def create_cinematic_reel_video(
             reel_slug=reel_slug,
             used_images=used_scene_images,
         )
+        assigned_scene_images.append(img_file)
         badge = get_scene_badge(sc, idx, topic)
 
         # Dynamic zoom rates per scene for punchy, modern video pacing
@@ -851,7 +856,16 @@ def create_cinematic_reel_video(
         clip = clip.with_audio(sc_audio_clip)
         video_clips.append(clip)
 
-    # 4. Concatenate video clips (moviepy concatenates both video and audio tracks in lockstep)
+    # 4. Strict Anti-Repetition Verification
+    unique_assigned = set(str(p.resolve()) for p in assigned_scene_images)
+    if len(unique_assigned) != len(assigned_scene_images):
+        raise RuntimeError(
+            f"Strict Anti-Repetition Rule Broken: {len(assigned_scene_images)} scenes but only {len(unique_assigned)} unique images! "
+            f"Duplicated files: {[str(p.name) for p in assigned_scene_images]}"
+        )
+    print(f"[CINEMATIC COMPOSER] Anti-Repetition Verified: All {len(assigned_scene_images)} scenes have 100% unique, distinct images.")
+
+    # Concatenate video clips (moviepy concatenates both video and audio tracks in lockstep)
     final_video = concatenate_videoclips(video_clips, method="compose")
     total_video_duration = final_video.duration
     print(f" -> Master Timeline Duration: {total_video_duration:.2f} seconds (100% synchronized)")

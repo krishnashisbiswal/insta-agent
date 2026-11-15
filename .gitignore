@@ -13,6 +13,8 @@ venv/
 # Generated media
 output/*
 storage/*
+assets/generated_broll/*
+scratch/
 *TEMP_MPY_*
 *.mp4.jpg
 !output/.gitkeep
