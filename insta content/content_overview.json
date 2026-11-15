@@ -1,35 +1,37 @@
 {
-  "topic": "5 uncanny physical and emotional signs your 2nd house Jupiter and Venus alignment is generating sudden wealth blockages and money leakage.",
-  "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
-  "voice": "sarvam:arjun",
-  "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
+  "topic": "Stop wearing 5 mukhi rudraksha blindly until you check your central nervous system for these 5 bio-electric stress locks",
+  "niche": "Vedic Astrology, Sacred Energy, Gemstones & Spiritual Devotion",
+  "language": "Hindi (Devanagari)",
+  "voice": "hi-IN-MadhurNeural",
+  "production_style": "Stage-Decoupled Dedicated Script-Driven Photography + Ken Burns Zoom + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 6.7,
+  "duration_seconds": 42.57,
+  "total_scenes": 7,
   "hook": {
-    "id": "jupiter_venus_alignment_1",
-    "name": "Numbered With A Favourite",
-    "spoken": "दूसरे घर में गुरु और शुक्र की युति के पाँच विचित्र संकेत। पांचवाँ संकेत सबसे अलग है।",
-    "on_screen": "5 HIDDEN WEALTH BLOCKAGES",
-    "why_it_works": "Leverages the numbered hook formula to spark curiosity while maintaining a calm, authoritative astrological tone.",
+    "id": "rudraksha_nervous_system",
+    "name": "Nobody Tells You",
+    "spoken": "कोई नहीं बताता कि गलत तरीके से पहना गया रुद्राक्ष आपके केंद्रीय तंत्रिका तंत्र को कैसे जकड़ लेता है।",
+    "on_screen": "THE HIDDEN RUDRAKSHA TRUTH",
+    "why_it_works": "Leverages an insider truth about sacred geometry and bio-electric resistance that challenges mainstream spiritual advice.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
         "score": 80,
-        "detail": "4 words, 25 chars, ~1.5s spoken (want 5-12 words)"
+        "detail": "4 words, 26 chars, ~1.5s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 75,
-        "detail": "1 concrete marker(s): 5"
+        "score": 15.0,
+        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
       },
       "STAKES": {
-        "score": 70.0,
-        "detail": "1 tension marker(s): hidden"
+        "score": 100.0,
+        "detail": "2 tension marker(s): hidden, truth"
       },
       "FRONTLOAD": {
         "score": 100.0,
-        "detail": "payload at word 1"
+        "detail": "payload at word 2"
       },
       "ADDRESS": {
         "score": 35.0,
@@ -47,11 +49,11 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "89 chars (Target: <=125)"
+        "detail": "88 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
-        "detail": "7 visual scenes with dynamic pacing (avg 3.6s)"
+        "detail": "7 visual scenes with dynamic pacing (avg 4.0s)"
       },
       "high_value_cta": {
         "score": 100,
@@ -63,10 +65,24 @@
       }
     }
   },
-  "duration_seconds": 40.01,
-  "generated_at": "2026-11-15 14:52:25",
-  "algorithm_phase": "Midday Spiritual Reset & Chart Curiosity",
-  "daily_post_enforced": true,
-  "comment_consultations_handled": 0,
-  "q_reward_score": 0.922
+  "non_ai_authenticity": {
+    "slop_density_score": 100.0,
+    "banned_cliches_found": 0,
+    "astrologer_perspective": "Consulting practitioner sharing client case study",
+    "degree_jargon_free": true,
+    "blind_remedy_warning": true
+  },
+  "viral_retention_architecture": {
+    "timeline_pacing": "Single-pass 42.57s (avg 3.6s - 4.2s per scene cut)",
+    "visual_uniqueness": "7 / 7 dedicated visual assets (100% unique MD5 hashes)",
+    "crop_zooming_ratio": "0% (completely eliminated)",
+    "engagement_funnel": "4-Layer CTA (Save + Share + Comment Placement + DM to Book Consultation)"
+  },
+  "publishing_status": {
+    "mode": "Staging / Local Deliverables Ready",
+    "auto_publish_live": false,
+    "deliverable_video": "insta content/viral_reel_video.mp4",
+    "deliverable_audio": "insta content/voiceover_audio.mp3",
+    "deliverable_caption": "insta content/caption_and_hashtags.txt"
+  }
 }
