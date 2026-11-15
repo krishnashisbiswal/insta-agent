@@ -38,9 +38,10 @@ def test_banned_static_assets():
 import uuid
 
 def test_dynamic_visual_registry_tracking(tmp_path):
-    unique_name = f"test_asset_{uuid.uuid4().hex}.jpg"
+    unique_id = uuid.uuid4().hex
+    unique_name = f"test_asset_{unique_id}.jpg"
     test_img = tmp_path / unique_name
-    test_img.write_text("fake image data")
+    test_img.write_text(f"fake image data {unique_id}")
 
     # Before registration
     assert DynamicVisualEngine.is_image_used(test_img) is False

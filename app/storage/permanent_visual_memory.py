@@ -20,6 +20,7 @@ import logging
 import math
 import os
 import sys
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -64,6 +65,7 @@ class PermanentVisualMemory:
     _records: Dict[str, Dict[str, Any]] = {}
     _sha256_set: Set[str] = set()
     _source_identities: Set[str] = set()
+    _thread_lock: threading.RLock = threading.RLock()
 
     @classmethod
     def _get_lock(cls) -> Any:
@@ -199,11 +201,12 @@ class PermanentVisualMemory:
     @classmethod
     def load_registry(cls) -> Dict[str, Any]:
         """Loads permanent registry from disk under concurrency lock."""
-        lock = cls._get_lock()
-        if lock:
-            with lock:
-                return cls._read_registry_file()
-        return cls._read_registry_file()
+        with cls._thread_lock:
+            lock = cls._get_lock()
+            if lock:
+                with lock:
+                    return cls._read_registry_file()
+            return cls._read_registry_file()
 
     @classmethod
     def _read_registry_file(cls) -> Dict[str, Any]:
@@ -349,18 +352,19 @@ class PermanentVisualMemory:
             "usage_timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-        lock = cls._get_lock()
-        if lock:
-            with lock:
+        with cls._thread_lock:
+            lock = cls._get_lock()
+            if lock:
+                with lock:
+                    data = cls._read_registry_file()
+                    data["records"][record_id] = record
+                    cls._write_registry_file(data)
+                    cls._update_cache(data)
+            else:
                 data = cls._read_registry_file()
                 data["records"][record_id] = record
                 cls._write_registry_file(data)
                 cls._update_cache(data)
-        else:
-            data = cls._read_registry_file()
-            data["records"][record_id] = record
-            cls._write_registry_file(data)
-            cls._update_cache(data)
 
         logger.info(
             f"[PermanentVisualMemory] Permanently recorded visual fingerprint: "
