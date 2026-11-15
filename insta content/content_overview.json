@@ -1,27 +1,27 @@
 {
-  "topic": "5 uncanny physical and emotional signs your 7th house Ketu placement is creating sudden emotional detachment and ghosting in relationships",
+  "topic": "Consultation case study: how a client's 4th house moon and saturn opposition caused heavy emotional exhaustion and chronic inner restlessness, decoded through 5 hidden vedic chart turning points.",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 6.2,
+  "agent_evolution_level": 6.5,
   "hook": {
-    "id": "ketu_seventh_house_detachment",
-    "name": "Numbered With A Favourite",
-    "spoken": "सातवें भाव में केतु होने पर जातक अचानक रिश्ते क्यों तोड़ देता है? पांचवां संकेत चौंका देगा।",
-    "on_screen": "7TH HOUSE KETU GHOSTING",
-    "why_it_works": "Leverages the curiosity of numbered signs and profound 7th house karmic detachment psychology.",
+    "id": "hook_1",
+    "name": "Wrong Way, Right Way",
+    "spoken": "चौथे भाव का चंद्रमा और शनि का विष योग आपकी हर खुशी को क्यों सोख रहा है?",
+    "on_screen": "4TH HOUSE MOON SATURN YOGA",
+    "why_it_works": "Directly targets the core astrological tension of inner restlessness and emotional exhaustion with protective authority.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
-        "score": 80,
-        "detail": "4 words, 23 chars, ~1.5s spoken (want 5-12 words)"
+        "score": 100.0,
+        "detail": "5 words, 26 chars, ~1.8s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
         "score": 75,
-        "detail": "1 concrete marker(s): 7"
+        "detail": "1 concrete marker(s): 4"
       },
       "STAKES": {
         "score": 20.0,
@@ -47,7 +47,7 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "90 chars (Target: <=125)"
+        "detail": "71 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
@@ -63,8 +63,8 @@
       }
     }
   },
-  "duration_seconds": 35.54,
-  "generated_at": "2026-11-15 12:45:33",
+  "duration_seconds": 34.14,
+  "generated_at": "2026-11-15 14:06:20",
   "algorithm_phase": "Midday Spiritual Reset & Chart Curiosity",
   "daily_post_enforced": true,
   "comment_consultations_handled": 0,
