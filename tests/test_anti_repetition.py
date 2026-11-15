@@ -8,6 +8,7 @@ Tests for Anti-Repetition Mandates:
 import hashlib
 import os
 import sys
+import uuid
 from pathlib import Path
 import pytest
 
@@ -210,8 +211,9 @@ def test_no_repetition_of_last_two_images_across_consecutive_videos():
 
 def test_content_hash_and_url_repetition_blocked():
     """Verify that identical source URLs and content byte hashes are permanently blocked."""
-    test_url = "https://commons.wikimedia.org/wiki/Special:FilePath/Sample_Amethyst_Specimen.jpg?width=1080"
-    test_bytes = b"unique_amethyst_photograph_test_bytes_987654"
+    u_id = uuid.uuid4().hex
+    test_url = f"https://commons.wikimedia.org/wiki/Special:FilePath/Sample_Amethyst_{u_id}.jpg?width=1080"
+    test_bytes = f"unique_amethyst_photograph_test_bytes_{u_id}".encode()
 
     # Before registration
     assert DynamicVisualEngine.is_image_used(test_url, file_bytes=test_bytes) is False
@@ -223,9 +225,9 @@ def test_content_hash_and_url_repetition_blocked():
     assert DynamicVisualEngine.is_image_used(test_url) is True
 
     # 2. Base URL (without query params) matches
-    base_url = "https://commons.wikimedia.org/wiki/Special:FilePath/Sample_Amethyst_Specimen.jpg"
+    base_url = f"https://commons.wikimedia.org/wiki/Special:FilePath/Sample_Amethyst_{u_id}.jpg"
     assert DynamicVisualEngine.is_image_used(base_url) is True
 
     # 3. Content hash matches even if path is completely different
-    different_filename = Path("completely_different_scene_filename.jpg")
+    different_filename = Path(f"completely_different_scene_{u_id}.jpg")
     assert DynamicVisualEngine.is_image_used(different_filename, file_bytes=test_bytes) is True

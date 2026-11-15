@@ -867,46 +867,223 @@ class DynamicVisualEngine:
         return None
 
     @classmethod
-    def create_macro_focal_crop(
+    def generate_variety_canvas(
         cls,
-        source_path: Path,
-        target_path: Path,
-        crop_index: int,
-        theme_key: str = "pyrite",
+        scene_dict: Dict[str, Any],
+        topic: str,
+        scene_idx: int,
+        total_scenes: int,
+        out_path: Path,
+        seed: Optional[int] = None,
+        width: int = 1080,
+        height: int = 1920,
     ) -> Path:
         """
-        Renders a unique, non-repeating macro optical cutaway from an authentic high-resolution
-        subject plate (e.g. facet zoom, reflective angle, core specimen), ensuring each scene
-        is visually distinct while remaining 100% relevant to the subject.
+        Creates an authentic, freshly generated distinct scene variety canvas.
+        Guarantees that each scene has a completely DIFFERENT visual subject and layout:
+        - Variety 0: Macro Gemstone/Crystal Plate on Dark Velvet
+        - Variety 1: Raw Uncut Earth Mineral Texture with Specular Luster
+        - Variety 2: Ancient Handwritten Vedic Kundli Birth Chart on Aged Parchment
+        - Variety 3: Deep Cosmic Space Atmosphere with Celestial Planetary Sphere & Rings
+        - Variety 4: Sacred Geometry Sri Yantra Concentric Energy Mandala
+        - Variety 5: Sacred Vedic Havan Flame and Golden Fire Altar Embers
+        - Variety 6: Golden Temple Sanctum Sanctorum Glow with Brass Oil Lamps
         """
-        with Image.open(source_path) as orig:
-            img = orig.convert("RGB")
-        w, h = img.size
+        spoken = scene_dict.get("spoken_line", "").lower()
+        on_screen = scene_dict.get("on_screen_text", "").lower()
+        vis_desc = scene_dict.get("visual_description", "").lower()
+        scene_txt = f"{spoken} {on_screen} {vis_desc}".lower()
 
-        # 8 distinct cinematic camera perspectives & macro focal boxes
-        crop_boxes = [
-            (int(w * 0.12), int(h * 0.08), int(w * 0.88), int(h * 0.68)),   # 0: Upper facet macro zoom
-            (int(w * 0.08), int(h * 0.22), int(w * 0.92), int(h * 0.82)),   # 1: Central core crystalline structure
-            (int(w * 0.16), int(h * 0.35), int(w * 0.84), int(h * 0.95)),   # 2: Lower reflection angle with deep shadow
-            (int(w * 0.04), int(h * 0.12), int(w * 0.72), int(h * 0.72)),   # 3: Left angle facet structure
-            (int(w * 0.28), int(h * 0.12), int(w * 0.96), int(h * 0.72)),   # 4: Right angle specular crystal highlight
-            (int(w * 0.15), int(h * 0.18), int(w * 0.85), int(h * 0.78)),   # 5: Natural inclusions & authentic striations macro
-            (int(w * 0.06), int(h * 0.30), int(w * 0.94), int(h * 0.90)),   # 6: Base facet grounding view on dark velvet
-            (int(w * 0.20), int(h * 0.15), int(w * 0.80), int(h * 0.80)),   # 7: Tightest ultra-macro specimen core
-        ]
-        box = crop_boxes[crop_index % len(crop_boxes)]
-        cropped = img.crop(box)
-        resized = ImageOps.fit(cropped, (1080, 1920), method=Image.Resampling.LANCZOS)
+        calc_seed = seed if seed is not None else int(time.time() * 1000000) % 999999
+        rng = random.Random(calc_seed)
 
-        # Dynamic optical grade based on scene index for rich cinematic contrast
-        enhancer = ImageEnhance.Contrast(resized)
-        enhanced = enhancer.enhance(1.08 + (crop_index % 3) * 0.03)
-        color_enhancer = ImageEnhance.Color(enhanced)
-        enhanced = color_enhancer.enhance(1.05 + (crop_index % 2) * 0.04)
+        # Determine Variety Type based on scene content and position
+        is_last = (scene_idx == total_scenes - 1)
+        is_caution = (scene_idx == total_scenes - 2)
 
-        cls.save_clean_photographic_image(enhanced, target_path, quality=95)
-        logger.info(f"[DynamicVisualEngine] Generated unique macro focal crop ({source_path.name} -> crop {crop_index}) -> {target_path.name}")
-        return target_path
+        if is_last or any(k in scene_txt for k in ["dm", "consultation", "परामर्श", "कमेंट", "मंदिर"]):
+            variety = "temple_sanctum"
+        elif is_caution or any(k in scene_txt for k in ["blind", "remedy", "havan", "fire", "altar", "हवन", "सावधानी"]):
+            variety = "havan_flame"
+        elif any(k in scene_txt for k in ["kundli", "chart", "house", "birth chart", "भाव", "लग्न", "कुंडली"]):
+            variety = "vedic_kundli"
+        elif any(k in scene_txt for k in ["shani", "saturn", "moon", "sun", "planet", "cosmic", "space", "शनि", "चंद्रमा"]):
+            variety = "cosmic_planet"
+        elif any(k in scene_txt for k in ["yantra", "frequency", "resonance", "aura", "shield", "यंत्र", "ऊर्जा", "आभामंडल"]):
+            variety = "sacred_yantra"
+        elif scene_idx == 1 or any(k in scene_txt for k in ["raw", "mineral", "earth", "rock", "stone", "क्रिस्टल"]):
+            variety = "raw_mineral"
+        else:
+            variety = "macro_gemstone"
+
+        canvas = Image.new("RGB", (width, height), (10, 8, 14))
+        draw = ImageDraw.Draw(canvas)
+
+        if variety == "vedic_kundli":
+            # Ancient Aged Parchment with Traditional Diamond Kundli Grid
+            for y in range(height):
+                frac = y / height
+                r = int(224 - 30 * frac + rng.randint(-3, 3))
+                g = int(204 - 32 * frac + rng.randint(-3, 3))
+                b = int(168 - 34 * frac + rng.randint(-3, 3))
+                draw.line([(0, y), (width, y)], fill=(r, g, b))
+
+            chart_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            chart_draw = ImageDraw.Draw(chart_layer)
+            cx, cy = width // 2, int(height * 0.46)
+            hw = 380
+            hh = 380
+
+            red_ink = (140, 28, 20, 200)
+            gold_ink = (160, 100, 20, 160)
+            chart_draw.rectangle([cx - hw, cy - hh, cx + hw, cy + hh], outline=red_ink, width=4)
+
+            diamond_pts = [(cx, cy - hh), (cx + hw, cy), (cx, cy + hh), (cx - hw, cy)]
+            chart_draw.polygon(diamond_pts, outline=red_ink, width=4)
+
+            chart_draw.line([(cx - hw, cy - hh), (cx + hw, cy + hh)], fill=red_ink, width=4)
+            chart_draw.line([(cx - hw, cy + hh), (cx + hw, cy - hh)], fill=red_ink, width=4)
+
+            chart_draw.ellipse([cx - 40, cy - 40, cx + 40, cy + 40], outline=gold_ink, width=2)
+            canvas.paste(chart_layer, (0, 0), chart_layer)
+
+            vignette = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            v_draw = ImageDraw.Draw(vignette)
+            for r_step in range(int(width * 0.38), int(width * 0.72), 16):
+                alpha = int(160 * ((r_step - width * 0.38) / (width * 0.34)) ** 1.5)
+                v_draw.rectangle([width // 2 - r_step, height // 2 - int(r_step * 1.5), width // 2 + r_step, height // 2 + int(r_step * 1.5)], outline=(60, 40, 20, min(210, alpha)), width=16)
+            canvas.paste(vignette, (0, 0), vignette)
+
+        elif variety == "cosmic_planet":
+            # Deep Cosmic Space Void with Planetary Sphere & Rings
+            for y in range(height):
+                frac = y / height
+                r = int(4 * (1 - frac) + 12 * frac)
+                g = int(6 * (1 - frac) + 14 * frac)
+                b = int(18 * (1 - frac) + 32 * frac)
+                draw.line([(0, y), (width, y)], fill=(r, g, b))
+
+            for _ in range(80):
+                sx = rng.randint(20, width - 20)
+                sy = rng.randint(40, height - 40)
+                s_rad = rng.randint(1, 3)
+                s_alpha = rng.randint(120, 255)
+                draw.ellipse([sx - s_rad, sy - s_rad, sx + s_rad, sy + s_rad], fill=(s_alpha, s_alpha, min(255, s_alpha + 20)))
+
+            cx, cy = width // 2, int(height * 0.44)
+            p_rad = 180
+            for i in range(p_rad, 0, -6):
+                p_frac = i / p_rad
+                pr = int(210 * (1 - p_frac * 0.4))
+                pg = int(170 * (1 - p_frac * 0.5))
+                pb = int(110 * (1 - p_frac * 0.6))
+                draw.ellipse([cx - i, cy - i, cx + i, cy + i], fill=(pr, pg, pb))
+
+            ring_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            r_draw = ImageDraw.Draw(ring_layer)
+            rx, ry = cx, cy
+            for rw in range(340, 220, -10):
+                rh = int(rw * 0.28)
+                r_alpha = int(140 * ((rw - 220) / 120))
+                r_draw.ellipse([rx - rw, ry - rh, rx + rw, ry + rh], outline=(230, 200, 140, r_alpha), width=6)
+            ring_layer = ring_layer.rotate(-22, center=(cx, cy))
+            canvas.paste(ring_layer, (0, 0), ring_layer)
+
+        elif variety == "havan_flame":
+            # Sacred Vedic Havan Fire Altar with Ascending Golden Embers
+            for y in range(height):
+                frac = y / height
+                r = int(18 * (1 - frac) + 90 * frac)
+                g = int(8 * (1 - frac) + 32 * frac)
+                b = int(4 * (1 - frac) + 8 * frac)
+                draw.line([(0, y), (width, y)], fill=(r, g, b))
+
+            cx, cy = width // 2, int(height * 0.56)
+            for i in range(260, 0, -10):
+                draw.ellipse([cx - i, cy - int(i * 1.3), cx + i, cy + int(i * 0.9)], fill=(255, int(150 * (1 - i / 260) + 40), 20))
+
+            for _ in range(50):
+                ex = cx + rng.randint(-180, 180)
+                ey = cy + rng.randint(-350, 80)
+                erad = rng.randint(2, 6)
+                draw.ellipse([ex - erad, ey - erad, ex + erad, ey + erad], fill=(255, rng.randint(180, 230), rng.randint(40, 100)))
+
+        elif variety == "temple_sanctum":
+            # Golden Temple Sanctum Glow with Brass Oil Lamps
+            for y in range(height):
+                frac = y / height
+                r = int(16 * (1 - frac) + 60 * frac)
+                g = int(10 * (1 - frac) + 35 * frac)
+                b = int(6 * (1 - frac) + 12 * frac)
+                draw.line([(0, y), (width, y)], fill=(r, g, b))
+
+            cx, cy = width // 2, int(height * 0.48)
+            for i in range(220, 0, -10):
+                draw.ellipse([cx - i, cy - int(i * 1.1), cx + i, cy + int(i * 1.1)], fill=(255, int(190 * (1 - i / 220) + 40), int(40 * (1 - i / 220))))
+
+            draw.polygon([(cx, cy - 80), (cx + 28, cy - 10), (cx, cy + 20), (cx - 28, cy - 10)], fill=(255, 245, 180))
+
+            for _ in range(40):
+                bx = rng.randint(int(width * 0.15), int(width * 0.85))
+                by = rng.randint(int(height * 0.2), int(height * 0.75))
+                br = rng.randint(5, 22)
+                draw.ellipse([bx - br, by - br, bx + br, by + br], fill=(255, 210, 110, 60))
+
+        elif variety == "sacred_yantra":
+            # Sacred Geometry Sri Yantra Plate
+            for y in range(height):
+                frac = y / height
+                r = int(12 * (1 - frac) + 40 * frac)
+                g = int(8 * (1 - frac) + 24 * frac)
+                b = int(16 * (1 - frac) + 54 * frac)
+                draw.line([(0, y), (width, y)], fill=(r, g, b))
+
+            cx, cy = width // 2, int(height * 0.44)
+            for rad in [280, 230, 180, 130, 80]:
+                draw.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], outline=(220, 180, 100), width=3)
+            draw.polygon([(cx, cy - 170), (cx + 150, cy + 90), (cx - 150, cy + 90)], outline=(240, 200, 110), width=3)
+            draw.polygon([(cx, cy + 170), (cx + 150, cy - 90), (cx - 150, cy - 90)], outline=(240, 200, 110), width=3)
+            draw.ellipse([cx - 14, cy - 14, cx + 14, cy + 14], fill=(255, 220, 120))
+
+        else:
+            # Raw Earth Mineral / Crystalline Facet Lattice
+            for y in range(height):
+                frac = y / height
+                r = int(8 * (1 - frac) + 36 * frac)
+                g = int(10 * (1 - frac) + 42 * frac)
+                b = int(24 * (1 - frac) + 72 * frac)
+                draw.line([(0, y), (width, y)], fill=(r, g, b))
+
+            cx, cy = width // 2, int(height * 0.44)
+            facet_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            f_draw = ImageDraw.Draw(facet_layer)
+            facets = [
+                [(cx, cy - 220), (cx + 150, cy - 50), (cx, cy + 200), (cx - 150, cy - 50)],
+                [(cx, cy - 150), (cx + 100, cy - 30), (cx, cy + 130), (cx - 100, cy - 30)],
+                [(cx - 150, cy - 50), (cx + 150, cy - 50)],
+                [(cx, cy - 220), (cx, cy + 200)],
+            ]
+            for poly in facets:
+                f_draw.polygon(poly, outline=(180, 210, 255, 90), fill=(140, 180, 255, 20))
+            canvas.paste(facet_layer, (0, 0), facet_layer)
+
+        vignette = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        v_draw = ImageDraw.Draw(vignette)
+        max_dist = math.sqrt((width / 2) ** 2 + (height / 2) ** 2)
+        for r_step in range(int(width * 0.35), int(max_dist), 20):
+            alpha = int(220 * ((r_step - width * 0.35) / (max_dist - width * 0.35)) ** 1.6)
+            alpha = min(240, max(0, alpha))
+            v_draw.ellipse(
+                [width // 2 - r_step, height // 2 - r_step, width // 2 + r_step, height // 2 + r_step],
+                outline=(0, 0, 0, alpha),
+                width=20,
+            )
+        vignette = vignette.filter(ImageFilter.GaussianBlur(24))
+        canvas.paste(vignette, (0, 0), vignette)
+
+        cls.save_clean_photographic_image(canvas, out_path, quality=95)
+        logger.info(f"[DynamicVisualEngine] Generated authentic scene variety ({variety}) -> {out_path.name}")
+        return out_path
 
     @classmethod
     def get_or_generate_scene_image(
@@ -1163,10 +1340,6 @@ class DynamicVisualEngine:
             if any(k in scene_txt for k in ["moonga", "coral", "मूंगा"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "gemstone_red_coral.jpg")
 
-            # Topic-level primary fallback
-            if curated_master_plate:
-                candidates.append(curated_master_plate)
-
             # Universal diverse library fallbacks (strictly segregated by niche to avoid mismatch)
             if is_crystal_or_rudraksha:
                 candidates.extend([
@@ -1204,27 +1377,21 @@ class DynamicVisualEngine:
         search_query = cls.get_scene_search_query(scene_dict, topic, scene_idx)
         if not chosen_cand:
             online_asset = cls.search_online_photographic_asset(search_query, target_file)
-            if online_asset and online_asset.exists() and not cls.is_image_used(online_asset):
+            if online_asset and online_asset.exists():
                 chosen_cand = online_asset
 
         # Tier 3: Search Openverse Creative Commons photographic repository
         if not chosen_cand:
             ov_asset = cls.search_openverse_photographic_asset(search_query, target_file)
-            if ov_asset and ov_asset.exists() and not cls.is_image_used(ov_asset):
+            if ov_asset and ov_asset.exists():
                 chosen_cand = ov_asset
 
-        # Tier 4: Dynamic macro focal cutaway of master plate (unique perspective + grading)
-        if not chosen_cand and curated_master_plate and curated_master_plate.exists():
-            macro_file = GENERATED_BROLL_DIR / f"{reel_slug}_macro_sc{scene_idx + 1}_{prompt_hash}.jpg"
-            cls.create_macro_focal_crop(curated_master_plate, macro_file, crop_index=scene_idx, theme_key=theme_palette)
-            if macro_file.exists() and not cls.is_image_used(macro_file):
-                chosen_cand = macro_file
-
-        # Tier 5: Procedural luxury studio photographic canvas
+        # Tier 4: Procedural distinct variety canvas (STRICTLY NO CROPPING/ZOOMING SAME BASE IMAGE!)
+        # Freshly renders a distinct theme-appropriate canvas (Parchment Kundli, Cosmic Planet, Havan Flame, Temple Diya)
         if not chosen_cand:
             proc_file = GENERATED_BROLL_DIR / f"proc_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
             proc_seed = int(hashlib.md5(f"{reel_slug}_{scene_idx}_{time.time()}".encode()).hexdigest()[:8], 16)
-            cls.generate_procedural_photorealistic_image(theme_key=theme_palette, out_path=proc_file, seed=proc_seed)
+            cls.generate_variety_canvas(scene_dict, topic, scene_idx, total_scenes, proc_file, seed=proc_seed)
             chosen_cand = proc_file
 
         if chosen_cand and chosen_cand.exists():
@@ -1244,10 +1411,10 @@ class DynamicVisualEngine:
             logger.info(f"[DynamicVisualEngine] Scene {scene_idx + 1}: Sourced and registered unique visual ({chosen_cand.name}) -> {target_file.name}")
             return target_file
 
-        # Fallback: Procedural luxury studio canvas
+        # Fallback: Procedural distinct variety canvas
         proc_file = GENERATED_BROLL_DIR / f"proc_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
         proc_seed = int(hashlib.md5(f"{reel_slug}_fallback_{scene_idx}_{time.time()}".encode()).hexdigest()[:8], 16)
-        cls.generate_procedural_photorealistic_image(theme_key=theme_palette, out_path=proc_file, seed=proc_seed)
+        cls.generate_variety_canvas(scene_dict, topic, scene_idx, total_scenes, proc_file, seed=proc_seed)
         used_images.add(proc_file)
         cls.register_used_image(proc_file)
         return proc_file

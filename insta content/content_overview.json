@@ -1,31 +1,31 @@
 {
-  "topic": "Consultation case study: how a client's 4th house moon and saturn opposition caused heavy emotional exhaustion and chronic inner restlessness, decoded through 5 hidden vedic chart turning points.",
+  "topic": "5 uncanny physical and emotional signs your 2nd house Jupiter and Venus alignment is generating sudden wealth blockages and money leakage.",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 6.5,
+  "agent_evolution_level": 6.7,
   "hook": {
-    "id": "hook_1",
-    "name": "Wrong Way, Right Way",
-    "spoken": "चौथे भाव का चंद्रमा और शनि का विष योग आपकी हर खुशी को क्यों सोख रहा है?",
-    "on_screen": "4TH HOUSE MOON SATURN YOGA",
-    "why_it_works": "Directly targets the core astrological tension of inner restlessness and emotional exhaustion with protective authority.",
+    "id": "jupiter_venus_alignment_1",
+    "name": "Numbered With A Favourite",
+    "spoken": "दूसरे घर में गुरु और शुक्र की युति के पाँच विचित्र संकेत। पांचवाँ संकेत सबसे अलग है।",
+    "on_screen": "5 HIDDEN WEALTH BLOCKAGES",
+    "why_it_works": "Leverages the numbered hook formula to spark curiosity while maintaining a calm, authoritative astrological tone.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
-        "score": 100.0,
-        "detail": "5 words, 26 chars, ~1.8s spoken (want 5-12 words)"
+        "score": 80,
+        "detail": "4 words, 25 chars, ~1.5s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
         "score": 75,
-        "detail": "1 concrete marker(s): 4"
+        "detail": "1 concrete marker(s): 5"
       },
       "STAKES": {
-        "score": 20.0,
-        "detail": "0 tension marker(s) - nothing is at stake in this line"
+        "score": 70.0,
+        "detail": "1 tension marker(s): hidden"
       },
       "FRONTLOAD": {
         "score": 100.0,
@@ -47,11 +47,11 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "71 chars (Target: <=125)"
+        "detail": "89 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
-        "detail": "7 visual scenes with dynamic pacing (avg 4.0s)"
+        "detail": "7 visual scenes with dynamic pacing (avg 3.6s)"
       },
       "high_value_cta": {
         "score": 100,
@@ -63,8 +63,8 @@
       }
     }
   },
-  "duration_seconds": 34.14,
-  "generated_at": "2026-11-15 14:06:20",
+  "duration_seconds": 40.01,
+  "generated_at": "2026-11-15 14:52:25",
   "algorithm_phase": "Midday Spiritual Reset & Chart Curiosity",
   "daily_post_enforced": true,
   "comment_consultations_handled": 0,
