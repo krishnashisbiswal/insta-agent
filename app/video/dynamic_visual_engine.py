@@ -936,11 +936,13 @@ class DynamicVisualEngine:
             variety = "temple_sanctum"
         elif is_caution or any(k in scene_txt for k in ["blind", "remedy", "havan", "fire", "altar", "हवन", "सावधानी"]):
             variety = "havan_flame"
+        elif scene_idx == 0:
+            variety = "macro_gemstone" if any(k in f"{topic} {scene_txt}".lower() for k in ["crystal", "gemstone", "pyrite", "rudraksh", "amethyst", "नीलम", "पुखराज", "पन्ना", "पायराइट", "पाइराइट", "रुद्राक्ष"]) else "cosmic_planet"
         elif any(k in scene_txt for k in ["kundli", "chart", "house", "birth chart", "भाव", "लग्न", "कुंडली"]):
             variety = "vedic_kundli"
         elif any(k in scene_txt for k in ["shani", "saturn", "moon", "sun", "planet", "cosmic", "space", "शनि", "चंद्रमा"]):
             variety = "cosmic_planet"
-        elif any(k in scene_txt for k in ["yantra", "frequency", "resonance", "aura", "shield", "यंत्र", "ऊर्जा", "आभामंडल"]):
+        elif any(k in scene_txt for k in ["yantra", "mandala", "यंत्र", "मंडल"]):
             variety = "sacred_yantra"
         elif scene_idx == 1 or any(k in scene_txt for k in ["raw", "mineral", "earth", "rock", "stone", "क्रिस्टल"]):
             variety = "raw_mineral"
@@ -1063,37 +1065,47 @@ class DynamicVisualEngine:
 
         elif variety == "sacred_yantra":
             # Sacred Geometry Sri Yantra Plate
+            bg_shift_r = rng.randint(-6, 6)
+            bg_shift_b = rng.randint(-6, 6)
             for y in range(height):
                 frac = y / height
-                r = int(12 * (1 - frac) + 40 * frac)
+                r = int(12 * (1 - frac) + 40 * frac) + bg_shift_r
                 g = int(8 * (1 - frac) + 24 * frac)
-                b = int(16 * (1 - frac) + 54 * frac)
-                draw.line([(0, y), (width, y)], fill=(r, g, b))
+                b = int(16 * (1 - frac) + 54 * frac) + bg_shift_b
+                draw.line([(0, y), (width, y)], fill=(max(0, min(255, r)), max(0, min(255, g)), max(0, min(255, b))))
 
             cx, cy = width // 2, int(height * 0.44)
+            yantra_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            y_draw = ImageDraw.Draw(yantra_layer)
             for rad in [280, 230, 180, 130, 80]:
-                draw.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], outline=(220, 180, 100), width=3)
-            draw.polygon([(cx, cy - 170), (cx + 150, cy + 90), (cx - 150, cy + 90)], outline=(240, 200, 110), width=3)
-            draw.polygon([(cx, cy + 170), (cx + 150, cy - 90), (cx - 150, cy - 90)], outline=(240, 200, 110), width=3)
-            draw.ellipse([cx - 14, cy - 14, cx + 14, cy + 14], fill=(255, 220, 120))
+                y_draw.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], outline=(220, 180, 100, 220), width=3)
+            y_draw.polygon([(cx, cy - 170), (cx + 150, cy + 90), (cx - 150, cy + 90)], outline=(240, 200, 110, 230), width=3)
+            y_draw.polygon([(cx, cy + 170), (cx + 150, cy - 90), (cx - 150, cy - 90)], outline=(240, 200, 110, 230), width=3)
+            y_draw.ellipse([cx - 14, cy - 14, cx + 14, cy + 14], fill=(255, 220, 120, 255))
+            rot_angle = rng.uniform(-15.0, 15.0)
+            yantra_layer = yantra_layer.rotate(rot_angle, center=(cx, cy))
+            canvas.paste(yantra_layer, (0, 0), yantra_layer)
 
         else:
             # Raw Earth Mineral / Crystalline Facet Lattice
+            bg_shift = rng.randint(-5, 5)
             for y in range(height):
                 frac = y / height
-                r = int(8 * (1 - frac) + 36 * frac)
-                g = int(10 * (1 - frac) + 42 * frac)
-                b = int(24 * (1 - frac) + 72 * frac)
+                r = max(0, min(255, int(8 * (1 - frac) + 36 * frac) + bg_shift))
+                g = max(0, min(255, int(10 * (1 - frac) + 42 * frac)))
+                b = max(0, min(255, int(24 * (1 - frac) + 72 * frac) + bg_shift))
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
 
             cx, cy = width // 2, int(height * 0.44)
             facet_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
             f_draw = ImageDraw.Draw(facet_layer)
+            jx = rng.randint(-6, 6)
+            jy = rng.randint(-6, 6)
             facets = [
-                [(cx, cy - 220), (cx + 150, cy - 50), (cx, cy + 200), (cx - 150, cy - 50)],
-                [(cx, cy - 150), (cx + 100, cy - 30), (cx, cy + 130), (cx - 100, cy - 30)],
-                [(cx - 150, cy - 50), (cx + 150, cy - 50)],
-                [(cx, cy - 220), (cx, cy + 200)],
+                [(cx + jx, cy - 220 + jy), (cx + 150 + jx, cy - 50 + jy), (cx + jx, cy + 200 + jy), (cx - 150 + jx, cy - 50 + jy)],
+                [(cx + jx, cy - 150 + jy), (cx + 100 + jx, cy - 30 + jy), (cx + jx, cy + 130 + jy), (cx - 100 + jx, cy - 30 + jy)],
+                [(cx - 150 + jx, cy - 50 + jy), (cx + 150 + jx, cy - 50 + jy)],
+                [(cx + jx, cy - 220 + jy), (cx + jx, cy + 200 + jy)],
             ]
             for poly in facets:
                 f_draw.polygon(poly, outline=(180, 210, 255, 90), fill=(140, 180, 255, 20))

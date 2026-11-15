@@ -231,3 +231,30 @@ def test_content_hash_and_url_repetition_blocked():
     # 3. Content hash matches even if path is completely different
     different_filename = Path(f"completely_different_scene_{u_id}.jpg")
     assert DynamicVisualEngine.is_image_used(different_filename, file_bytes=test_bytes) is True
+
+
+def test_no_duplicate_cta_or_hashtags_in_caption():
+    """Verify enforce_perfect_100_seo never repeats CTA blocks or hashtags in captions."""
+    from app.analytics.seo_optimizer import enforce_perfect_100_seo
+    sample_caption = (
+        "क्या गलत रुद्राक्ष आपके केंद्रीय तंत्रिका तंत्र को जकड़ रहा है?\n\n"
+        "बिना सोचे-समझे रुद्राक्ष धारण करने से ऊर्जा टकराव होता है।\n\n"
+        "यह रील तुरंत सेव करें और कमेंट में जन्मतिथि बताएं।\n\n"
+        "#VedicAstrology #RudrakshaEnergy"
+    )
+    cap, tags, audit = enforce_perfect_100_seo(
+        caption_text=sample_caption,
+        hashtags=["#VedicAstrology", "#RudrakshaEnergy", "#KundliAnalysis", "#Jyotish"],
+        script_data={},
+        topic="5 Mukhi Rudraksha",
+        language="Hindi",
+    )
+    # Check that CTA block phrases only appear once
+    assert cap.count("भविष्य के लिए अभी सेव (Save) करें") == 1
+    assert cap.count("नीचे कमेंट (Comment) करें") == 1
+    assert cap.count("तुरंत डीएम (DM) करें") == 1
+
+    # Check that each hashtag only appears once
+    for tag in tags:
+        assert cap.count(tag) == 1, f"Hashtag {tag} appeared more than once in caption"
+

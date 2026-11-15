@@ -891,10 +891,6 @@ def create_cinematic_reel_video(
         clip = clip.with_audio(sc_audio_clip)
         video_clips.append(clip)
 
-        # Attach this scene's vocal audio directly to the scene clip
-        clip = clip.with_audio(sc_audio_clip)
-        video_clips.append(clip)
-
     # 4. Strict Anti-Repetition Verification
     unique_assigned = set(str(p.resolve()) for p in assigned_scene_images)
     if len(unique_assigned) != len(assigned_scene_images):
@@ -903,6 +899,12 @@ def create_cinematic_reel_video(
             f"Duplicated files: {[str(p.name) for p in assigned_scene_images]}"
         )
     print(f"[CINEMATIC COMPOSER] Anti-Repetition Verified: All {len(assigned_scene_images)} scenes have 100% unique, distinct images.")
+
+    # Strict single-pass scene verification: exactly 1 clip per scene, never duplicated
+    if len(video_clips) != total_scenes:
+        raise ValueError(
+            f"Strict Anti-Repetition Error: {total_scenes} scenes expected, but {len(video_clips)} clips assembled!"
+        )
 
     # Concatenate video clips (moviepy concatenates both video and audio tracks in lockstep)
     final_video = concatenate_videoclips(video_clips, method="compose")

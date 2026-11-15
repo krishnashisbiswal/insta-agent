@@ -157,14 +157,24 @@ def enforce_perfect_100_seo(
     elif len(first_line) < 15:
         first_line = f"{first_line} | वैदिक ज्योतिष रहस्य 🔮"
 
-    # 2. Body text preservation
+    # 2. Body text preservation - strip trailing hashtags and duplicate CTAs
     body_lines = clean_lines[1:] if len(clean_lines) > 1 else []
-    # Strip any trailing hashtags or duplicate ctas from body
     filtered_body = []
     for line in body_lines:
-        if line.startswith("#"):
+        line_s = line.strip()
+        if not line_s:
             continue
-        filtered_body.append(line)
+        # Strip hashtag lines
+        if line_s.startswith("#") or all(word.startswith("#") for word in line_s.split() if word):
+            continue
+        # Strip duplicate CTA lines from body (since cta_block is appended below)
+        if any(kw in line_s.lower() for kw in [
+            "रील तुरंत सेव करें", "save this reel", "सेव (save) करें", "कमेंट (comment) करें",
+            "comment your", "डीएम (dm) करें", "dm us", "personal kundli analysis",
+            "व्यक्तिगत विश्लेषण के लिए हमें तुरंत डीएम"
+        ]):
+            continue
+        filtered_body.append(line_s)
     body_text = "\n\n".join(filtered_body)
     body_text = re.sub(r"\b(?:मैंने|मुझे)\s+(?:अपनी\s+)?कुंडली\s+बिना\s+(?:देखे|दिखाए|जांचे)\b", "क्लाइंट ने बिना कुंडली जांचे", body_text)
     body_text = re.sub(r"\bमेरा\s+नुकसान\b", "क्लाइंट का नुकसान", body_text)
