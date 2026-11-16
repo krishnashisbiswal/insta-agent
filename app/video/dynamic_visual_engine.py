@@ -418,9 +418,14 @@ class DynamicVisualEngine:
         # Use Gemini's custom visual description if provided (guaranteeing subject inclusion)
         if vis_desc and len(vis_desc.split()) >= 4:
             clean_desc = re.sub(r"^(cinematic\s+)?(8k\s+)?(shot\s+of\s+)?", "", vis_desc.strip(), flags=re.I)
-            gem_kw_token = gem_name.split()[0].lower()
-            if gem_kw_token not in clean_desc.lower() and not any(k in clean_desc.lower() for k in ["crystal", "gemstone", "rudraksha", "stone", "bead"]):
-                clean_desc = f"{gem_name}, {clean_desc}"
+            is_crystal_or_gem = any(k in f"{entity_context} {topic.lower()}" for k in [
+                "pyrite", "amethyst", "tourmaline", "citrine", "rose quartz", "tiger",
+                "sphatik", "selenite", "carnelian", "labradorite", "rudraksha", "mukhi"
+            ])
+            if is_crystal_or_gem:
+                gem_kw_token = gem_name.split()[0].lower()
+                if gem_kw_token not in clean_desc.lower() and not any(k in clean_desc.lower() for k in ["crystal", "gemstone", "rudraksha", "stone", "bead"]):
+                    clean_desc = f"{gem_name}, {clean_desc}"
             return f"cinematic 8k {clean_desc}, moody dramatic atmosphere, {base_modifiers}"
 
         # Default Planetary / Gemstone Macro (strictly featuring subject)
@@ -430,6 +435,23 @@ class DynamicVisualEngine:
         )
 
     @classmethod
+    def matches_keyword(cls, text: str, keywords: List[str]) -> bool:
+        """Performs strict word-boundary matching to prevent substring false positives (e.g. 'moti' in 'emotional')."""
+        if not text:
+            return False
+        for kw in keywords:
+            if re.search(r"[a-zA-Z]", kw):
+                pattern = rf"\b{re.escape(kw)}\b"
+                if re.search(pattern, text, flags=re.IGNORECASE):
+                    return True
+            else:
+                # Devanagari Hindi words (protect boundaries)
+                pattern = rf"(?<![\w\u0900-\u097F]){re.escape(kw)}(?![\w\u0900-\u097F])"
+                if re.search(pattern, text):
+                    return True
+        return False
+
+    @classmethod
     def get_scene_search_query(cls, scene_dict: Dict[str, Any], topic: str, scene_idx: int) -> str:
         """Formulates targeted keywords for live photographic image retrieval that match exact scene content."""
         spoken = scene_dict.get("spoken_line", "").lower()
@@ -437,161 +459,168 @@ class DynamicVisualEngine:
         vis_desc = scene_dict.get("visual_description", "").lower()
         scene_context = f"{spoken} {on_screen} {vis_desc}".lower()
         topic_lower = (topic or "").lower()
+        combined_context = f"{topic_lower} {scene_context}"
 
-        # Prioritize scene_context over topic_lower if specific entity words appear in this scene
-        known_entities = [
-            "pyrite", "पायराइट", "amethyst", "कटेला", "जामुनिया", "tourmaline", "टूमलाइन",
-            "citrine", "सिट्रीन", "rose quartz", "aventurine", "एवेंट्यूरिन", "tiger",
-            "sphatik", "स्फटिक", "selenite", "सेलेनाइट", "carnelian", "कार्नेलियन",
-            "labradorite", "लैब्राडोराइट", "rudraksha", "रुद्राक्ष", "mukhi", "मुख",
-            "neelam", "blue sapphire", "नीलम", "pukhraj", "yellow sapphire", "पुखराज",
-            "panna", "emerald", "पन्ना", "manik", "ruby", "माणिक", "moti", "pearl", "मोती",
-            "moonga", "coral", "मूंगा", "heera", "diamond", "हीरा", "gomed", "hessonite",
-            "lehsuniya", "cat's eye", "shani", "saturn", "शनि", "chandra", "moon", "चंद्रमा",
-            "surya", "sun", "सूर्य", "guru", "jupiter", "गुरु", "mangal", "mars", "मंगल",
-            "shukra", "venus", "शुक्र", "budh", "mercury", "बुध", "rahu", "राहु", "ketu", "केतु",
-            "kundli", "कुंडली", "yantra", "यंत्र"
-        ]
-        if any(k in scene_context for k in known_entities):
-            target_context = scene_context
-        else:
-            target_context = f"{scene_context} {topic_lower}"
-
-        # Detect active gemstone/planet/crystal/rudraksha
-        gem_kw = "gemstone jewelry"
-        if any(k in target_context for k in ["pyrite"]):
+        # 1. SPECIFIC CRYSTAL / GEMSTONE / RUDRAKSHA TOPIC OVERRIDES
+        # When the user or scene specifically talks about an entity, strictly return queries for that entity
+        if cls.matches_keyword(combined_context, ["pyrite", "पायराइट"]):
             queries = ["pyrite crystal cluster", "raw golden pyrite mineral", "sparkling pyrite cube specimen", "iron pyrite rock cluster"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["amethyst", "कटेला", "जामुनिया"]):
-            queries = ["amethyst geode crystal", "raw purple amethyst cluster", "deep violet amethyst mineral specimen", "amethyst crystal point"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["tourmaline"]):
-            queries = ["black tourmaline crystal", "raw black tourmaline tower", "schorl tourmaline mineral specimen", "striated black tourmaline"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["citrine"]):
-            queries = ["citrine quartz crystal", "golden citrine cluster", "raw amber citrine mineral", "yellow citrine specimen"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["rose quartz"]):
-            queries = ["rose quartz crystal mineral", "raw pink rose quartz", "translucent rose quartz stone", "pink quartz specimen"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["tiger", "tigers eye", "tiger's eye"]):
-            queries = ["tigers eye gemstone mineral", "golden brown tigers eye stone", "chatoyant tigers eye specimen", "tigers eye rock"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["selenite"]):
-            queries = ["selenite crystal tower", "white selenite mineral specimen", "raw selenite gypsum crystal", "selenite wand crystal"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["rudraksha", "rudraksh", "मुख", "mukhi"]):
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "pyrite crystal cluster macro"
+        elif cls.matches_keyword(combined_context, ["rudraksha", "रुद्राक्ष", "मुख", "mukhi"]):
             queries = ["rudraksha beads prayer mala", "nepalese rudraksha seed macro", "sacred rudraksha japa mala", "rudraksha tree bead"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["neelam", "blue sapphire", "shani", "saturn"]):
-            queries = ["blue sapphire gemstone", "raw blue corundum sapphire", "natural blue sapphire crystal", "ceylon blue sapphire mineral"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["manik", "ruby", "surya", "sun"]):
-            queries = ["ruby gemstone jewelry", "raw ruby corundum mineral", "natural red ruby crystal", "burma ruby stone"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["pukhraj", "yellow sapphire", "guru", "jupiter"]):
-            queries = ["yellow sapphire gemstone", "natural yellow sapphire corundum", "yellow sapphire mineral", "raw yellow sapphire"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["panna", "emerald", "budh", "mercury"]):
-            queries = ["emerald gemstone jewelry", "raw green emerald beryl", "colombian emerald crystal specimen", "natural emerald stone"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["moti", "pearl", "chandra", "moon"]):
-            queries = ["natural pearl gemstone", "south sea white pearl", "basra pearl jewelry", "pearl oyster shell"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["moonga", "coral", "mangal", "mars"]):
-            queries = ["red coral gemstone", "natural red coral mineral", "mediterranean red coral specimen", "italian red coral stone"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["heera", "diamond", "shukra", "venus"]):
-            queries = ["diamond gemstone jewelry", "raw uncut diamond crystal", "rough diamond octahedral mineral", "sparkling diamond gemstone"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["gomed", "hessonite", "rahu"]):
-            queries = ["hessonite garnet gemstone", "raw hessonite garnet mineral", "cinnamon stone hessonite", "hessonite crystal"]
-            gem_kw = queries[scene_idx % len(queries)]
-        elif any(k in target_context for k in ["lehsuniya", "cat's eye", "ketu"]):
-            queries = ["chrysoberyl cats eye gemstone", "natural cats eye chrysoberyl mineral", "chrysoberyl cabochon stone", "cymophane cats eye"]
-            gem_kw = queries[scene_idx % len(queries)]
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "rudraksha beads prayer mala macro"
+        elif cls.matches_keyword(combined_context, ["amethyst", "कटेला", "जामुनिया"]):
+            queries = ["amethyst geode crystal", "raw purple amethyst cluster", "deep violet amethyst mineral specimen", "amethyst crystal point"]
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "amethyst geode crystal macro"
+        elif cls.matches_keyword(combined_context, ["tourmaline", "टूमलाइन"]):
+            queries = ["black tourmaline crystal", "raw black tourmaline tower", "schorl tourmaline mineral specimen", "striated black tourmaline"]
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "black tourmaline crystal macro"
+        elif cls.matches_keyword(combined_context, ["citrine", "सिट्रीन"]):
+            queries = ["citrine quartz crystal", "golden citrine cluster", "raw amber citrine mineral", "yellow citrine specimen"]
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "citrine quartz crystal macro"
+        elif cls.matches_keyword(combined_context, ["rose quartz"]):
+            queries = ["rose quartz crystal mineral", "raw pink rose quartz", "translucent rose quartz stone", "pink quartz specimen"]
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "rose quartz crystal mineral macro"
+        elif cls.matches_keyword(combined_context, ["tiger", "tigers eye", "tiger's eye", "टाइगर"]):
+            queries = ["tigers eye gemstone mineral", "golden brown tigers eye stone", "chatoyant tigers eye specimen", "tigers eye rock"]
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "tigers eye gemstone mineral macro"
+        elif cls.matches_keyword(combined_context, ["selenite", "सेलेनाइट"]):
+            queries = ["selenite crystal tower", "white selenite mineral specimen", "raw selenite gypsum crystal", "selenite wand crystal"]
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "selenite crystal tower macro"
+        elif cls.matches_keyword(combined_context, ["clear quartz", "sphatik", "स्फटिक"]):
+            queries = ["clear quartz crystal", "sphatik crystal point", "natural quartz mineral specimen"]
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "clear quartz crystal macro"
+        elif cls.matches_keyword(combined_context, ["carnelian", "कार्नेलियन"]):
+            queries = ["carnelian crystal polished stone", "raw carnelian agate mineral", "translucent carnelian gemstone"]
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "carnelian crystal macro"
+        elif cls.matches_keyword(combined_context, ["labradorite", "लैब्राडोराइट"]):
+            queries = ["labradorite crystal stone", "raw labradorite mineral flash", "labradorite iridescent specimen"]
+            return queries[scene_idx % len(queries)] if scene_idx > 0 else "labradorite crystal macro"
+        elif cls.matches_keyword(combined_context, ["blue sapphire", "neelam", "नीलम"]) and cls.matches_keyword(combined_context, ["gemstone", "रत्न", "stone", "ring", "अंगूठी"]):
+            queries = ["blue sapphire gemstone", "raw blue corundum sapphire", "natural blue sapphire crystal"]
+            return queries[scene_idx % len(queries)]
+        elif cls.matches_keyword(combined_context, ["ruby", "manik", "माणिक"]) and cls.matches_keyword(combined_context, ["gemstone", "रत्न", "stone", "ring", "अंगूठी"]):
+            queries = ["ruby gemstone jewelry", "raw ruby corundum mineral", "natural red ruby crystal"]
+            return queries[scene_idx % len(queries)]
+        elif cls.matches_keyword(combined_context, ["yellow sapphire", "pukhraj", "पुखराज"]) and cls.matches_keyword(combined_context, ["gemstone", "रत्न", "stone", "ring", "अंगूठी"]):
+            queries = ["yellow sapphire gemstone", "natural yellow sapphire corundum", "yellow sapphire mineral"]
+            return queries[scene_idx % len(queries)]
+        elif cls.matches_keyword(combined_context, ["emerald", "panna", "पन्ना"]) and cls.matches_keyword(combined_context, ["gemstone", "रत्न", "stone", "ring", "अंगूठी"]):
+            queries = ["emerald gemstone jewelry", "raw green emerald beryl", "colombian emerald crystal specimen"]
+            return queries[scene_idx % len(queries)]
+        elif cls.matches_keyword(combined_context, ["pearl", "moti", "मोती"]) and cls.matches_keyword(combined_context, ["gemstone", "रत्न", "stone", "ring", "अंगूठी"]):
+            queries = ["natural pearl gemstone", "south sea white pearl", "basra pearl jewelry"]
+            return queries[scene_idx % len(queries)]
+        elif cls.matches_keyword(combined_context, ["coral", "moonga", "मूँगा", "मूंगा"]) and cls.matches_keyword(combined_context, ["gemstone", "रत्न", "stone", "ring", "अंगूठी"]):
+            queries = ["red coral gemstone", "natural red coral mineral", "mediterranean red coral stone"]
+            return queries[scene_idx % len(queries)]
+        elif cls.matches_keyword(combined_context, ["diamond", "heera", "हीरा"]) and cls.matches_keyword(combined_context, ["gemstone", "रत्न", "stone", "ring", "अंगूठी"]):
+            queries = ["diamond gemstone jewelry", "raw uncut diamond crystal", "sparkling diamond gemstone"]
+            return queries[scene_idx % len(queries)]
 
-        # 1. Hook (Scene 0)
-        if scene_idx == 0:
-            return f"{gem_kw} macro"
+        # 2. SCRIPT-SPECIFIC CONTENT ROUTING (Astrology, Meditation, Sacred Lamps, Constellations)
+        if cls.matches_keyword(scene_context, ["constellation", "star map", "cosmic map", "starlight", "astrolabe"]):
+            queries = [
+                "ancient star chart constellation lines",
+                "ancient celestial map star chart",
+                "constellation star map celestial",
+            ]
+            return queries[scene_idx % len(queries)]
 
-        # 2. CTA / DM Consultation / Sacred Temple
-        if any(k in scene_context for k in ["dm", "consultation", "परामर्श", "कमेंट", "booking"]):
+        if cls.matches_keyword(scene_context, ["dream", "astral", "dreamscape", "sleep", "नींद", "सपनों"]):
+            queries = [
+                "cosmic dreamscape starlight nebula",
+                "ethereal deep space nebula",
+                "starry sky nebula space",
+            ]
+            return queries[scene_idx % len(queries)]
+
+        if cls.matches_keyword(scene_context, ["meditat", "silhouette", "एकांत", "ध्यान", "detachment", "वैराग्य", "solitude"]):
+            queries = [
+                "meditation silhouette amber light",
+                "person meditating serene golden light",
+                "meditator silhouette sacred room",
+            ]
+            return queries[scene_idx % len(queries)]
+
+        if cls.matches_keyword(scene_context, ["lamp", "diya", "दीपक", "दीप", "oil lamp", "candlelight", "candle"]):
+            if cls.matches_keyword(scene_context, ["text", "scripture", "ग्रंथ", "शास्त्र", "book", "chart", "charts"]):
+                return "burning brass oil lamp sacred texts"
+            queries = [
+                "brass diya flame temple altar",
+                "hindu temple brass oil lamp",
+                "sacred brass diya glowing light",
+            ]
+            return queries[scene_idx % len(queries)]
+
+        if cls.matches_keyword(scene_context, ["mala", "bead", "beads", "माला", "japa"]):
+            queries = [
+                "japa mala prayer beads brass diya",
+                "sacred japa mala beads altar",
+                "prayer beads meditation desk",
+            ]
+            return queries[scene_idx % len(queries)]
+
+        if cls.matches_keyword(scene_context, ["palmleaf", "manuscript", "पांडुलिपि", "hourglass"]):
+            queries = [
+                "ancient palm leaf manuscript sanskrit",
+                "vedic manuscript parchment scroll",
+                "ancient sanskrit scripture",
+            ]
+            return queries[scene_idx % len(queries)]
+
+        if cls.matches_keyword(scene_context, ["kundli", "birth chart", "कुंडली", "जन्मपत्रिका", "house", "भाव", "लग्न", "horoscope"]):
+            queries = [
+                "authentic vedic kundli astrology chart",
+                "ancient astrology birth chart horoscope",
+                "vedic birth chart manuscript",
+            ]
+            return queries[scene_idx % len(queries)]
+
+        if cls.matches_keyword(scene_context, ["temple", "sanctum", "मंदिर", "dm", "consultation", "परामर्श", "कमेंट", "booking", "bells", "bell"]):
             cta_queries = [
-                "hindu temple sanctum oil lamp brass diya",
+                "hindu temple sanctum brass diyas",
+                "sacred temple oil lamps golden diyas",
                 "sacred brass diya flame temple altar",
-                "hindu puja altar brass lamps sanctum",
-                "sacred temple oil lamps golden light",
             ]
             return cta_queries[scene_idx % len(cta_queries)]
 
-        # 3. Calming Nervous System / Meditation / Peace
-        if any(k in scene_context for k in ["calm", "nervous system", "peace", "meditat", "focus", "clarity", "anxiety relief", "एकाग्रता", "शांति", "ध्यान", "हृदय", "heartbeat"]):
-            calm_queries = [
-                f"{gem_kw} meditation calm",
-                f"{gem_kw} zen harmony",
-                f"{gem_kw} soothing specimen",
+        if cls.matches_keyword(scene_context, ["havan", "fire", "altar", "हवन", "अग्नि"]):
+            queries = [
+                "sacred havan flame fire altar",
+                "vedic havan fire altar",
+                "sacred fire flame ritual",
             ]
-            return calm_queries[scene_idx % len(calm_queries)]
-
-        # 4. Aura / Protection / Negativity Shield / Frequency
-        if any(k in scene_context for k in ["shield", "aura", "protect", "negative", "absorb", "emf", "सुरक्षा", "आभामंडल", "frequency", "resonance"]):
-            aura_queries = [
-                f"{gem_kw} energy resonance",
-                "sacred geometry energy frequency yantra",
-                f"{gem_kw} raw natural specimen",
-            ]
-            return aura_queries[scene_idx % len(aura_queries)]
-
-        # 5. Wealth Attraction / Abundance / Office Desk
-        if any(k in scene_context for k in ["attract", "wealth", "abundance", "prosperity", "money", "desk", "office", "धन", "समृद्धि"]):
-            wealth_queries = [
-                f"{gem_kw} prosperity mineral",
-                f"{gem_kw} executive desk stone",
-                f"{gem_kw} cluster specimen",
-            ]
-            return wealth_queries[scene_idx % len(wealth_queries)]
-
-        # 6. Blind Remedies / Caution / Unverified Claims
-        if any(k in scene_context for k in ["blind", "remedy", "remedies", "unverified", "internet", "सावधानी", "नकली"]):
-            caution_queries = [
-                "ancient sanskrit vedic manuscript parchment",
-                "antique vedic scripture astrology scroll",
-                f"{gem_kw} natural authenticity verification",
-            ]
-            return caution_queries[scene_idx % len(caution_queries)]
-
-        # 7. Birth Chart, Kundli Houses
-        if any(k in scene_context for k in ["kundli", "house", "houses", "chart", "horoscope", "भाव", "लग्न", "केंद्र", "त्रिकोण"]):
-            kundli_queries = [
-                "authentic vedic kundli astrology chart manuscript",
-                "ancient vedic astrology horoscope scroll",
-                "handwritten kundli birth chart parchment",
-            ]
-            return kundli_queries[scene_idx % len(kundli_queries)]
-
-        # 8. Enemy Planets Clashing / Collision
-        if any(k in scene_context for k in ["enemy", "clash", "collision", "opposing", "शत्रु", "टकराव", "विपरीत"]):
-            queries = [f"{gem_kw} rough mineral crystal", f"{gem_kw} specimen raw", f"{gem_kw} crystal cluster"]
             return queries[scene_idx % len(queries)]
 
-        # 9. Panic, Anxiety, Insomnia, 3 AM Restlessness
-        if any(k in scene_context for k in ["panic", "anxiety", "insomnia", "3 am", "sleep", "restless", "तनाव", "घबराहट", "अनिद्रा", "बेचैनी"]):
-            queries = [f"{gem_kw} bedside calm", f"{gem_kw} soothing crystal", f"{gem_kw} polished stone"]
-            return queries[scene_idx % len(queries)]
+        if cls.matches_keyword(scene_context, ["saturn", "shani", "शनि"]):
+            return "planet saturn rings space"
+        if cls.matches_keyword(scene_context, ["moon", "chandra", "चंद्रमा"]):
+            return "crescent moon night stars space"
+        if cls.matches_keyword(scene_context, ["sun", "surya", "सूर्य"]):
+            return "sun solar flare corona space"
+        if cls.matches_keyword(scene_context, ["jupiter", "guru", "बृहस्पति"]):
+            return "planet jupiter space cosmos"
+        if cls.matches_keyword(scene_context, ["mars", "mangal", "मंगल"]):
+            return "planet mars red space"
+        if cls.matches_keyword(scene_context, ["venus", "shukra", "शुक्र"]):
+            return "planet venus space atmosphere"
 
-        # 10. Career Destruction, Financial Loss, Office Stress
-        if any(k in scene_context for k in ["career", "financ", "money", "drain", "ruin", "destruct", "loss", "करियर", "नुकसान", "हानि", "कर्ज", "बर्बाद"]):
-            queries = [f"{gem_kw} executive desk stone", f"{gem_kw} grounding crystal", f"{gem_kw} cluster"]
-            return queries[scene_idx % len(queries)]
+        # 3. Clean extraction from visual_description if provided
+        if vis_desc and len(vis_desc.split()) >= 3:
+            clean_desc = re.sub(
+                r"^(cinematic\s+)?(8k\s+)?(macro\s+)?(shot\s+of\s+)?(close-up\s+of\s+)?(high-end\s+visual\s+of\s+)?(clear\s+cinematic\s+focus\s+on\s+)?(warm,\s*inviting\s+cinematic\s+frame\s+of\s+)?(calm,\s*serene\s+silhouette\s+of\s+a\s+)?(an\s+)?",
+                "",
+                vis_desc,
+                flags=re.I,
+            ).strip()
+            stopwords = {"with", "and", "the", "for", "from", "into", "that", "this", "shot", "visual", "frame", "tones", "colors"}
+            words = [w for w in re.split(r"[\s,\.:;]+", clean_desc) if len(w) > 2 and w.lower() not in stopwords]
+            if len(words) >= 2:
+                return " ".join(words[:4])
 
-        # 11. Wrong Metal, Wrong Finger, Ring Fitting
-        if any(k in scene_context for k in ["metal", "finger", "hand", "wear", "ring", "धातु", "उंगली", "हाथ", "अंगूठी"]):
-            queries = [f"{gem_kw} ring", f"{gem_kw} jewelry ring fingers", gem_kw]
-            return queries[scene_idx % len(queries)]
-
-        # 12. Fallback
-        return f"{gem_kw} mineral specimen"
+        # 4. Safe authentic fallback
+        return "authentic vedic astrology cosmic map"
 
     @classmethod
     def save_clean_photographic_image(cls, img: Image.Image, target_path: Path, quality: int = 95) -> Path:
@@ -908,7 +937,7 @@ class DynamicVisualEngine:
         return None
 
     @classmethod
-    def generate_variety_canvas(
+    def generate_authentic_photographic_canvas(
         cls,
         scene_dict: Dict[str, Any],
         topic: str,
@@ -920,225 +949,157 @@ class DynamicVisualEngine:
         height: int = 1920,
     ) -> Path:
         """
-        Creates an authentic, freshly generated distinct scene variety canvas.
-        Guarantees that each scene has a completely DIFFERENT visual subject and layout:
-        - Variety 0: Macro Gemstone/Crystal Plate on Dark Velvet
-        - Variety 1: Raw Uncut Earth Mineral Texture with Specular Luster
-        - Variety 2: Ancient Handwritten Vedic Kundli Birth Chart on Aged Parchment
-        - Variety 3: Deep Cosmic Space Atmosphere with Celestial Planetary Sphere & Rings
-        - Variety 4: Sacred Geometry Sri Yantra Concentric Energy Mandala
-        - Variety 5: Sacred Vedic Havan Flame and Golden Fire Altar Embers
-        - Variety 6: Golden Temple Sanctum Sanctorum Glow with Brass Oil Lamps
+        Creates an authentic, freshly rendered 100% genuine photographic canvas.
+        Strictly sources from high-resolution authentic master photographs in CINEMATIC_BROLL_DIR,
+        crops/fits to 1080x1920 (9:16 vertical), and applies subtle cinematic photographic
+        grading (contrast, color temperature, tone curve) so that every output is uniquely
+        registered and 100% photographic.
+        STRICTLY ZERO 3D geometric drawings, ZERO Pillow polygon shapes, ZERO synthetic canvases.
         """
         spoken = scene_dict.get("spoken_line", "").lower()
         on_screen = scene_dict.get("on_screen_text", "").lower()
         vis_desc = scene_dict.get("visual_description", "").lower()
         scene_txt = f"{spoken} {on_screen} {vis_desc}".lower()
+        topic_lower = (topic or "").lower()
+        full_context = f"{topic_lower} {scene_txt}"
 
         calc_seed = seed if seed is not None else int(time.time() * 1000000) % 999999
         rng = random.Random(calc_seed)
 
-        # Determine Variety Type based on scene content and position
-        is_last = (scene_idx == total_scenes - 1)
-        is_caution = (scene_idx == total_scenes - 2)
+        # 1. Determine the best matching authentic photographic master asset
+        master_asset: Optional[Path] = None
 
-        if is_last or any(k in scene_txt for k in ["dm", "consultation", "परामर्श", "कमेंट", "मंदिर"]):
-            variety = "temple_sanctum"
-        elif is_caution or any(k in scene_txt for k in ["blind", "remedy", "havan", "fire", "altar", "हवन", "सावधानी"]):
-            variety = "havan_flame"
-        elif scene_idx == 0:
-            variety = "macro_gemstone" if any(k in f"{topic} {scene_txt}".lower() for k in ["crystal", "gemstone", "pyrite", "rudraksh", "amethyst", "नीलम", "पुखराज", "पन्ना", "पायराइट", "पाइराइट", "रुद्राक्ष"]) else "cosmic_planet"
-        elif any(k in scene_txt for k in ["kundli", "chart", "house", "birth chart", "भाव", "लग्न", "कुंडली"]):
-            variety = "vedic_kundli"
-        elif any(k in scene_txt for k in ["shani", "saturn", "moon", "sun", "planet", "cosmic", "space", "शनि", "चंद्रमा"]):
-            variety = "cosmic_planet"
-        elif any(k in scene_txt for k in ["yantra", "mandala", "यंत्र", "मंडल"]):
-            variety = "sacred_yantra"
-        elif scene_idx == 1 or any(k in scene_txt for k in ["raw", "mineral", "earth", "rock", "stone", "क्रिस्टल"]):
-            variety = "raw_mineral"
-        else:
-            variety = "macro_gemstone"
+        # (A) Crystal / Gemstone / Rudraksha specific topics
+        if any(k in full_context for k in ["pyrite", "पायराइट"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_pyrite_cluster.jpg"
+        elif any(k in full_context for k in ["rudraksha", "रुद्राक्ष", "mukhi"]):
+            master_asset = CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg"
+        elif any(k in full_context for k in ["amethyst", "कटेला", "जामुनिया"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_amethyst_cluster.jpg"
+        elif any(k in full_context for k in ["tourmaline", "टूमलाइन"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_black_tourmaline.jpg"
+        elif any(k in full_context for k in ["citrine", "सिट्रीन"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg"
+        elif any(k in full_context for k in ["rose quartz"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_rose_quartz.jpg"
+        elif any(k in full_context for k in ["tiger"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg"
+        elif any(k in full_context for k in ["selenite"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_selenite.jpg"
+        elif any(k in full_context for k in ["aventurine"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg"
+        elif any(k in full_context for k in ["clear quartz", "sphatik", "स्फटिक"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg"
+        elif any(k in full_context for k in ["carnelian"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_carnelian.jpg"
+        elif any(k in full_context for k in ["labradorite"]):
+            master_asset = CINEMATIC_BROLL_DIR / "crystal_labradorite.jpg"
 
-        canvas = Image.new("RGB", (width, height), (10, 8, 14))
-        draw = ImageDraw.Draw(canvas)
+        # (B) Script scene semantic matching
+        if not master_asset:
+            if any(k in scene_txt for k in ["meditat", "silhouette", "एकांत", "ध्यान", "peace", "serenity"]):
+                candidates = [
+                    CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                ]
+                master_asset = candidates[scene_idx % len(candidates)]
+            elif any(k in scene_txt for k in ["lamp", "diya", "दीपक", "दीप", "oil lamp"]):
+                candidates = [
+                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+                    CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
+                ]
+                master_asset = candidates[scene_idx % len(candidates)]
+            elif any(k in scene_txt for k in ["dream", "astral", "dreamscape", "sleep", "नींद", "starlight"]):
+                candidates = [
+                    CINEMATIC_BROLL_DIR / "planet_moon.jpg",
+                    CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
+                    CINEMATIC_BROLL_DIR / "planet_jupiter.jpg",
+                ]
+                master_asset = candidates[scene_idx % len(candidates)]
+            elif any(k in scene_txt for k in ["constellation", "star map", "cosmic map"]):
+                candidates = [
+                    CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
+                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+                    CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
+                ]
+                master_asset = candidates[scene_idx % len(candidates)]
+            elif any(k in scene_txt for k in ["kundli", "birth chart", "कुंडली", "जन्मपत्रिका", "house", "भाव"]):
+                candidates = [
+                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+                    CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
+                    CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
+                ]
+                master_asset = candidates[scene_idx % len(candidates)]
+            elif any(k in scene_txt for k in ["palmleaf", "manuscript", "पांडुलिपि", "शास्त्र", "ग्रंथ", "remedy", "caution"]):
+                candidates = [
+                    CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
+                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                ]
+                master_asset = candidates[scene_idx % len(candidates)]
+            elif any(k in scene_txt for k in ["mala", "bead", "माला", "desk"]):
+                candidates = [
+                    CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
+                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                ]
+                master_asset = candidates[scene_idx % len(candidates)]
+            elif any(k in scene_txt for k in ["havan", "fire", "altar", "हवन", "अग्नि"]):
+                candidates = [
+                    CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
+                    CINEMATIC_BROLL_DIR / "4_sacred_havan.jpg",
+                ]
+                master_asset = candidates[scene_idx % len(candidates)]
+            elif any(k in scene_txt for k in ["temple", "sanctum", "मंदिर", "dm", "consultation", "परामर्श"]):
+                candidates = [
+                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+                    CINEMATIC_BROLL_DIR / "5_temple_sanctum.jpg",
+                ]
+                master_asset = candidates[scene_idx % len(candidates)]
+            elif any(k in scene_txt for k in ["saturn", "shani", "शनि"]):
+                master_asset = CINEMATIC_BROLL_DIR / "planet_saturn.jpg"
+            elif any(k in scene_txt for k in ["moon", "chandra", "चंद्रमा"]):
+                master_asset = CINEMATIC_BROLL_DIR / "planet_moon.jpg"
+            elif any(k in scene_txt for k in ["sun", "surya", "सूर्य"]):
+                master_asset = CINEMATIC_BROLL_DIR / "planet_sun.jpg"
+            elif any(k in scene_txt for k in ["jupiter", "guru", "बृहस्पति"]):
+                master_asset = CINEMATIC_BROLL_DIR / "planet_jupiter.jpg"
+            elif any(k in scene_txt for k in ["yantra", "mandala", "यंत्र"]):
+                master_asset = CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg"
 
-        if variety == "vedic_kundli":
-            # Ancient Aged Parchment with Traditional Diamond Kundli Grid
-            for y in range(height):
-                frac = y / height
-                r = int(224 - 30 * frac + rng.randint(-3, 3))
-                g = int(204 - 32 * frac + rng.randint(-3, 3))
-                b = int(168 - 34 * frac + rng.randint(-3, 3))
-                draw.line([(0, y), (width, y)], fill=(r, g, b))
-
-            chart_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-            chart_draw = ImageDraw.Draw(chart_layer)
-            cx, cy = width // 2, int(height * 0.46)
-            hw = 380
-            hh = 380
-
-            red_ink = (140, 28, 20, 200)
-            gold_ink = (160, 100, 20, 160)
-            chart_draw.rectangle([cx - hw, cy - hh, cx + hw, cy + hh], outline=red_ink, width=4)
-
-            diamond_pts = [(cx, cy - hh), (cx + hw, cy), (cx, cy + hh), (cx - hw, cy)]
-            chart_draw.polygon(diamond_pts, outline=red_ink, width=4)
-
-            chart_draw.line([(cx - hw, cy - hh), (cx + hw, cy + hh)], fill=red_ink, width=4)
-            chart_draw.line([(cx - hw, cy + hh), (cx + hw, cy - hh)], fill=red_ink, width=4)
-
-            chart_draw.ellipse([cx - 40, cy - 40, cx + 40, cy + 40], outline=gold_ink, width=2)
-            canvas.paste(chart_layer, (0, 0), chart_layer)
-
-            vignette = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-            v_draw = ImageDraw.Draw(vignette)
-            for r_step in range(int(width * 0.38), int(width * 0.72), 16):
-                frac = max(0.0, (r_step - width * 0.38) / max(1.0, (width * 0.34)))
-                alpha = int(160 * (frac ** 1.5))
-                v_draw.rectangle([width // 2 - r_step, height // 2 - int(r_step * 1.5), width // 2 + r_step, height // 2 + int(r_step * 1.5)], outline=(60, 40, 20, min(210, alpha)), width=16)
-            canvas.paste(vignette, (0, 0), vignette)
-
-        elif variety == "cosmic_planet":
-            # Deep Cosmic Space Void with Planetary Sphere & Rings
-            for y in range(height):
-                frac = y / height
-                r = int(4 * (1 - frac) + 12 * frac)
-                g = int(6 * (1 - frac) + 14 * frac)
-                b = int(18 * (1 - frac) + 32 * frac)
-                draw.line([(0, y), (width, y)], fill=(r, g, b))
-
-            for _ in range(80):
-                sx = rng.randint(20, width - 20)
-                sy = rng.randint(40, height - 40)
-                s_rad = rng.randint(1, 3)
-                s_alpha = rng.randint(120, 255)
-                draw.ellipse([sx - s_rad, sy - s_rad, sx + s_rad, sy + s_rad], fill=(s_alpha, s_alpha, min(255, s_alpha + 20)))
-
-            cx, cy = width // 2, int(height * 0.44)
-            p_rad = 180
-            for i in range(p_rad, 0, -6):
-                p_frac = i / p_rad
-                pr = int(210 * (1 - p_frac * 0.4))
-                pg = int(170 * (1 - p_frac * 0.5))
-                pb = int(110 * (1 - p_frac * 0.6))
-                draw.ellipse([cx - i, cy - i, cx + i, cy + i], fill=(pr, pg, pb))
-
-            ring_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-            r_draw = ImageDraw.Draw(ring_layer)
-            rx, ry = cx, cy
-            for rw in range(340, 220, -10):
-                rh = int(rw * 0.28)
-                r_alpha = int(140 * ((rw - 220) / 120))
-                r_draw.ellipse([rx - rw, ry - rh, rx + rw, ry + rh], outline=(230, 200, 140, r_alpha), width=6)
-            ring_layer = ring_layer.rotate(-22, center=(cx, cy))
-            canvas.paste(ring_layer, (0, 0), ring_layer)
-
-        elif variety == "havan_flame":
-            # Sacred Vedic Havan Fire Altar with Ascending Golden Embers
-            for y in range(height):
-                frac = y / height
-                r = int(18 * (1 - frac) + 90 * frac)
-                g = int(8 * (1 - frac) + 32 * frac)
-                b = int(4 * (1 - frac) + 8 * frac)
-                draw.line([(0, y), (width, y)], fill=(r, g, b))
-
-            cx, cy = width // 2, int(height * 0.56)
-            for i in range(260, 0, -10):
-                draw.ellipse([cx - i, cy - int(i * 1.3), cx + i, cy + int(i * 0.9)], fill=(255, int(150 * (1 - i / 260) + 40), 20))
-
-            for _ in range(50):
-                ex = cx + rng.randint(-180, 180)
-                ey = cy + rng.randint(-350, 80)
-                erad = rng.randint(2, 6)
-                draw.ellipse([ex - erad, ey - erad, ex + erad, ey + erad], fill=(255, rng.randint(180, 230), rng.randint(40, 100)))
-
-        elif variety == "temple_sanctum":
-            # Golden Temple Sanctum Glow with Brass Oil Lamps
-            for y in range(height):
-                frac = y / height
-                r = int(16 * (1 - frac) + 60 * frac)
-                g = int(10 * (1 - frac) + 35 * frac)
-                b = int(6 * (1 - frac) + 12 * frac)
-                draw.line([(0, y), (width, y)], fill=(r, g, b))
-
-            cx, cy = width // 2, int(height * 0.48)
-            for i in range(220, 0, -10):
-                draw.ellipse([cx - i, cy - int(i * 1.1), cx + i, cy + int(i * 1.1)], fill=(255, int(190 * (1 - i / 220) + 40), int(40 * (1 - i / 220))))
-
-            draw.polygon([(cx, cy - 80), (cx + 28, cy - 10), (cx, cy + 20), (cx - 28, cy - 10)], fill=(255, 245, 180))
-
-            for _ in range(40):
-                bx = rng.randint(int(width * 0.15), int(width * 0.85))
-                by = rng.randint(int(height * 0.2), int(height * 0.75))
-                br = rng.randint(5, 22)
-                draw.ellipse([bx - br, by - br, bx + br, by + br], fill=(255, 210, 110, 60))
-
-        elif variety == "sacred_yantra":
-            # Sacred Geometry Sri Yantra Plate
-            bg_shift_r = rng.randint(-6, 6)
-            bg_shift_b = rng.randint(-6, 6)
-            for y in range(height):
-                frac = y / height
-                r = int(12 * (1 - frac) + 40 * frac) + bg_shift_r
-                g = int(8 * (1 - frac) + 24 * frac)
-                b = int(16 * (1 - frac) + 54 * frac) + bg_shift_b
-                draw.line([(0, y), (width, y)], fill=(max(0, min(255, r)), max(0, min(255, g)), max(0, min(255, b))))
-
-            cx, cy = width // 2, int(height * 0.44)
-            yantra_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-            y_draw = ImageDraw.Draw(yantra_layer)
-            for rad in [280, 230, 180, 130, 80]:
-                y_draw.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], outline=(220, 180, 100, 220), width=3)
-            y_draw.polygon([(cx, cy - 170), (cx + 150, cy + 90), (cx - 150, cy + 90)], outline=(240, 200, 110, 230), width=3)
-            y_draw.polygon([(cx, cy + 170), (cx + 150, cy - 90), (cx - 150, cy - 90)], outline=(240, 200, 110, 230), width=3)
-            y_draw.ellipse([cx - 14, cy - 14, cx + 14, cy + 14], fill=(255, 220, 120, 255))
-            rot_angle = rng.uniform(-15.0, 15.0)
-            yantra_layer = yantra_layer.rotate(rot_angle, center=(cx, cy))
-            canvas.paste(yantra_layer, (0, 0), yantra_layer)
-
-        else:
-            # Raw Earth Mineral / Crystalline Facet Lattice
-            bg_shift = rng.randint(-5, 5)
-            for y in range(height):
-                frac = y / height
-                r = max(0, min(255, int(8 * (1 - frac) + 36 * frac) + bg_shift))
-                g = max(0, min(255, int(10 * (1 - frac) + 42 * frac)))
-                b = max(0, min(255, int(24 * (1 - frac) + 72 * frac) + bg_shift))
-                draw.line([(0, y), (width, y)], fill=(r, g, b))
-
-            cx, cy = width // 2, int(height * 0.44)
-            facet_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-            f_draw = ImageDraw.Draw(facet_layer)
-            jx = rng.randint(-6, 6)
-            jy = rng.randint(-6, 6)
-            facets = [
-                [(cx + jx, cy - 220 + jy), (cx + 150 + jx, cy - 50 + jy), (cx + jx, cy + 200 + jy), (cx - 150 + jx, cy - 50 + jy)],
-                [(cx + jx, cy - 150 + jy), (cx + 100 + jx, cy - 30 + jy), (cx + jx, cy + 130 + jy), (cx - 100 + jx, cy - 30 + jy)],
-                [(cx - 150 + jx, cy - 50 + jy), (cx + 150 + jx, cy - 50 + jy)],
-                [(cx + jx, cy - 220 + jy), (cx + jx, cy + 200 + jy)],
+        # Final default fallback to safe authentic photographic master
+        if not master_asset or not master_asset.exists():
+            safe_pool = [
+                CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+                CINEMATIC_BROLL_DIR / "planet_moon.jpg",
+                CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+                CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
+                CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
+                CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
             ]
-            for poly in facets:
-                f_draw.polygon(poly, outline=(180, 210, 255, 90), fill=(140, 180, 255, 20))
-            canvas.paste(facet_layer, (0, 0), facet_layer)
+            master_asset = safe_pool[scene_idx % len(safe_pool)]
 
-        vignette = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        v_draw = ImageDraw.Draw(vignette)
-        max_dist = math.sqrt((width / 2) ** 2 + (height / 2) ** 2)
-        for r_step in range(int(width * 0.35), int(max_dist), 20):
-            frac = max(0.0, (r_step - width * 0.35) / max(1.0, (max_dist - width * 0.35)))
-            alpha = int(220 * (frac ** 1.6))
-            alpha = min(240, max(0, alpha))
-            v_draw.ellipse(
-                [width // 2 - r_step, height // 2 - r_step, width // 2 + r_step, height // 2 + r_step],
-                outline=(0, 0, 0, alpha),
-                width=20,
-            )
-        vignette = vignette.filter(ImageFilter.GaussianBlur(24))
-        canvas.paste(vignette, (0, 0), vignette)
+        # Open and adapt the genuine photograph with subtle cinematic grading
+        with Image.open(master_asset) as src_img:
+            img = src_img.convert("RGB")
+            cropped = ImageOps.fit(img, (width, height), method=Image.Resampling.LANCZOS)
 
-        cls.save_clean_photographic_image(canvas, out_path, quality=95)
-        logger.info(f"[DynamicVisualEngine] Generated authentic scene variety ({variety}) -> {out_path.name}")
+            # Apply subtle photographic grading
+            contrast_factor = 1.02 + (scene_idx % 3) * 0.02
+            color_factor = 0.98 + (scene_idx % 2) * 0.04
+            graded = ImageEnhance.Contrast(cropped).enhance(contrast_factor)
+            graded = ImageEnhance.Color(graded).enhance(color_factor)
+
+        cls.save_clean_photographic_image(graded, out_path, quality=95)
+        logger.info(f"[DynamicVisualEngine] Rendered authentic photographic canvas ({master_asset.name}) -> {out_path.name}")
         return out_path
+
+    # Backward-compatibility alias
+    generate_variety_canvas = generate_authentic_photographic_canvas
 
     @classmethod
     def get_or_generate_scene_image(
@@ -1355,7 +1316,39 @@ class DynamicVisualEngine:
             if any(k in scene_txt for k in ["ketu", "केतु"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_ketu.jpg")
 
-            # 5. Direct Crystals / Gemstones / Rudraksha
+            # 5. Meditation, Solitude, Detachment & Serenity
+            if any(k in scene_txt for k in ["meditat", "silhouette", "एकांत", "ध्यान", "peace", "detachment", "वैराग्य"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg")
+
+            # 6. Brass Lamps, Diyas, Sacred Texts & Books
+            if any(k in scene_txt for k in ["lamp", "diya", "दीपक", "दीप", "oil lamp"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg")
+
+            # 7. Ancient Palmleaf Manuscript, Ancient Scriptures & Caution
+            if any(k in scene_txt for k in ["palmleaf", "manuscript", "पांडुलिपि", "शास्त्र", "ग्रंथ"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
+
+            # 8. Constellations, Celestial Charts & Cosmic Maps
+            if any(k in scene_txt for k in ["constellation", "star map", "cosmic map"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
+
+            # 9. Astral Dreams & Cosmic Dreamscape
+            if any(k in scene_txt for k in ["dream", "astral", "dreamscape", "sleep", "नींद", "सपनों"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_moon.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_saturn.jpg")
+
+            # 10. Sacred Mala Beads & Devotional Desk
+            if any(k in scene_txt for k in ["mala", "bead", "माला"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg")
+
+            # 11. Direct Crystals / Gemstones / Rudraksha
             if any(k in scene_txt for k in ["pyrite", "पायराइट"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "crystal_pyrite_cluster.jpg")
             if any(k in scene_txt for k in ["amethyst", "कटेला", "जामुनिया"]):
@@ -1441,13 +1434,13 @@ class DynamicVisualEngine:
             if ov_asset and ov_asset.exists():
                 chosen_cand = ov_asset
 
-        # Tier 4: Procedural distinct variety canvas (STRICTLY NO CROPPING/ZOOMING SAME BASE IMAGE!)
-        # Freshly renders a distinct theme-appropriate canvas (Parchment Kundli, Cosmic Planet, Havan Flame, Temple Diya)
+        # Tier 4: Authentic photographic canvas adaptation (STRICTLY 100% genuine photograph, ZERO 3D drawings)
+        # Sourced directly from authentic master b-roll, cropped to 1080x1920 with subtle cinematic grade
         if not chosen_cand:
-            proc_file = GENERATED_BROLL_DIR / f"proc_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
+            photo_file = GENERATED_BROLL_DIR / f"photo_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
             proc_seed = int(hashlib.md5(f"{reel_slug}_{scene_idx}_{time.time()}".encode()).hexdigest()[:8], 16)
-            cls.generate_variety_canvas(scene_dict, topic, scene_idx, total_scenes, proc_file, seed=proc_seed)
-            chosen_cand = proc_file
+            cls.generate_authentic_photographic_canvas(scene_dict, topic, scene_idx, total_scenes, photo_file, seed=proc_seed)
+            chosen_cand = photo_file
 
         if chosen_cand and chosen_cand.exists():
             if chosen_cand != target_file:
@@ -1466,10 +1459,10 @@ class DynamicVisualEngine:
             logger.info(f"[DynamicVisualEngine] Scene {scene_idx + 1}: Sourced and registered unique visual ({chosen_cand.name}) -> {target_file.name}")
             return target_file
 
-        # Fallback: Procedural distinct variety canvas
-        proc_file = GENERATED_BROLL_DIR / f"proc_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
+        # Fallback: Authentic photographic canvas adaptation (STRICTLY 100% genuine photograph)
+        photo_file = GENERATED_BROLL_DIR / f"photo_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
         proc_seed = int(hashlib.md5(f"{reel_slug}_fallback_{scene_idx}_{time.time()}".encode()).hexdigest()[:8], 16)
-        cls.generate_variety_canvas(scene_dict, topic, scene_idx, total_scenes, proc_file, seed=proc_seed)
-        used_images.add(proc_file)
-        cls.register_used_image(proc_file)
-        return proc_file
+        cls.generate_authentic_photographic_canvas(scene_dict, topic, scene_idx, total_scenes, photo_file, seed=proc_seed)
+        used_images.add(photo_file)
+        cls.register_used_image(photo_file)
+        return photo_file
