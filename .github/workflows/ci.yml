@@ -9,33 +9,57 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+      fail-fast: false
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - name: Install System Fonts & FFmpeg
         run: |
-          sudo apt-get update -o Acquire::http::Timeout="10" -o Acquire::Retries="2" || true
-          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-core fonts-deva || true
+          sudo apt-get update -o Acquire::http::Timeout="15" -o Acquire::Retries="3"
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-core fonts-deva
 
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
 
-      - name: Run Test Suite
+      - name: Validate Python Syntax
+        run: |
+          python -m compileall -q app/ config/ tests/
+
+      - name: Verify Key Imports
+        run: |
+          python -c "import app.autonomous.daily_algorithm_publisher; import app.video.dynamic_visual_engine; import app.api.main; import app.storage.permanent_visual_memory; print('All key imports succeeded.')"
+
+      - name: Run Startup Preflight Validation (Dry-Run)
+        env:
+          AUTO_PUBLISH: "false"
+        run: |
+          python app/autonomous/daily_algorithm_publisher.py --validate --dry-run
+
+      - name: Run Complete Test Suite
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AUTO_PUBLISH: "false"
           PYTHONPATH: "."
+          TESTING: "true"
         run: |
           pytest -v
