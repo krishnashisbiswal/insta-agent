@@ -136,6 +136,7 @@ def _cleanup_revocation_store() -> None:
 # ---------------------------------------------------------------------------
 # FASTAPI AUTHENTICATION & AUTHORIZATION DEPENDENCIES
 # ---------------------------------------------------------------------------
+from sqlalchemy.orm import Session, joinedload
 from app.models.saas_models import User, get_db_session
 
 
@@ -146,6 +147,7 @@ def get_current_user(
     """
     Extracts and validates the authenticated user from the Bearer token.
     Enforces active user checks and tenant verification.
+    Uses eager loading on User.organization to eliminate N+1 secondary queries.
     """
     if not auth or not auth.credentials:
         raise HTTPException(
@@ -159,7 +161,7 @@ def get_current_user(
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token subject")
 
-    user = db.query(User).filter(User.user_id == user_id).first()
+    user = db.query(User).options(joinedload(User.organization)).filter(User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 

@@ -387,7 +387,8 @@ def get_current_user_profile(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db_session),
 ):
-    org = db.query(Organization).filter_by(org_id=current_user.org_id).first()
+    # Eagerly loaded via joinedload in get_current_user; fallback only if detached
+    org = current_user.organization or db.query(Organization).filter_by(org_id=current_user.org_id).first()
     return {
         "user_id": current_user.user_id,
         "email": current_user.email,
@@ -455,11 +456,21 @@ def create_account(
 
 @app.get("/api/accounts")
 def list_accounts(
+    limit: int = 50,
+    offset: int = 0,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db_session),
 ):
-    # Strictly scoped to current_user.org_id
-    accounts = db.query(InstagramAccount).filter_by(org_id=current_user.org_id).all()
+    # Strictly scoped to current_user.org_id with bounded pagination
+    clamped_limit = max(1, min(limit, 100))
+    clamped_offset = max(0, offset)
+    accounts = (
+        db.query(InstagramAccount)
+        .filter_by(org_id=current_user.org_id)
+        .offset(clamped_offset)
+        .limit(clamped_limit)
+        .all()
+    )
     return [
         {
             "account_id": a.account_id,
@@ -593,14 +604,21 @@ def generate_content(
 
 @app.get("/api/jobs")
 def list_jobs(
+    limit: int = 50,
+    offset: int = 0,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db_session),
 ):
-    # Only return jobs belonging to accounts within current_user.org_id
+    # Only return jobs belonging to accounts within current_user.org_id with bounded pagination
+    clamped_limit = max(1, min(limit, 100))
+    clamped_offset = max(0, offset)
     jobs = (
         db.query(PublishingJobModel)
         .join(InstagramAccount, PublishingJobModel.account_id == InstagramAccount.account_id)
         .filter(InstagramAccount.org_id == current_user.org_id)
+        .order_by(PublishingJobModel.created_at.desc())
+        .offset(clamped_offset)
+        .limit(clamped_limit)
         .all()
     )
     return [

@@ -130,3 +130,19 @@ def test_multi_account_creation_and_isolation():
     gen_data = r_gen.json()
     assert "job_id" in gen_data
     assert gen_data["status"] == "QUEUED"
+
+    # 7. Test Pagination on accounts and jobs
+    r_paginated_acc = client.get("/api/accounts?limit=1&offset=0", headers=headers_alpha)
+    assert r_paginated_acc.status_code == 200
+    assert len(r_paginated_acc.json()) == 1
+
+    r_paginated_jobs = client.get("/api/jobs?limit=10&offset=0", headers=headers_alpha)
+    assert r_paginated_jobs.status_code == 200
+    assert len(r_paginated_jobs.json()) >= 1
+
+    # 8. Test Eager Loading on Profile
+    r_profile = client.get("/api/auth/me", headers=headers_alpha)
+    assert r_profile.status_code == 200
+    prof_data = r_profile.json()
+    assert prof_data["org_name"] == "Agency Alpha"
+    assert prof_data["email"] == email_alpha
