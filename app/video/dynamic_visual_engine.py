@@ -68,13 +68,17 @@ class DynamicVisualEngine:
 
     @classmethod
     def save_used_registry(cls, used_set: Set[str]) -> None:
-        """Persists used images registry to disk."""
-        USED_REGISTRY_FILE.parent.mkdir(parents=True, exist_ok=True)
+        """Persists used images registry to disk atomically with backoff."""
         try:
-            with open(USED_REGISTRY_FILE, "w", encoding="utf-8") as f:
-                json.dump({"used_images": sorted(list(used_set))}, f, indent=2)
-        except Exception as e:
-            logger.warning(f"Notice saving visual registry: {e}")
+            from app.storage.permanent_visual_memory import _atomic_replace_json
+            _atomic_replace_json(USED_REGISTRY_FILE, {"used_images": sorted(list(used_set))}, indent=2)
+        except Exception:
+            try:
+                USED_REGISTRY_FILE.parent.mkdir(parents=True, exist_ok=True)
+                with open(USED_REGISTRY_FILE, "w", encoding="utf-8") as f:
+                    json.dump({"used_images": sorted(list(used_set))}, f, indent=2)
+            except Exception as e:
+                logger.warning(f"Notice saving visual registry: {e}")
 
     @classmethod
     def purge_old_generated_images(cls) -> int:
@@ -737,6 +741,9 @@ class DynamicVisualEngine:
         Enforces strict anti-repetition: checks URLs and content hashes against both
         session memory and the persistent used visuals registry.
         """
+        if os.getenv("TESTING") == "true" or os.getenv("OFFLINE_MODE") == "true":
+            return None
+
         clean_q = urllib.parse.quote(query)
         url = f"https://api.openverse.org/v1/images/?q={clean_q}&page_size=15"
         req = urllib.request.Request(
@@ -792,6 +799,9 @@ class DynamicVisualEngine:
         Enforces strict anti-repetition: checks URLs and content hashes against both
         session memory and the persistent used visuals registry.
         """
+        if os.getenv("TESTING") == "true" or os.getenv("OFFLINE_MODE") == "true":
+            return None
+
         # 1. Check NASA API for celestial / space queries
         if any(w in query.lower() for w in ["moon", "saturn", "jupiter", "mars", "nebula", "space", "eclipse", "sun", "stars", "cosmos"]):
             try:

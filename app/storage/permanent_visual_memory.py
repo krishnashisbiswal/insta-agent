@@ -22,6 +22,7 @@ import os
 import sys
 import threading
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -54,6 +55,42 @@ DEFAULT_DHASH_THRESHOLD = 8
 DEFAULT_COLOR_SIMILARITY_THRESHOLD = 0.94
 
 
+def _atomic_replace_json(target_path: Path, data: Dict[str, Any], indent: int = 2) -> None:
+    """
+    Safely writes JSON data to a unique per-process, per-thread temporary file
+    and performs an atomic replacement with backoff retries for Windows file-system locking.
+    """
+    target_path = Path(target_path)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    unique_tmp = target_path.parent / f".tmp_{target_path.stem}_{os.getpid()}_{threading.get_ident()}_{time.time_ns()}_{uuid.uuid4().hex[:8]}.tmp"
+    try:
+        with open(unique_tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=indent, ensure_ascii=False)
+            f.flush()
+            os.fsync(f.fileno())
+
+        for attempt in range(5):
+            try:
+                os.replace(unique_tmp, target_path)
+                return
+            except (PermissionError, FileNotFoundError, OSError) as err:
+                if attempt == 4:
+                    try:
+                        if target_path.exists():
+                            os.remove(target_path)
+                        os.rename(unique_tmp, target_path)
+                        return
+                    except Exception:
+                        raise err
+                time.sleep(0.02 * (attempt + 1))
+    finally:
+        if unique_tmp.exists():
+            try:
+                unique_tmp.unlink()
+            except Exception:
+                pass
+
+
 class PermanentVisualMemory:
     """
     Production-grade visual memory that permanently stores image fingerprints,
@@ -65,6 +102,8 @@ class PermanentVisualMemory:
     _records: Dict[str, Dict[str, Any]] = {}
     _sha256_set: Set[str] = set()
     _source_identities: Set[str] = set()
+    _last_disk_mtime_ns: int = 0
+    _last_disk_size: int = 0
     _thread_lock: threading.RLock = threading.RLock()
 
     @classmethod
@@ -209,32 +248,65 @@ class PermanentVisualMemory:
             return cls._read_registry_file()
 
     @classmethod
+    def _recover_registry(cls) -> Optional[Dict[str, Any]]:
+        """Scans for valid temporary recovery files or falls back to legacy registry."""
+        try:
+            candidates = sorted(
+                PERMANENT_REGISTRY_FILE.parent.glob(f"*{PERMANENT_REGISTRY_FILE.stem}*.tmp*"),
+                key=lambda p: p.stat().st_mtime_ns if p.exists() else 0,
+                reverse=True,
+            )
+            for c in candidates:
+                try:
+                    with open(c, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    if isinstance(data, dict) and "records" in data and len(data["records"]) > 0:
+                        logger.warning(f"[PermanentVisualMemory] Recovered registry from temp snapshot: {c.name}")
+                        return data
+                except Exception:
+                    continue
+        except Exception as e:
+            logger.debug(f"Recovery scan notice: {e}")
+
+        # Fallback to reconstructing from legacy registry
+        if LEGACY_REGISTRY_FILE.exists():
+            try:
+                with open(LEGACY_REGISTRY_FILE, "r", encoding="utf-8") as lf:
+                    leg = json.load(lf)
+                recovered = {
+                    "schema_version": "2.0.0",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "last_updated": datetime.now(timezone.utc).isoformat(),
+                    "total_records": 0,
+                    "records": {},
+                }
+                for item in leg.get("used_images", []):
+                    item_str = str(item).strip()
+                    if item_str:
+                        recovered["records"][f"legacy:{item_str}"] = {
+                            "source_identity": item_str,
+                            "legacy_import": True,
+                            "usage_timestamp": datetime.now(timezone.utc).isoformat(),
+                        }
+                recovered["total_records"] = len(recovered["records"])
+                logger.warning("[PermanentVisualMemory] Recovered records from legacy registry.")
+                return recovered
+            except Exception:
+                pass
+        return None
+
+    @classmethod
     def _read_registry_file(cls) -> Dict[str, Any]:
         if not PERMANENT_REGISTRY_FILE.exists():
-            initial_data = {
-                "schema_version": "2.0.0",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "last_updated": datetime.now(timezone.utc).isoformat(),
-                "total_records": 0,
-                "records": {},
-            }
-            # Import legacy used_images if available
-            if LEGACY_REGISTRY_FILE.exists():
-                try:
-                    with open(LEGACY_REGISTRY_FILE, "r", encoding="utf-8") as f:
-                        leg = json.load(f)
-                    for item in leg.get("used_images", []):
-                        item_str = str(item).strip()
-                        if item_str:
-                            initial_data["records"][f"legacy:{item_str}"] = {
-                                "source_identity": item_str,
-                                "legacy_import": True,
-                                "usage_timestamp": datetime.now(timezone.utc).isoformat(),
-                            }
-                    initial_data["total_records"] = len(initial_data["records"])
-                except Exception as e:
-                    logger.warning(f"Notice importing legacy registry: {e}")
-
+            initial_data = cls._recover_registry()
+            if not initial_data:
+                initial_data = {
+                    "schema_version": "2.0.0",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "last_updated": datetime.now(timezone.utc).isoformat(),
+                    "total_records": 0,
+                    "records": {},
+                }
             cls._write_registry_file(initial_data)
             cls._update_cache(initial_data)
             return initial_data
@@ -245,34 +317,30 @@ class PermanentVisualMemory:
             cls._update_cache(data)
             return data
         except Exception as exc:
-            logger.error(f"Error reading permanent registry file: {exc}")
-            # Try recovering from atomic temp file if crash occurred
-            tmp_file = PERMANENT_REGISTRY_FILE.with_suffix(".tmp")
-            if tmp_file.exists():
-                try:
-                    with open(tmp_file, "r", encoding="utf-8") as tf:
-                        data = json.load(tf)
-                    cls._write_registry_file(data)
-                    cls._update_cache(data)
-                    return data
-                except Exception:
-                    pass
-            return {"schema_version": "2.0.0", "records": {}, "total_records": 0}
+            logger.error(f"Error reading permanent registry file: {exc}. Attempting recovery...")
+            recovered = cls._recover_registry()
+            if recovered:
+                cls._write_registry_file(recovered)
+                cls._update_cache(recovered)
+                return recovered
+            fallback = {"schema_version": "2.0.0", "records": {}, "total_records": 0}
+            cls._update_cache(fallback)
+            return fallback
 
     @classmethod
     def _write_registry_file(cls, data: Dict[str, Any]) -> None:
         """Atomic transactional write with fsync to guarantee durable persistence."""
-        PERMANENT_REGISTRY_FILE.parent.mkdir(parents=True, exist_ok=True)
-        tmp_file = PERMANENT_REGISTRY_FILE.with_suffix(".tmp")
         data["last_updated"] = datetime.now(timezone.utc).isoformat()
         data["total_records"] = len(data.get("records", {}))
+        _atomic_replace_json(PERMANENT_REGISTRY_FILE, data, indent=2)
 
-        with open(tmp_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-            f.flush()
-            os.fsync(f.fileno())
-
-        os.replace(tmp_file, PERMANENT_REGISTRY_FILE)
+        try:
+            if PERMANENT_REGISTRY_FILE.exists():
+                st = PERMANENT_REGISTRY_FILE.stat()
+                cls._last_disk_mtime_ns = st.st_mtime_ns
+                cls._last_disk_size = st.st_size
+        except Exception:
+            pass
 
         # Synchronize backward compatibility with legacy registry
         try:
@@ -283,13 +351,7 @@ class PermanentVisualMemory:
                 if rec.get("sha256"):
                     legacy_set.add(f"sha256:{rec['sha256']}")
                     legacy_set.add(f"hash:{rec['sha256'][:32]}")
-            LEGACY_REGISTRY_FILE.parent.mkdir(parents=True, exist_ok=True)
-            leg_tmp = LEGACY_REGISTRY_FILE.with_suffix(".tmp")
-            with open(leg_tmp, "w", encoding="utf-8") as lf:
-                json.dump({"used_images": sorted(list(legacy_set))}, lf, indent=2)
-                lf.flush()
-                os.fsync(lf.fileno())
-            os.replace(leg_tmp, LEGACY_REGISTRY_FILE)
+            _atomic_replace_json(LEGACY_REGISTRY_FILE, {"used_images": sorted(list(legacy_set))}, indent=2)
         except Exception as e:
             logger.debug(f"Legacy sync notice: {e}")
 
@@ -306,6 +368,13 @@ class PermanentVisualMemory:
             for rec in cls._records.values()
             if rec.get("source_identity")
         }
+        if PERMANENT_REGISTRY_FILE.exists():
+            try:
+                st = PERMANENT_REGISTRY_FILE.stat()
+                cls._last_disk_mtime_ns = st.st_mtime_ns
+                cls._last_disk_size = st.st_size
+            except Exception:
+                pass
         cls._cache_loaded = True
 
     # =========================================================================
@@ -357,12 +426,12 @@ class PermanentVisualMemory:
             if lock:
                 with lock:
                     data = cls._read_registry_file()
-                    data["records"][record_id] = record
+                    data.setdefault("records", {})[record_id] = record
                     cls._write_registry_file(data)
                     cls._update_cache(data)
             else:
                 data = cls._read_registry_file()
-                data["records"][record_id] = record
+                data.setdefault("records", {})[record_id] = record
                 cls._write_registry_file(data)
                 cls._update_cache(data)
 
@@ -396,6 +465,13 @@ class PermanentVisualMemory:
         """
         if not cls._cache_loaded:
             cls.load_registry()
+        elif PERMANENT_REGISTRY_FILE.exists():
+            try:
+                st = PERMANENT_REGISTRY_FILE.stat()
+                if st.st_mtime_ns != cls._last_disk_mtime_ns or st.st_size != cls._last_disk_size:
+                    cls.load_registry()
+            except Exception:
+                pass
 
         # Quick check for raw source identity string
         clean_source = source_identity.strip().lower()
