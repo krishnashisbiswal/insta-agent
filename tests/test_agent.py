@@ -8,6 +8,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from unittest.mock import patch
+
 from app.agents.gemini_client import check_health, generate_text, generate_json
 from app.video.visual_generator import generate_scene_frame
 from app.instagram.uploader import InstagramUploader
@@ -18,16 +20,31 @@ from app.autonomous.content_manager import ContentManager
 
 
 def test_gemini_health():
-    health = check_health()
-    assert health["status"] == "healthy"
-    assert "response" in health
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        with patch("app.agents.gemini_client.get_client"):
+            with patch("app.agents.gemini_client.generate_text", return_value="OK"):
+                health = check_health()
+                assert health["status"] == "healthy"
+                assert "response" in health
+    else:
+        health = check_health()
+        assert health["status"] == "healthy"
+        assert "response" in health
 
 
 def test_gemini_json_generation():
     prompt = "Return a JSON object with key 'status' equal to 'success'."
-    res = generate_json(prompt)
-    assert isinstance(res, dict)
-    assert res.get("status") == "success"
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        with patch("app.agents.gemini_client.generate_text", return_value='{"status": "success"}'):
+            res = generate_json(prompt)
+            assert isinstance(res, dict)
+            assert res.get("status") == "success"
+    else:
+        res = generate_json(prompt)
+        assert isinstance(res, dict)
+        assert res.get("status") == "success"
 
 
 def test_language_detection():

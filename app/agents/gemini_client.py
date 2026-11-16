@@ -26,11 +26,6 @@ from config.settings import (
 
 logger = logging.getLogger(__name__)
 
-if not GEMINI_API_KEY:
-    raise RuntimeError(
-        "GEMINI_API_KEY is missing! Please configure it in your .env file."
-    )
-
 # Initialize the official Google GenAI Client
 _client: Optional[genai.Client] = None
 
@@ -38,8 +33,13 @@ _client: Optional[genai.Client] = None
 def get_client() -> genai.Client:
     global _client
     if _client is None:
+        api_key = os.getenv("GEMINI_API_KEY", GEMINI_API_KEY).strip()
+        if not api_key:
+            raise RuntimeError(
+                "GEMINI_API_KEY is missing! Please configure it in your .env file or environment."
+            )
         _client = genai.Client(
-            api_key=GEMINI_API_KEY,
+            api_key=api_key,
             http_options=types.HttpOptions(timeout=20000),
         )
     return _client

@@ -1,37 +1,35 @@
 {
-  "topic": "Stop wearing 5 mukhi rudraksha blindly until you check your central nervous system for these 5 bio-electric stress locks",
-  "niche": "Vedic Astrology, Sacred Energy, Gemstones & Spiritual Devotion",
-  "language": "Hindi (Devanagari)",
-  "voice": "hi-IN-MadhurNeural",
-  "production_style": "Stage-Decoupled Dedicated Script-Driven Photography + Ken Burns Zoom + Kinetic Subtitles",
+  "topic": "5 uncanny physical and emotional signs your 8th house psychic portal is opening, triggering sudden 3 AM wakeups, heavy shoulder pressure, and intense dream vividness.",
+  "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
+  "voice": "sarvam:arjun",
+  "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "duration_seconds": 42.57,
-  "total_scenes": 7,
+  "agent_evolution_level": 7.1,
   "hook": {
-    "id": "rudraksha_nervous_system",
-    "name": "Nobody Tells You",
-    "spoken": "कोई नहीं बताता कि गलत तरीके से पहना गया रुद्राक्ष आपके केंद्रीय तंत्रिका तंत्र को कैसे जकड़ लेता है।",
-    "on_screen": "THE HIDDEN RUDRAKSHA TRUTH",
-    "why_it_works": "Leverages an insider truth about sacred geometry and bio-electric resistance that challenges mainstream spiritual advice.",
+    "id": "eighth_house_three_am",
+    "name": "Numbered With A Favourite",
+    "spoken": "रात तीन बजे अचानक आंख खुलना किस छिपे हुए आठवें भाव का संकेत है?",
+    "on_screen": "HIDDEN 8TH HOUSE SIGNS",
+    "why_it_works": "Directly targets an uncanny physical experience shared by spiritually sensitive viewers, leveraging Vedic astrology secrets.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
         "score": 80,
-        "detail": "4 words, 26 chars, ~1.5s spoken (want 5-12 words)"
+        "detail": "4 words, 22 chars, ~1.5s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 15.0,
-        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
+        "score": 75,
+        "detail": "1 concrete marker(s): 8"
       },
       "STAKES": {
-        "score": 100.0,
-        "detail": "2 tension marker(s): hidden, truth"
+        "score": 70.0,
+        "detail": "1 tension marker(s): hidden"
       },
       "FRONTLOAD": {
-        "score": 100.0,
-        "detail": "payload at word 2"
+        "score": 70.0,
+        "detail": "payload at word 1; weak opener \"hi\""
       },
       "ADDRESS": {
         "score": 35.0,
@@ -49,11 +47,11 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "88 chars (Target: <=125)"
+        "detail": "63 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
-        "detail": "7 visual scenes with dynamic pacing (avg 4.0s)"
+        "detail": "7 visual scenes with dynamic pacing (avg 3.9s)"
       },
       "high_value_cta": {
         "score": 100,
@@ -65,24 +63,10 @@
       }
     }
   },
-  "non_ai_authenticity": {
-    "slop_density_score": 100.0,
-    "banned_cliches_found": 0,
-    "astrologer_perspective": "Consulting practitioner sharing client case study",
-    "degree_jargon_free": true,
-    "blind_remedy_warning": true
-  },
-  "viral_retention_architecture": {
-    "timeline_pacing": "Single-pass 42.57s (avg 3.6s - 4.2s per scene cut)",
-    "visual_uniqueness": "7 / 7 dedicated visual assets (100% unique MD5 hashes)",
-    "crop_zooming_ratio": "0% (completely eliminated)",
-    "engagement_funnel": "4-Layer CTA (Save + Share + Comment Placement + DM to Book Consultation)"
-  },
-  "publishing_status": {
-    "mode": "Staging / Local Deliverables Ready",
-    "auto_publish_live": false,
-    "deliverable_video": "insta content/viral_reel_video.mp4",
-    "deliverable_audio": "insta content/voiceover_audio.mp3",
-    "deliverable_caption": "insta content/caption_and_hashtags.txt"
-  }
+  "duration_seconds": 32.77,
+  "generated_at": "2026-11-16 16:19:04",
+  "algorithm_phase": "Algorithmic Indexing & Quiet Hours",
+  "daily_post_enforced": true,
+  "comment_consultations_handled": 0,
+  "q_reward_score": 0.922
 }

@@ -21,6 +21,12 @@ jobs:
         python-version: ['3.11', '3.12']
       fail-fast: false
 
+    env:
+      PYTHONPATH: "."
+      TESTING: "true"
+      AUTO_PUBLISH: "false"
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
