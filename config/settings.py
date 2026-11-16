@@ -1,9 +1,28 @@
 import os
+import shutil
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables from .env
 load_dotenv()
+
+# Ensure FFmpeg is available on PATH (including bundled imageio_ffmpeg)
+if not shutil.which("ffmpeg"):
+    try:
+        import imageio_ffmpeg
+        ffmpeg_bin = imageio_ffmpeg.get_ffmpeg_exe()
+        if ffmpeg_bin and os.path.exists(ffmpeg_bin):
+            bin_dir = os.path.dirname(ffmpeg_bin)
+            canonical = os.path.join(bin_dir, "ffmpeg.exe" if os.name == "nt" else "ffmpeg")
+            if not os.path.exists(canonical):
+                try:
+                    shutil.copyfile(ffmpeg_bin, canonical)
+                except Exception:
+                    pass
+            if os.path.exists(canonical):
+                os.environ["PATH"] = bin_dir + os.pathsep + os.environ.get("PATH", "")
+    except Exception:
+        pass
 
 # Project root directory (agent/)
 BASE_DIR = Path(__file__).resolve().parent.parent

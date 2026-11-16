@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import json
 import logging
@@ -7,7 +9,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 # Project root
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -66,6 +68,71 @@ class DailyAlgorithmPublisher:
         self.learning_engine = SelfLearningEngine()
         from app.analytics.reinforcement_engine import ReinforcementEvolutionEngine
         self.reinforcement_engine = ReinforcementEvolutionEngine()
+
+    @classmethod
+    def validate_environment(cls, dry_run: bool = False) -> Dict[str, Any]:
+        """
+        Startup validation to ensure all dependencies, tools, directories,
+        configuration, and credentials are valid before publishing.
+        """
+        issues: List[str] = []
+        warnings: List[str] = []
+
+        # 1. System FFmpeg binary
+        if not shutil.which("ffmpeg"):
+            issues.append("FFmpeg executable not found on system PATH. Video encoding will fail.")
+
+        # 2. Writable directories
+        required_dirs = [
+            STORAGE_DIR,
+            PROJECT_ROOT / "output" / "reels",
+            PROJECT_ROOT / "output" / "audio",
+            PROJECT_ROOT / "output" / "frames",
+            PROJECT_ROOT / "assets" / "generated_broll",
+            PROJECT_ROOT / "insta content",
+        ]
+        for d in required_dirs:
+            try:
+                d.mkdir(parents=True, exist_ok=True)
+                probe = d / f".perm_probe_{os.getpid()}_{int(time.time())}"
+                probe.write_text("probe")
+                probe.unlink()
+            except Exception as e:
+                issues.append(f"Storage path {d} is not writable: {e}")
+
+        # 3. Gemini API Key
+        gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+        if not gemini_key:
+            warnings.append("GEMINI_API_KEY is not configured. Falling back to offline template generation.")
+
+        # 4. Instagram Credentials (mandatory for live publishing)
+        if not dry_run:
+            from app.instagram.uploader import InstagramUploader
+            uploader = InstagramUploader()
+            if not uploader.has_direct_credentials():
+                issues.append(
+                    "Production publishing requires Instagram credentials. "
+                    "Provide INSTAGRAM_SESSION_DATA, INSTAGRAM_SESSION_ID, or INSTAGRAM_USERNAME/PASSWORD. "
+                    "Use --dry-run for offline verification."
+                )
+
+        status_dict = {
+            "valid": len(issues) == 0,
+            "ffmpeg": bool(shutil.which("ffmpeg")),
+            "issues": issues,
+            "warnings": warnings,
+            "dry_run": dry_run,
+        }
+
+        for w in warnings:
+            logger.warning(f"[STARTUP VALIDATION WARNING] {w}")
+        for err in issues:
+            logger.error(f"[STARTUP VALIDATION ERROR] {err}")
+
+        if not status_dict["valid"] and not dry_run:
+            raise EnvironmentError(f"Startup validation failed: {'; '.join(issues)}")
+
+        return status_dict
 
     def load_tracker(self) -> Dict[str, Any]:
         if not self.tracker_file.exists():
@@ -470,6 +537,9 @@ class DailyAlgorithmPublisher:
         """
         Executes today's single video generation and scheduling based on algorithm timing.
         """
+        # Preflight startup validation for dependencies, storage, and credentials
+        self.validate_environment(dry_run=dry_run)
+
         now = get_current_time(tz)
         today_str = now.strftime("%Y-%m-%d")
 
@@ -565,7 +635,13 @@ if __name__ == "__main__":
     parser.add_argument("--topic", type=str, default=None, help="Specific topic override")
     parser.add_argument("--category", type=str, default=None, help="Specific category override")
     parser.add_argument("--clean-space", action="store_true", help="Clean up intermediate audio chunks, temporary frame renders, and cached files to clear disk space")
+    parser.add_argument("--validate", action="store_true", help="Validate runtime environment, tools, and credentials then exit")
     args = parser.parse_args()
+
+    if args.validate:
+        status = DailyAlgorithmPublisher.validate_environment(dry_run=args.dry_run)
+        print(f"\n[VALIDATION STATUS] Valid: {status['valid']}, FFmpeg: {status['ffmpeg']}, Issues: {len(status['issues'])}, Warnings: {len(status['warnings'])}")
+        sys.exit(0 if status["valid"] or args.dry_run else 1)
 
     if args.clean_space:
         from app.utils.storage_cleaner import StorageCleaner
