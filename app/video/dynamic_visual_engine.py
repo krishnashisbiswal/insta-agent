@@ -823,15 +823,14 @@ class DynamicVisualEngine:
     @classmethod
     def search_online_photographic_asset(cls, query: str, target_file: Path) -> Optional[Path]:
         """
-        Searches live online open photo repositories (NASA API & Wikimedia Commons)
+        Searches NASA Image and Video Library API strictly for celestial / astronomical space queries
         and crops the image to professional 1080x1920 (9:16 vertical) resolution.
-        Enforces strict anti-repetition: checks URLs and content hashes against both
-        session memory and the persistent used visuals registry.
+        Never scrapes generic public search engines (eliminating food, insects, and irrelevant images).
         """
         if os.getenv("TESTING") == "true" or os.getenv("OFFLINE_MODE") == "true":
             return None
 
-        # 1. Check NASA API for celestial / space queries
+        # Check NASA API strictly for celestial / space queries
         if any(w in query.lower() for w in ["moon", "saturn", "jupiter", "mars", "nebula", "space", "eclipse", "sun", "stars", "cosmos"]):
             try:
                 nasa_url = f"https://images-api.nasa.gov/search?q={urllib.parse.quote(query)}&media_type=image"
@@ -869,71 +868,6 @@ class DynamicVisualEngine:
             except Exception as e:
                 logger.debug(f"[DynamicVisualEngine] NASA search notice: {e}")
 
-        # 2. Check Wikimedia Commons API with progressive query fallback
-        candidate_queries = [query]
-        tokens = [t for t in query.split() if t.lower() not in ["macro", "specimen", "cluster", "sacred", "raw", "altar", "temple", "stone", "close", "up"]]
-        if len(tokens) >= 2:
-            candidate_queries.append(" ".join(tokens[:2]))
-        if len(tokens) >= 1 and tokens[0] != query:
-            candidate_queries.append(tokens[0])
-
-        for c_query in candidate_queries:
-            try:
-                # Strictly filter out scanned books, PDF pages, treatises, and archive documents
-                clean_search_query = f"{c_query} filetype:bitmap -pdf -djvu -book -text -treatise -ia -page"
-                wiki_url = f"https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch={urllib.parse.quote(clean_search_query)}&gsrnamespace=6&gsrlimit=20&prop=imageinfo&iiprop=url|size&iiurlwidth=1080&format=json"
-                req = urllib.request.Request(wiki_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
-                with urllib.request.urlopen(req, timeout=4) as r:
-                    data = json.loads(r.read())
-                pages = data.get("query", {}).get("pages", {})
-                for _, pdata in pages.items():
-                    title_lower = pdata.get("title", "").lower()
-                    if any(bad in title_lower for bad in [".pdf", ".djvu", ".tif", "page1", "ia ", "treatise", "report", "journal", "document", "disassembled", "book"]):
-                        continue
-
-                    ii = pdata.get("imageinfo", [{}])[0]
-                    dl_url = ii.get("thumburl") or ii.get("url")
-                    if not dl_url:
-                        continue
-                    clean_url = dl_url.split("?")[0].lower()
-                    if any(bad in clean_url for bad in [".pdf", ".djvu", ".tif", "page1", "ia_"]):
-                        continue
-                    if not clean_url.endswith((".jpg", ".jpeg", ".png")):
-                        continue
-
-                    # STRICT ANTI-REPETITION CHECK
-                    if dl_url in cls._session_used_urls or clean_url in cls._session_used_urls:
-                        continue
-                    if cls.is_image_used(dl_url) or cls.is_image_used(clean_url):
-                        continue
-
-                    img_req = urllib.request.Request(dl_url, headers={"User-Agent": "InstaAstrologyAgent/1.0 (https://neodivinestore.in; support@neodivinestore.in)"})
-                    with urllib.request.urlopen(img_req, timeout=5) as ir:
-                        img_bytes = ir.read(5 * 1024 * 1024)
-                    if len(img_bytes) < 10000:
-                        continue
-
-                    # Check MD5 hash of downloaded bytes against session and registry
-                    if cls.is_image_used(clean_url, file_bytes=img_bytes):
-                        continue
-
-                    img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-                    w, h = img.size
-                    if w < 200 or h < 200:
-                        continue
-
-                    cropped = ImageOps.fit(img, (1080, 1920), method=Image.Resampling.LANCZOS)
-                    cls.save_clean_photographic_image(cropped, target_file, quality=95)
-                    cls._session_used_urls.add(dl_url)
-                    cls._session_used_urls.add(clean_url)
-                    cls.register_used_image(dl_url, file_bytes=img_bytes)
-                    cls.register_used_image(clean_url)
-                    cls.register_used_image(target_file)
-                    logger.info(f"[DynamicVisualEngine] Sourced authentic photographic asset via Wikimedia ('{c_query}') -> {target_file.name}")
-                    return target_file
-            except Exception as e:
-                logger.debug(f"[DynamicVisualEngine] Wikimedia search notice ('{c_query}'): {e}")
-
         return None
 
     @classmethod
@@ -947,6 +881,8 @@ class DynamicVisualEngine:
         seed: Optional[int] = None,
         width: int = 1080,
         height: int = 1920,
+        master_asset_override: Optional[Path] = None,
+        used_master_assets: Optional[Set[Any]] = None,
     ) -> Path:
         """
         Creates an authentic, freshly rendered 100% genuine photographic canvas.
@@ -966,122 +902,207 @@ class DynamicVisualEngine:
         calc_seed = seed if seed is not None else int(time.time() * 1000000) % 999999
         rng = random.Random(calc_seed)
 
+        def is_available(p: Path) -> bool:
+            if not p or not p.exists():
+                return False
+            if used_master_assets is None:
+                return True
+            return p not in used_master_assets and p.name not in used_master_assets and str(p) not in used_master_assets
+
+        def pick_unused(cands_list: List[Path]) -> Optional[Path]:
+            for c in cands_list:
+                if is_available(c):
+                    return c
+            return None
+
         # 1. Determine the best matching authentic photographic master asset
         master_asset: Optional[Path] = None
+        if master_asset_override and is_available(master_asset_override):
+            master_asset = master_asset_override
 
         # (A) Crystal / Gemstone / Rudraksha specific topics
-        if any(k in full_context for k in ["pyrite", "पायराइट"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_pyrite_cluster.jpg"
-        elif any(k in full_context for k in ["rudraksha", "रुद्राक्ष", "mukhi"]):
-            master_asset = CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg"
-        elif any(k in full_context for k in ["amethyst", "कटेला", "जामुनिया"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_amethyst_cluster.jpg"
-        elif any(k in full_context for k in ["tourmaline", "टूमलाइन"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_black_tourmaline.jpg"
-        elif any(k in full_context for k in ["citrine", "सिट्रीन"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg"
-        elif any(k in full_context for k in ["rose quartz"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_rose_quartz.jpg"
-        elif any(k in full_context for k in ["tiger"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg"
-        elif any(k in full_context for k in ["selenite"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_selenite.jpg"
-        elif any(k in full_context for k in ["aventurine"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg"
-        elif any(k in full_context for k in ["clear quartz", "sphatik", "स्फटिक"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg"
-        elif any(k in full_context for k in ["carnelian"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_carnelian.jpg"
-        elif any(k in full_context for k in ["labradorite"]):
-            master_asset = CINEMATIC_BROLL_DIR / "crystal_labradorite.jpg"
+        if not master_asset:
+            if any(k in full_context for k in ["pyrite", "पायराइट"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_pyrite_cluster.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                ])
+            elif any(k in full_context for k in ["rudraksha", "रुद्राक्ष", "mukhi", "मुख"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                ])
+            elif any(k in full_context for k in ["amethyst", "कटेला", "जामुनिया"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_amethyst_cluster.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                ])
+            elif any(k in full_context for k in ["tourmaline", "टूमलाइन"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_black_tourmaline.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                ])
+            elif any(k in full_context for k in ["citrine", "सिट्रीन"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_pyrite_cluster.jpg",
+                ])
+            elif any(k in full_context for k in ["rose quartz"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_rose_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                ])
+            elif any(k in full_context for k in ["tiger", "tigers eye", "टाइगर"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                ])
+            elif any(k in full_context for k in ["selenite", "सेलेनाइट"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                ])
+            elif any(k in full_context for k in ["aventurine", "एवेंट्यूरिन"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                ])
+            elif any(k in full_context for k in ["clear quartz", "sphatik", "स्फटिक"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                ])
+            elif any(k in full_context for k in ["carnelian", "कार्नेलियन"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_carnelian.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
+                ])
+            elif any(k in full_context for k in ["labradorite", "लैब्राडोराइट"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "crystal_labradorite.jpg",
+                    CINEMATIC_BROLL_DIR / "crystal_black_tourmaline.jpg",
+                ])
 
         # (B) Script scene semantic matching
         if not master_asset:
             if any(k in scene_txt for k in ["meditat", "silhouette", "एकांत", "ध्यान", "peace", "serenity"]):
-                candidates = [
+                master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
                     CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
                     CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                ]
-                master_asset = candidates[scene_idx % len(candidates)]
+                ])
             elif any(k in scene_txt for k in ["lamp", "diya", "दीपक", "दीप", "oil lamp"]):
-                candidates = [
+                master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
                     CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
                     CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
-                ]
-                master_asset = candidates[scene_idx % len(candidates)]
-            elif any(k in scene_txt for k in ["dream", "astral", "dreamscape", "sleep", "नींद", "starlight"]):
-                candidates = [
+                ])
+            elif any(k in scene_txt for k in ["dream", "astral", "dreamscape", "sleep", "नींद", "starlight", "vivid", "सपने", "सपनों"]):
+                master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "planet_moon.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
                     CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
                     CINEMATIC_BROLL_DIR / "planet_jupiter.jpg",
-                ]
-                master_asset = candidates[scene_idx % len(candidates)]
+                ])
             elif any(k in scene_txt for k in ["constellation", "star map", "cosmic map"]):
-                candidates = [
+                master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
                     CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
                     CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
-                ]
-                master_asset = candidates[scene_idx % len(candidates)]
-            elif any(k in scene_txt for k in ["kundli", "birth chart", "कुंडली", "जन्मपत्रिका", "house", "भाव"]):
-                candidates = [
+                ])
+            elif any(k in scene_txt for k in ["kundli", "birth chart", "कुंडली", "जन्मपत्रिका", "house", "भाव", "8th house"]):
+                master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-                    CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
                     CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
-                ]
-                master_asset = candidates[scene_idx % len(candidates)]
-            elif any(k in scene_txt for k in ["palmleaf", "manuscript", "पांडुलिपि", "शास्त्र", "ग्रंथ", "remedy", "caution"]):
-                candidates = [
+                    CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
+                ])
+            elif any(k in scene_txt for k in ["palmleaf", "manuscript", "पांडुलिपि", "शास्त्र", "ग्रंथ", "remedy", "caution", "उपाय", "सावधानी"]):
+                master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
                     CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
                     CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-                ]
-                master_asset = candidates[scene_idx % len(candidates)]
+                ])
             elif any(k in scene_txt for k in ["mala", "bead", "माला", "desk"]):
-                candidates = [
+                master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
                     CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                ]
-                master_asset = candidates[scene_idx % len(candidates)]
+                ])
             elif any(k in scene_txt for k in ["havan", "fire", "altar", "हवन", "अग्नि"]):
-                candidates = [
+                master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
                     CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
                     CINEMATIC_BROLL_DIR / "4_sacred_havan.jpg",
-                ]
-                master_asset = candidates[scene_idx % len(candidates)]
-            elif any(k in scene_txt for k in ["temple", "sanctum", "मंदिर", "dm", "consultation", "परामर्श"]):
-                candidates = [
+                ])
+            elif any(k in scene_txt for k in ["temple", "sanctum", "मंदिर", "dm", "consultation", "परामर्श", "सेव"]):
+                master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
                     CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
                     CINEMATIC_BROLL_DIR / "5_temple_sanctum.jpg",
-                ]
-                master_asset = candidates[scene_idx % len(candidates)]
+                ])
             elif any(k in scene_txt for k in ["saturn", "shani", "शनि"]):
-                master_asset = CINEMATIC_BROLL_DIR / "planet_saturn.jpg"
+                master_asset = pick_unused([CINEMATIC_BROLL_DIR / "planet_saturn.jpg"])
             elif any(k in scene_txt for k in ["moon", "chandra", "चंद्रमा"]):
-                master_asset = CINEMATIC_BROLL_DIR / "planet_moon.jpg"
+                master_asset = pick_unused([CINEMATIC_BROLL_DIR / "planet_moon.jpg"])
             elif any(k in scene_txt for k in ["sun", "surya", "सूर्य"]):
-                master_asset = CINEMATIC_BROLL_DIR / "planet_sun.jpg"
+                master_asset = pick_unused([CINEMATIC_BROLL_DIR / "planet_sun.jpg"])
             elif any(k in scene_txt for k in ["jupiter", "guru", "बृहस्पति"]):
-                master_asset = CINEMATIC_BROLL_DIR / "planet_jupiter.jpg"
+                master_asset = pick_unused([CINEMATIC_BROLL_DIR / "planet_jupiter.jpg"])
             elif any(k in scene_txt for k in ["yantra", "mandala", "यंत्र"]):
-                master_asset = CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg"
+                master_asset = pick_unused([CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg"])
 
         # Final default fallback to safe authentic photographic master
-        if not master_asset or not master_asset.exists():
-            safe_pool = [
-                CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-                CINEMATIC_BROLL_DIR / "planet_moon.jpg",
-                CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
-                CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
-                CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
-                CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
-            ]
+        is_crystal_topic = any(k in full_context for k in ["pyrite", "crystal", "amethyst", "tourmaline", "citrine", "rudraksha", "mukhi"])
+        safe_pool = [
+            CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
+            CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg",
+            CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+            CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg",
+            CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+            CINEMATIC_BROLL_DIR / "crystal_carnelian.jpg",
+            CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+        ] if is_crystal_topic else [
+            CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+            CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
+            CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+            CINEMATIC_BROLL_DIR / "planet_moon.jpg",
+            CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+            CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
+            CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
+            CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
+            CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
+            CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
+            CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+        ]
+
+        if not master_asset:
+            master_asset = pick_unused(safe_pool)
+
+        if not master_asset:
             master_asset = safe_pool[scene_idx % len(safe_pool)]
+
+        # Track in used_master_assets so no scene in this reel reuses this master asset
+        if used_master_assets is not None and master_asset:
+            used_master_assets.add(master_asset)
+            used_master_assets.add(master_asset.name)
+            used_master_assets.add(str(master_asset))
 
         # Open and adapt the genuine photograph with subtle cinematic grading
         with Image.open(master_asset) as src_img:
@@ -1410,59 +1431,45 @@ class DynamicVisualEngine:
                     CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
                 ])
 
-        # Pick the FIRST candidate that exists, hasn't been used in THIS reel, AND hasn't been used in past reels
+        # Tier 1: Check NASA API strictly for celestial/astronomical space queries
         chosen_cand: Optional[Path] = None
-        for cand in candidates:
-            if cand.exists() and cand not in used_images:
-                # If this image was already used globally in past videos, skip it to prevent repeating!
-                if cls.is_image_used(cand):
-                    continue
-                chosen_cand = cand
-                break
-
-        # Tier 2: Search live online photographic repositories (Wikimedia Commons & NASA API)
-        # Sourcing fresh, never-used authentic photographs directly from museum/space archives
         search_query = cls.get_scene_search_query(scene_dict, topic, scene_idx)
+        if any(w in search_query.lower() for w in ["moon", "saturn", "jupiter", "mars", "nebula", "galaxy"]):
+            nasa_asset = cls.search_online_photographic_asset(search_query, target_file)
+            if nasa_asset and nasa_asset.exists():
+                chosen_cand = nasa_asset
+
+        # Tier 2: Check matching candidates in candidates list that haven't been used in this reel
         if not chosen_cand:
-            online_asset = cls.search_online_photographic_asset(search_query, target_file)
-            if online_asset and online_asset.exists():
-                chosen_cand = online_asset
+            for cand in candidates:
+                if cand.exists() and cand not in used_images and cand.name not in used_images:
+                    chosen_cand = cand
+                    break
 
-        # Tier 3: Search Openverse Creative Commons photographic repository
+        # Tier 3: Authentic photographic canvas adaptation (STRICTLY 100% genuine photograph, ZERO 3D drawings)
+        # Sourced directly from authentic master b-roll, cropped to 1080x1920 with scene-specific cinematic grading
         if not chosen_cand:
-            ov_asset = cls.search_openverse_photographic_asset(search_query, target_file)
-            if ov_asset and ov_asset.exists():
-                chosen_cand = ov_asset
+            proc_seed = int(hashlib.md5(f"{reel_slug}_{scene_idx}_{prompt_hash}".encode()).hexdigest()[:8], 16)
+            chosen_cand = cls.generate_authentic_photographic_canvas(
+                scene_dict, topic, scene_idx, total_scenes, target_file, seed=proc_seed, used_master_assets=used_images
+            )
+        elif chosen_cand != target_file:
+            # Adapt the chosen candidate into target_file with 9:16 vertical crop and grading
+            proc_seed = int(hashlib.md5(f"{reel_slug}_{scene_idx}_{prompt_hash}".encode()).hexdigest()[:8], 16)
+            cls.generate_authentic_photographic_canvas(
+                scene_dict, topic, scene_idx, total_scenes, target_file, seed=proc_seed,
+                master_asset_override=chosen_cand, used_master_assets=used_images
+            )
+            chosen_cand = target_file
 
-        # Tier 4: Authentic photographic canvas adaptation (STRICTLY 100% genuine photograph, ZERO 3D drawings)
-        # Sourced directly from authentic master b-roll, cropped to 1080x1920 with subtle cinematic grade
-        if not chosen_cand:
-            photo_file = GENERATED_BROLL_DIR / f"photo_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
-            proc_seed = int(hashlib.md5(f"{reel_slug}_{scene_idx}_{time.time()}".encode()).hexdigest()[:8], 16)
-            cls.generate_authentic_photographic_canvas(scene_dict, topic, scene_idx, total_scenes, photo_file, seed=proc_seed)
-            chosen_cand = photo_file
-
-        if chosen_cand and chosen_cand.exists():
-            if chosen_cand != target_file:
-                with Image.open(chosen_cand) as c_img:
-                    cropped = ImageOps.fit(c_img.convert("RGB"), (1080, 1920), method=Image.Resampling.LANCZOS)
-                cls.save_clean_photographic_image(cropped, target_file, quality=95)
-
-            # Record in current reel's memory
+        # Record in current reel's memory
+        if chosen_cand:
             used_images.add(chosen_cand)
+            used_images.add(chosen_cand.name)
             used_images.add(target_file)
+            used_images.add(target_file.name)
 
-            # PERSISTENT STORAGE: Record in global registry so it is NEVER reused in future videos
-            cls.register_used_image(chosen_cand)
-            cls.register_used_image(target_file)
-
-            logger.info(f"[DynamicVisualEngine] Scene {scene_idx + 1}: Sourced and registered unique visual ({chosen_cand.name}) -> {target_file.name}")
-            return target_file
-
-        # Fallback: Authentic photographic canvas adaptation (STRICTLY 100% genuine photograph)
-        photo_file = GENERATED_BROLL_DIR / f"photo_{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
-        proc_seed = int(hashlib.md5(f"{reel_slug}_fallback_{scene_idx}_{time.time()}".encode()).hexdigest()[:8], 16)
-        cls.generate_authentic_photographic_canvas(scene_dict, topic, scene_idx, total_scenes, photo_file, seed=proc_seed)
-        used_images.add(photo_file)
-        cls.register_used_image(photo_file)
-        return photo_file
+        # Durable permanent registration of the generated target image
+        cls.register_used_image(target_file)
+        logger.info(f"[DynamicVisualEngine] Scene {scene_idx + 1}: Sourced and registered unique visual ({chosen_cand.name if chosen_cand else target_file.name}) -> {target_file.name}")
+        return target_file

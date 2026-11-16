@@ -1,35 +1,35 @@
 {
-  "topic": "5 uncanny physical and emotional signs your 8th house psychic portal is opening, triggering sudden 3 AM wakeups, heavy shoulder pressure, and intense dream vividness.",
+  "topic": "Consultation case study: how a client's 10th house Saturn and Mars opposition caused years of professional stagnation, career roadblocks, and sudden authority clashes, decoded through 5 hidden karmic turning points of Vedic chart foundations.",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 7.1,
+  "agent_evolution_level": 7.2,
   "hook": {
-    "id": "eighth_house_three_am",
-    "name": "Numbered With A Favourite",
-    "spoken": "रात तीन बजे अचानक आंख खुलना किस छिपे हुए आठवें भाव का संकेत है?",
-    "on_screen": "HIDDEN 8TH HOUSE SIGNS",
-    "why_it_works": "Directly targets an uncanny physical experience shared by spiritually sensitive viewers, leveraging Vedic astrology secrets.",
+    "id": "1",
+    "name": "Cost Confession",
+    "spoken": "दस साल की अथक मेहनत के बाद भी हमारे एक क्लाइंट की पदोन्नति बार-बार क्यों टल रही थी?",
+    "on_screen": "TEN YEARS OF CAREER STAGNATION",
+    "why_it_works": "Highlights deep professional frustration and invites immediate curiosity about hidden karmic blockages.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
-        "score": 80,
-        "detail": "4 words, 22 chars, ~1.5s spoken (want 5-12 words)"
+        "score": 100.0,
+        "detail": "5 words, 30 chars, ~1.8s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
         "score": 75,
-        "detail": "1 concrete marker(s): 8"
+        "detail": "1 concrete marker(s): ten"
       },
       "STAKES": {
-        "score": 70.0,
-        "detail": "1 tension marker(s): hidden"
+        "score": 20.0,
+        "detail": "0 tension marker(s) - nothing is at stake in this line"
       },
       "FRONTLOAD": {
-        "score": 70.0,
-        "detail": "payload at word 1; weak opener \"hi\""
+        "score": 100.0,
+        "detail": "payload at word 1"
       },
       "ADDRESS": {
         "score": 35.0,
@@ -47,11 +47,11 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "63 chars (Target: <=125)"
+        "detail": "83 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
-        "detail": "7 visual scenes with dynamic pacing (avg 3.9s)"
+        "detail": "7 visual scenes with dynamic pacing (avg 4.0s)"
       },
       "high_value_cta": {
         "score": 100,
@@ -63,8 +63,8 @@
       }
     }
   },
-  "duration_seconds": 32.77,
-  "generated_at": "2026-11-16 16:19:04",
+  "duration_seconds": 33.32,
+  "generated_at": "2026-11-16 17:29:42",
   "algorithm_phase": "Algorithmic Indexing & Quiet Hours",
   "daily_post_enforced": true,
   "comment_consultations_handled": 0,
