@@ -19,7 +19,9 @@ import json
 import logging
 import os
 import shutil
+import threading
 import time
+import uuid
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
@@ -114,26 +116,58 @@ class AssetLifecycleManager:
                 return json.load(f)
         except Exception as exc:
             logger.error(f"Error reading asset lifecycle jobs: {exc}")
-            tmp = JOBS_REGISTRY_FILE.with_suffix(".tmp")
-            if tmp.exists():
-                try:
-                    with open(tmp, "r", encoding="utf-8") as tf:
-                        return json.load(tf)
-                except Exception:
-                    pass
+            # Scan for any valid temporary recovery files
+            try:
+                candidates = sorted(
+                    JOBS_REGISTRY_FILE.parent.glob(f"*{JOBS_REGISTRY_FILE.stem}*.tmp*"),
+                    key=lambda p: p.stat().st_mtime_ns if p.exists() else 0,
+                    reverse=True,
+                )
+                for cand in candidates:
+                    try:
+                        with open(cand, "r", encoding="utf-8") as tf:
+                            recovered = json.load(tf)
+                        if isinstance(recovered, dict) and "jobs" in recovered:
+                            logger.warning(f"[AssetLifecycleManager] Recovered jobs registry from {cand.name}")
+                            return recovered
+                    except Exception:
+                        continue
+            except Exception:
+                pass
             return {"schema_version": "1.0.0", "jobs": {}}
 
     @classmethod
     def _write_jobs_file(cls, data: Dict[str, Any]) -> None:
-        """Atomic transactional write with fsync."""
+        """Atomic transactional write with fsync and backoff retries using unique per-process/thread temporary file."""
         JOBS_REGISTRY_FILE.parent.mkdir(parents=True, exist_ok=True)
-        tmp = JOBS_REGISTRY_FILE.with_suffix(".tmp")
+        unique_tmp = JOBS_REGISTRY_FILE.parent / f".tmp_{JOBS_REGISTRY_FILE.stem}_{os.getpid()}_{threading.get_ident()}_{time.time_ns()}_{uuid.uuid4().hex[:8]}.tmp"
         data["last_updated"] = datetime.now(timezone.utc).isoformat()
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-            f.flush()
-            os.fsync(f.fileno())
-        os.replace(tmp, JOBS_REGISTRY_FILE)
+        try:
+            with open(unique_tmp, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+
+            for attempt in range(5):
+                try:
+                    os.replace(unique_tmp, JOBS_REGISTRY_FILE)
+                    return
+                except (PermissionError, FileNotFoundError, OSError) as err:
+                    if attempt == 4:
+                        try:
+                            if JOBS_REGISTRY_FILE.exists():
+                                os.remove(JOBS_REGISTRY_FILE)
+                            os.rename(unique_tmp, JOBS_REGISTRY_FILE)
+                            return
+                        except Exception:
+                            raise err
+                    time.sleep(0.02 * (attempt + 1))
+        finally:
+            if unique_tmp.exists():
+                try:
+                    unique_tmp.unlink()
+                except Exception:
+                    pass
 
     # =========================================================================
     # 2. JOB LIFECYCLE MANAGEMENT

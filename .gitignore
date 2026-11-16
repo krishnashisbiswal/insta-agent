@@ -5,19 +5,32 @@ __pycache__/
 venv/
 .pytest_cache/
 
-# Secrets
+# Secrets & Environment
 .env
 .env.*
 !.env.example
 
-# Generated media
+# Generated media and runtime artifacts
 output/*
-storage/*
+!output/.gitkeep
 assets/generated_broll/*
-scratch/
+!assets/generated_broll/.gitkeep
+scratch/*
 *TEMP_MPY_*
 *.mp4.jpg
-!output/.gitkeep
+
+# Runtime-generated previews and videos in insta content
+insta content/*.gif
+insta content/*.mp4
+insta content/*.mp3
+insta content/*.jpg
+!insta content/.gitkeep
+!insta content/README.md
+!insta content/caption_and_hashtags.txt
+!insta content/content_overview.json
+
+# Storage runtime states & databases (only permanent registries are tracked in git)
+storage/*
 !storage/.gitkeep
 !storage/used_visuals_registry.json
 !storage/permanent_visual_registry.json
