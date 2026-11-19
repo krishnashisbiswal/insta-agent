@@ -663,6 +663,94 @@ def resolve_entity_context(topic: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def calculate_spoken_duration(text: str, language: str = "hindi") -> float:
+    """
+    Calculates realistic spoken duration based on natural conversational speech rates:
+    - Hindi (Devanagari): ~135 WPM (~2.25 words/sec -> 0.44s per word).
+    - English: ~150 WPM (~2.5 words/sec -> 0.40s per word).
+    - Punctuation breath pauses: commas add 0.20s, full-stops/questions add 0.40s.
+    - Clamped between minimum 2.5s and maximum 6.5s per scene.
+    """
+    if not text or not text.strip():
+        return 3.0
+
+    clean_text = text.strip()
+    words = clean_text.split()
+    word_count = max(1, len(words))
+
+    is_hindi = bool(re.search(r"[\u0900-\u097F]", clean_text)) or "hindi" in language.lower()
+
+    if is_hindi:
+        base_sec = word_count * 0.44
+        pauses = len(re.findall(r"[।\?\!]", clean_text)) * 0.40
+        commas = len(re.findall(r"[,،]", clean_text)) * 0.20
+    else:
+        base_sec = word_count * 0.40
+        pauses = len(re.findall(r"[\.\?\!]", clean_text)) * 0.35
+        commas = len(re.findall(r"[,;]", clean_text)) * 0.15
+
+    total = base_sec + pauses + commas
+    return round(max(2.5, min(6.5, total)), 1)
+
+
+def segment_narration_into_scenes(
+    narration: str,
+    language: str = "hindi",
+    target_scene_duration: float = 4.0,
+) -> List[Dict[str, Any]]:
+    """
+    Divides narration text into coherent, meaningful scenes based on sentence boundaries.
+    Never splits sentences awkwardly.
+    Guarantees each scene duration is between 2.5s and 6.5s.
+    """
+    if not narration or not narration.strip():
+        return []
+
+    # Split on sentence boundaries: । (Hindi purna viram), ., ?, !
+    raw_sentences = [
+        s.strip()
+        for s in re.split(r"(?<=[।\.\?!])\s+", narration.strip())
+        if s.strip()
+    ]
+    if not raw_sentences:
+        raw_sentences = [narration.strip()]
+
+    scenes: List[Dict[str, Any]] = []
+    current_sentences: List[str] = []
+    current_duration: float = 0.0
+
+    for sentence in raw_sentences:
+        s_dur = calculate_spoken_duration(sentence, language=language)
+        if current_sentences and (current_duration + s_dur > 6.0):
+            scene_text = " ".join(current_sentences)
+            scene_num = len(scenes) + 1
+            scenes.append({
+                "scene_num": scene_num,
+                "spoken_line": scene_text,
+                "on_screen_text": "KEY INSIGHT",
+                "badge": "WATCH CLOSELY",
+                "estimated_seconds": round(current_duration, 1),
+            })
+            current_sentences = [sentence]
+            current_duration = s_dur
+        else:
+            current_sentences.append(sentence)
+            current_duration += s_dur
+
+    if current_sentences:
+        scene_text = " ".join(current_sentences)
+        scene_num = len(scenes) + 1
+        scenes.append({
+            "scene_num": scene_num,
+            "spoken_line": scene_text,
+            "on_screen_text": "KEY INSIGHT",
+            "badge": "WATCH CLOSELY",
+            "estimated_seconds": round(max(2.5, current_duration), 1),
+        })
+
+    return scenes
+
+
 def sanitize_script_dialogue(scenes: List[Dict[str, Any]], topic: str = "") -> List[Dict[str, Any]]:
     """
     Sanitizes scenes to guarantee:
@@ -672,6 +760,7 @@ def sanitize_script_dialogue(scenes: List[Dict[str, Any]], topic: str = "") -> L
     4. Zero degree jargon.
     5. Zero remedies & zero mantras.
     6. Divine reverence for celestial entities.
+    7. Unsupported claim protection (no medical cures or guaranteed wealth).
     """
     graha_map = {
         "surya": {"dev": "सूर्य देव", "alt": "सूर्य", "en": "Sun"},
@@ -741,6 +830,14 @@ def sanitize_script_dialogue(scenes: List[Dict[str, Any]], topic: str = "") -> L
         line = re.sub(r"\bहवन\s*करें\b", "परामर्श लें", line)
         line = re.sub(r"\bदान\s*करें\b", "स्थिति जांचें", line)
         line = re.sub(r"\s{2,}", " ", line).strip()
+
+        # Strict claim safety: Medical and physical illness claims
+        line = re.sub(r"\b(?:बीमारी|रोग|कैंसर|डायबिटीज|ब्लड\s*प्रेशर)\s*(?:ठीक|खत्म|दूर|जड़\s*से)\s*(?:करता|होती|होगा)?\b", "मानसिक शांति और एकाग्रता में सहायक है", line)
+        line = re.sub(r"\b(?:cures?|heals?|treats?)\s+(?:disease|illness|cancer|diabetes|medical)\b", "promotes inner calm and mindfulness", line, flags=re.I)
+
+        # Strict claim safety: Guaranteed financial wealth claims
+        line = re.sub(r"\b(?:करोड़पति|अरबपति|रातोंरात\s*अमीर)\s*(?:बन\s*जाएंगे|बनाता\s*है)?\b", "कार्यक्षेत्र में अनुशासन और स्पष्टता", line)
+        line = re.sub(r"\b(?:guaranteed\s+wealth|get\s+rich\s+overnight|guaranteed\s+money)\b", "professional discipline and focus", line, flags=re.I)
 
         # Strict reverence constraint: eliminate generic pronouns ("यह ग्रह", "इस ग्रह")
         if detected_graha:
@@ -1092,6 +1189,16 @@ Return ONLY valid JSON in this exact structure:
         raise ValueError("Gemini returned no scenes for the Reel.")
 
     scenes = sanitize_script_dialogue(scenes, topic)
+
+    # Transform narration into structured scene visual plans with strict context isolation
+    from app.video.scene_visual_planner import SceneVisualPlanner
+    visual_plans = SceneVisualPlanner.plan_reel_visuals(scenes=scenes, topic=topic)
+    for idx, sc in enumerate(scenes):
+        plan = visual_plans[idx]
+        sc["visual_plan"] = plan.to_dict()
+        sc["visual_description"] = plan.generation_prompt
+        sc["estimated_seconds"] = calculate_spoken_duration(sc.get("spoken_line", ""), language=language)
+
     full_script_lines = [sc["spoken_line"] for sc in scenes]
 
     full_script_text = "\n".join(full_script_lines)
@@ -1123,6 +1230,7 @@ Return ONLY valid JSON in this exact structure:
         "selected_hook": selected_hook,
         "hook_rankings": ranked_hooks,
         "scenes": scenes,
+        "visual_plans": [p.to_dict() for p in visual_plans],
         "full_script": full_script_text,
         "caption": data.get("caption", ""),
         "hashtags": (seo_hashtags[:5] if seo_hashtags else data.get("hashtags", []))[:5],
