@@ -119,23 +119,33 @@ def generate_text(
             except errors.APIError as exc:
                 last_error = exc
                 err_str = str(exc).lower()
-                # If daily quota limit exceeded, retry won't help; switch model immediately
-                if exc.code == 429 and ("per day" in err_str or "exceeded your current quota" in err_str or "retry in" in err_str):
+
+                # Check if it's genuinely a daily quota limit (not per-minute rate limit)
+                is_daily_limit = ("per day" in err_str or "quota metric 'generate content requests per day'" in err_str) and "per minute" not in err_str
+
+                if is_daily_limit:
                     logger.warning(
                         f"Model {target_model} daily quota exhausted. Falling back to next model..."
                     )
                     break
 
-                # Transient error codes: 429 (RPM throttle), 500 (Internal), 502 (Bad Gateway), 503 (Unavailable), 504 (Deadline Exceeded)
+                # Transient rate limits (429) or server errors (500, 502, 503, 504)
                 if exc.code in (429, 500, 502, 503, 504) and attempt < (GEMINI_MAX_RETRIES - 1):
-                    wait_time = 3 if exc.code == 429 else 2
+                    # Extract suggested retry delay if provided by API (e.g. 'retry in 2.5s')
+                    delay_match = re.search(r"retry in (\d+(?:\.\d+)?)s", err_str)
+                    if delay_match:
+                        wait_time = min(max(float(delay_match.group(1)) + 0.5, 1.0), 10.0)
+                    else:
+                        wait_time = (attempt + 1) * 3 if exc.code == 429 else 2
+
                     logger.warning(
-                        f"Model {target_model} temporary error ({exc.code}). Retrying in {wait_time}s..."
+                        f"Model {target_model} temporary error ({exc.code}). Retrying in {wait_time:.1f}s (attempt {attempt + 1}/{GEMINI_MAX_RETRIES})..."
                     )
                     time.sleep(wait_time)
+                    continue
                 elif exc.code in (404, 429, 500, 502, 503, 504):
                     logger.warning(
-                        f"Model {target_model} failed with code {exc.code}. Falling back to next available model..."
+                        f"Model {target_model} failed with code {exc.code} after retries. Falling back to next available model..."
                     )
                     break
                 else:

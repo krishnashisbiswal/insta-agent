@@ -31,7 +31,6 @@ from app.research.trend_agent import research_viral_ideas
 from app.video.cinematic_composer import create_cinematic_reel_video
 from app.video.preflight_checker import PreFlightQualityGate, format_preflight_report
 from app.video.tts_engine import generate_speech
-from app.video.video_composer import create_reel_video
 from config.settings import (
     AUDIO_DIR,
     CONTENT_LANGUAGE,

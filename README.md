@@ -6,10 +6,12 @@ An autonomous AI agent that generates high-retention faceless Instagram Reels (1
 
 ## 🌟 Autonomous Highlights
 
-- **100% Autonomous Pipeline:** Self-ideates viral topics using Gemini, generates scored scripts, synthesizes neural voiceover audio, renders 1080x1920 MP4 vertical videos, writes optimized captions, and publishes directly to Instagram.
-- **Smart Memory (No Duplicate Topics):** Tracks published reels in `storage/published_history.json` and keeps a dynamic content buffer in `storage/content_queue.json`.
+- **100% Autonomous Pipeline:** Self-ideates viral topics using Gemini, generates scored scripts, segments scenes, crafts script-driven emotion-aware visual concepts with quality gating and perceptual hash deduplication, synthesizes neural voiceover audio (Sarvam AI / Edge TTS), renders 1080x1920 MP4 vertical videos with cinematic motion and safe-zone captions, writes optimized captions, and publishes directly to Instagram.
+- **Smart Memory (No Duplicate Topics or Visuals):** Tracks published reels in `storage/published_history.json`, used visuals in `storage/permanent_visual_registry.json`, and keeps a dynamic content buffer in `storage/content_queue.json`.
+- **Script-Driven Emotion-Aware Visual Intelligence:** Visual prompts are generated directly from scene narration, emotional tone, and narrative progression—preventing repetitive or disconnected imagery.
+- **Cinematic Video Composer:** Full 1080x1920 vertical composition with smooth motion, Devanagari/Hindi font rendering, kinetic captions, ambient score generation, and post-render video quality control (QC).
 - **Two Direct Upload Methods:**
-  1. **Direct Account Login (`instagrapi`):** Direct upload using your Instagram username & password—no Meta Developer App or Facebook Page required!
+  1. **Direct Account Login (`instagrapi`):** Direct upload using your Instagram username & password.
   2. **Official Meta Graph API:** Resumable video container upload for Meta Business/Creator accounts.
   3. **Safe Dry-Run Mode:** If no credentials are provided, validates video specs and saves files locally without failing.
 - **Continuous Daemon Scheduler:** Runs in the background (e.g. every 6 or 12 hours) producing and uploading Reels automatically.
@@ -22,22 +24,29 @@ An autonomous AI agent that generates high-retention faceless Instagram Reels (1
 agent/
 ├── app/
 │   ├── autonomous/
-│   │   ├── autonomous_agent.py  # 1-Click autonomous reel production cycle
-│   │   └── content_manager.py   # Topic buffer & published history memory
+│   │   ├── daily_algorithm_publisher.py  # Production daily scheduled publisher & pipeline coordinator
+│   │   ├── autonomous_agent.py           # 1-Click autonomous reel production cycle
+│   │   └── content_manager.py            # Topic buffer & published history memory
 │   ├── agents/
-│   │   ├── gemini_client.py     # Resilient Gemini client with fallback & retries
-│   │   ├── script_agent.py      # Hook formulas (26 templates), scoring & beats
-│   │   └── caption_agent.py     # Caption optimizer & feed-cut linter
+│   │   ├── gemini_client.py              # Resilient Gemini client with 429 backoff & model fallbacks
+│   │   ├── script_agent.py               # Hook formulas (26 templates), scoring & beats
+│   │   └── caption_agent.py              # Caption optimizer & feed-cut linter
 │   ├── video/
-│   │   ├── tts_engine.py        # Neural TTS (Hindi/Hinglish/English) with timestamps
-│   │   ├── visual_generator.py  # 1080x1920 aesthetic scene generator
-│   │   └── video_composer.py    # MoviePy 2 + FFmpeg MP4 composer
+│   │   ├── cinematic_composer.py         # 1080x1920 MoviePy 2 + FFmpeg composition & motion
+│   │   ├── scene_visual_intelligence.py  # Script-driven emotion-aware visual planning
+│   │   ├── ai_image_generator.py         # Multi-provider image generator (Pollinations, HuggingFace)
+│   │   ├── vision_quality_gate.py        # Automated visual quality & relevance validation
+│   │   ├── tts_engine.py                 # Neural TTS (Sarvam AI / Edge TTS) with timestamps
+│   │   └── video_qc.py                   # Automated video QC (bitrate, codecs, black frames)
 │   ├── instagram/
-│   │   └── uploader.py          # Direct Instagram + Meta Graph API publisher
+│   │   └── uploader.py                   # Meta Graph API & direct Instagram publisher
+│   ├── storage/
+│   │   ├── permanent_visual_memory.py    # Cross-run pHash & visual deduplication
+│   │   └── state_manager.py              # Atomic backup & restore of runtime state
 │   ├── research/
-│   │   └── trend_agent.py       # Viral topic & swipe file research
+│   │   └── trend_agent.py                # Viral topic & swipe file research
 │   └── analytics/
-│   │   └── audit_agent.py       # 100-point profile & bio auditor
+│       └── audit_agent.py                # 100-point profile & bio auditor
 │   └── main.py                  # CLI pipeline runner
 ├── config/
 │   └── settings.py              # Centralized environment configuration

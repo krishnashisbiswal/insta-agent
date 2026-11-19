@@ -42,7 +42,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "models/gemini-3.5-flash-lite").strip()
 GEMINI_FALLBACK_MODELS = [
     "models/gemini-3.5-flash",
-    "models/gemini-3-flash-preview",
+    "models/gemini-3.1-flash-lite",
+    "models/gemini-3.8-flash",
 ]
 
 # Generation parameters
