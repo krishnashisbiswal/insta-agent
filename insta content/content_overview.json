@@ -1,39 +1,39 @@
 {
-  "topic": "Stop wearing Pyrite blindly until you understand how this solar mineral interacts with your 5th house karmic memory and creative blockages",
+  "topic": "The hidden frequency of Amethyst and how it unlocks the dormant potential of your 8th house Rahu placement.",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 7.7,
+  "agent_evolution_level": 12.1,
   "hook": {
-    "id": "negative_command_pyrite",
-    "name": "Negative Command",
-    "spoken": "पायराइट को बिना सोचे-समझे पहनना बंद कीजिए।",
-    "on_screen": "STOP WEARING PYRITE BLINDLY",
-    "why_it_works": "Uses a strong negative command on a common habit to immediately grab attention and establish astrological authority.",
+    "id": "amethyst_rahu_unlock",
+    "name": "Eighth House Mystery",
+    "spoken": "कुंडली के आठवें भाव में राहु है? अमेथिस्ट की गुप्त आवृत्ति इसे सक्रिय करती है।",
+    "on_screen": "UNLOCK 8TH HOUSE RAHU",
+    "why_it_works": "Directly addresses a specific, complex astrological placement and offers an energetic solution.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
         "score": 80,
-        "detail": "4 words, 27 chars, ~1.5s spoken (want 5-12 words)"
+        "detail": "4 words, 21 chars, ~1.5s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 15.0,
-        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
+        "score": 75,
+        "detail": "1 concrete marker(s): 8"
       },
       "STAKES": {
-        "score": 70.0,
-        "detail": "1 tension marker(s): stop"
+        "score": 20.0,
+        "detail": "0 tension marker(s) - nothing is at stake in this line"
       },
       "FRONTLOAD": {
         "score": 100.0,
-        "detail": "payload at word 1"
+        "detail": "payload at word 2"
       },
       "ADDRESS": {
-        "score": 90.0,
-        "detail": "imperative opener (\"stop\")"
+        "score": 35.0,
+        "detail": "third person, nobody in the room"
       }
     }
   },
@@ -47,11 +47,11 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "93 chars (Target: <=125)"
+        "detail": "78 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
-        "detail": "7 visual scenes with dynamic pacing (avg 6.1s)"
+        "detail": "7 visual scenes with dynamic pacing (avg 6.3s)"
       },
       "high_value_cta": {
         "score": 100,
@@ -63,10 +63,8 @@
       }
     }
   },
-  "duration_seconds": 40.31,
-  "generated_at": "2026-11-19 21:39:09",
+  "duration_seconds": 30.18,
+  "generated_at": "2026-11-19 23:36:14",
   "algorithm_phase": "Late Night Subconscious & Gemstone Truth",
-  "daily_post_enforced": true,
-  "comment_consultations_handled": 0,
-  "q_reward_score": 0.922
+  "daily_post_enforced": true
 }

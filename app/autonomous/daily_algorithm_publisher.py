@@ -532,7 +532,7 @@ class DailyAlgorithmPublisher:
             uploader = InstagramUploader()
             upload_res = uploader.upload_reel(
                 video_path=final_video_dest,
-                caption=caption_text,
+                caption=caption_text_to_save,
                 force_dry_run=True,
             )
             res_info["instagram_upload"] = upload_res
