@@ -152,6 +152,10 @@ class PublishingJobModel(Base):
     meta_container_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     meta_media_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     meta_permalink: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    video_fingerprint: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    content_fingerprint: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    attempt_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    recovery_state: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     error_category: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)  # transient, permanent, policy, rate_limit
     history_json: Mapped[str] = mapped_column(Text, default="[]")
@@ -250,6 +254,27 @@ def init_db(db_url: Optional[str] = None):
     _engine = create_engine(url, connect_args=connect_args, pool_pre_ping=True)
     _SessionFactory = sessionmaker(bind=_engine, autoflush=False, autocommit=False)
     Base.metadata.create_all(bind=_engine)
+
+    # Non-destructive automatic schema evolution for SQLite
+    if url.startswith("sqlite"):
+        try:
+            from sqlalchemy import text
+            with _engine.connect() as conn:
+                res = conn.execute(text("PRAGMA table_info(publishing_jobs)"))
+                cols = {row[1] for row in res.fetchall()}
+                if cols:
+                    if "video_fingerprint" not in cols:
+                        conn.execute(text("ALTER TABLE publishing_jobs ADD COLUMN video_fingerprint VARCHAR(64)"))
+                    if "content_fingerprint" not in cols:
+                        conn.execute(text("ALTER TABLE publishing_jobs ADD COLUMN content_fingerprint VARCHAR(64)"))
+                    if "attempt_id" not in cols:
+                        conn.execute(text("ALTER TABLE publishing_jobs ADD COLUMN attempt_id VARCHAR(64)"))
+                    if "recovery_state" not in cols:
+                        conn.execute(text("ALTER TABLE publishing_jobs ADD COLUMN recovery_state VARCHAR(64)"))
+                    conn.commit()
+        except Exception as exc:
+            logger.debug(f"Schema column sync notice: {exc}")
+
     logger.info(f"Database initialized with URL: {url.split('@')[-1] if '@' in url else url}")
     return _engine
 

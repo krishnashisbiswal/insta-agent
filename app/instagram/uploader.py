@@ -12,6 +12,17 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from app.publishing.pre_publish_validator import PrePublishValidator
+from app.publishing.publishing_errors import (
+    DuplicatePublishPreventedError,
+    PublishingAuthError,
+    PublishingConfigError,
+    PublishingNetworkError,
+    PublishingRateLimitError,
+    PublishingUncertainOutcomeError,
+    PublishingValidationError,
+)
+from app.publishing.state_machine import compute_video_fingerprint
 from config.settings import (
     GRAPH_API_BASE_URL,
     IG_SESSION_FILE,
@@ -165,6 +176,7 @@ class InstagramUploader:
         self,
         video_path: Path,
         caption: str,
+        min_size_bytes: int = 250,
     ) -> Dict[str, Any]:
         """
         Uploads a Reel directly using Instagram account credentials.
@@ -174,22 +186,55 @@ class InstagramUploader:
         if not video_path.exists():
             raise FileNotFoundError(f"Video file not found: {video_path}")
 
+        # Pre-publish content and media validation gate
+        val_report = PrePublishValidator.validate_reel(video_path, caption, min_size_bytes=min_size_bytes)
+        if not val_report.is_valid:
+            val_report.raise_if_invalid()
+
         print(f"\n[INSTAGRAM DIRECT] Uploading Reel directly: {video_path.name}...")
         
-        # 1. Guarantee video metadata is 100% sanitized & Apple iPhone camera tags are injected
+        # 1. Guarantee video metadata is sanitized with standard faststart headers
         try:
-            from app.video.cinematic_composer import sanitize_and_spoof_camera_metadata
-            video_path = sanitize_and_spoof_camera_metadata(video_path)
+            from app.video.cinematic_composer import sanitize_video_metadata
+            video_path = sanitize_video_metadata(video_path)
         except Exception as e:
-            logger.warning(f"Could not sanitize camera metadata: {e}")
+            logger.warning(f"Could not sanitize video metadata: {e}")
 
         cl = self._init_direct_client()
 
-        # 2. Upload clip as an authentic Reel without artificial AI disclosure flags
-        media = cl.clip_upload(
-            path=str(video_path),
-            caption=caption,
-        )
+        # 2. Upload clip with capped retries and reconciliation protection
+        max_retries = 3
+        media = None
+        for attempt in range(1, max_retries + 1):
+            try:
+                media = cl.clip_upload(
+                    path=str(video_path),
+                    caption=caption,
+                )
+                break
+            except Exception as exc:
+                exc_str = str(exc).lower()
+                if "please wait" in exc_str or "few minutes" in exc_str or "rate limit" in exc_str:
+                    logger.warning(f"[INSTAGRAM DIRECT] Rate limit detected (attempt {attempt}/{max_retries}): {exc}")
+                    if attempt >= max_retries:
+                        raise PublishingRateLimitError(f"Direct Instagram rate limit: {exc}")
+                    time.sleep(5.0 * attempt)
+                elif "login" in exc_str or "checkpoint" in exc_str or "challenge" in exc_str:
+                    raise PublishingAuthError(f"Direct Instagram authentication failure: {exc}")
+                else:
+                    logger.warning(f"[INSTAGRAM DIRECT] Upload notice (attempt {attempt}/{max_retries}): {exc}")
+                    # Reconciliation probe: check if clip was actually posted on Instagram
+                    try:
+                        clips = cl.user_clips(cl.user_id, amount=1)
+                        if clips and (caption[:30].strip().lower() in (getattr(clips[0], "caption_text", "") or "").lower()):
+                            logger.info(f"[INSTAGRAM DIRECT] Reconciliation match found clip {clips[0].code}!")
+                            media = clips[0]
+                            break
+                    except Exception:
+                        pass
+                    if attempt >= max_retries:
+                        raise PublishingNetworkError(f"Direct upload failed after {max_retries} attempts: {exc}")
+                    time.sleep(2.0 * attempt)
 
         media_id = getattr(media, "id", str(media.pk if hasattr(media, "pk") else "uploaded"))
         media_code = getattr(media, "code", "")
@@ -220,10 +265,10 @@ class InstagramUploader:
     ) -> Dict[str, Any]:
         """
         Uploads an MP4 video directly to Instagram using the official Resumable Upload API.
-        Streams video bytes directly to Meta servers.
+        Streams video bytes directly to Meta servers via MetaInstagramClient.
         """
         if not self.has_graph_credentials():
-            raise RuntimeError(
+            raise PublishingAuthError(
                 "Instagram credentials missing. Set INSTAGRAM_USER_ID and INSTAGRAM_ACCESS_TOKEN in .env"
             )
 
@@ -231,102 +276,23 @@ class InstagramUploader:
         if not video_path.exists():
             raise FileNotFoundError(f"Video file not found: {video_path}")
 
-        file_size = video_path.stat().st_size
-        print(f"\n[META GRAPH API] Initializing Reel container for: {video_path.name} ({file_size / (1024*1024):.2f} MB)...")
+        # Pre-publish validation
+        val_report = PrePublishValidator.validate_reel(video_path, caption, min_size_bytes=250)
+        if not val_report.is_valid:
+            val_report.raise_if_invalid()
 
-        # Step 1: Create Resumable Container
-        init_url = f"{GRAPH_API_BASE_URL}/{self.user_id}/media"
-        init_params = {
-            "media_type": "REELS",
-            "upload_type": "resumable",
-            "caption": caption,
-            "share_to_feed": str(share_to_feed).lower(),
-            "access_token": self.access_token,
-        }
+        from app.instagram.meta_graph_api import MetaInstagramClient
+        client = MetaInstagramClient(
+            instagram_account_id=self.user_id,
+            access_token=self.access_token,
+        )
 
-        init_resp = requests.post(init_url, data=init_params, timeout=30)
-        init_data = init_resp.json()
-
-        if "error" in init_data:
-            err_msg = init_data["error"].get("message", "Container creation error")
-            raise RuntimeError(f"Meta Graph API error creating Reel container: {err_msg}")
-
-        container_id = init_data.get("id")
-        upload_uri = init_data.get("uri")
-
-        if not container_id or not upload_uri:
-            raise RuntimeError(f"Unexpected response from Meta API: {init_data}")
-
-        print(f"[META GRAPH API] Container created (ID: {container_id}). Uploading video binary...")
-
-        # Step 2: Upload Binary Bytes to Upload URI
-        headers = {
-            "Authorization": f"OAuth {self.access_token}",
-            "offset": "0",
-            "file_size": str(file_size),
-            "Content-Type": "application/octet-stream",
-        }
-
-        with open(video_path, "rb") as video_file:
-            video_bytes = video_file.read()
-
-        upload_resp = requests.post(upload_uri, headers=headers, data=video_bytes, timeout=120)
-        upload_data = upload_resp.json()
-
-        if upload_resp.status_code not in (200, 201) or "error" in upload_data:
-            raise RuntimeError(f"Failed to upload video bytes to Meta: {upload_data}")
-
-        print("[META GRAPH API] Video binary uploaded successfully. Waiting for Meta encoding...")
-
-        # Step 3: Poll Container Processing Status
-        status_url = f"{GRAPH_API_BASE_URL}/{container_id}"
-        status_params = {
-            "fields": "status_code,status",
-            "access_token": self.access_token,
-        }
-
-        start_time = time.time()
-        while time.time() - start_time < max_poll_seconds:
-            poll_resp = requests.get(status_url, params=status_params, timeout=15)
-            poll_data = poll_resp.json()
-
-            status_code = poll_data.get("status_code", "").upper()
-            logger.info(f"Container {container_id} status: {status_code}")
-
-            if status_code == "FINISHED":
-                print("[META GRAPH API] Processing FINISHED! Publishing Reel...")
-                break
-            elif status_code in ("ERROR", "EXPIRED"):
-                raise RuntimeError(f"Meta processing failed with status: {status_code} ({poll_data})")
-            else:
-                print(f"[META GRAPH API] Status: {status_code or 'IN_PROGRESS'}... Waiting 5s...")
-                time.sleep(5)
-        else:
-            raise TimeoutError(f"Reel processing timed out after {max_poll_seconds}s for container {container_id}")
-
-        # Step 4: Publish Reel
-        publish_url = f"{GRAPH_API_BASE_URL}/{self.user_id}/media_publish"
-        publish_params = {
-            "creation_id": container_id,
-            "access_token": self.access_token,
-        }
-
-        publish_resp = requests.post(publish_url, data=publish_params, timeout=30)
-        publish_data = publish_resp.json()
-
-        if "error" in publish_data:
-            raise RuntimeError(f"Meta error publishing Reel: {publish_data['error']}")
-
-        media_id = publish_data.get("id")
-        print(f"\n[META GRAPH API] SUCCESS! Reel published with Media ID: {media_id}")
-
-        return {
-            "success": True,
-            "method": "GRAPH_API",
-            "media_id": media_id,
-            "container_id": container_id,
-            "status": "PUBLISHED",
-        }
+        return client.publish_reel_resumable(
+            video_path=video_path,
+            caption=caption,
+            share_to_feed=share_to_feed,
+            max_poll_seconds=max_poll_seconds,
+        )
 
     # -----------------------------------------------------------------------
     # METHOD 3: UNIFIED DISPATCHER & DRY-RUN MODE

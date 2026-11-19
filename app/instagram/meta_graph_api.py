@@ -21,16 +21,35 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 
+from app.publishing.publishing_errors import (
+    PublishingAuthError,
+    PublishingConfigError,
+    PublishingError,
+    PublishingNetworkError,
+    PublishingRateLimitError,
+    PublishingUncertainOutcomeError,
+    PublishingValidationError,
+)
+
 logger = logging.getLogger(__name__)
 
 GRAPH_API_VERSION = "v21.0"
 GRAPH_API_BASE_URL = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
 
 
-class MetaGraphAPIError(Exception):
+def mask_secret(secret: str) -> str:
+    """Masks secret tokens to guarantee zero credential leakage in logs."""
+    if not secret:
+        return ""
+    if len(secret) <= 8:
+        return "***"
+    return f"{secret[:4]}...{secret[-4:]}"
+
+
+class MetaGraphAPIError(PublishingError):
     """Raised when the Meta Graph API returns an error response."""
     def __init__(self, message: str, error_code: Optional[int] = None, error_subcode: Optional[int] = None, response: Optional[Dict[str, Any]] = None):
-        super().__init__(message)
+        super().__init__(message, error_category="meta_api", details=response or {})
         self.error_code = error_code
         self.error_subcode = error_subcode
         self.response = response or {}
@@ -178,8 +197,31 @@ class MetaInstagramClient:
         self._poll_container_status(container_id, max_poll_seconds=max_poll_seconds)
 
         # Step 4: Publish Container
-        publish_data = self._publish_container(container_id)
-        media_id = publish_data.get("id")
+        try:
+            publish_data = self._publish_container(container_id)
+            media_id = publish_data.get("id")
+        except Exception as exc:
+            logger.warning(
+                f"[REEL PUBLISH] Notice during media_publish for container {container_id}: {exc}. "
+                f"Attempting reconciliation to verify if publication succeeded on Meta..."
+            )
+            reconciled = self._reconcile_container(container_id, caption)
+            if reconciled:
+                media_id = reconciled.get("id")
+                return {
+                    "success": True,
+                    "dry_run": False,
+                    "media_id": media_id,
+                    "container_id": container_id,
+                    "permalink": reconciled.get("permalink", f"https://www.instagram.com/reel/{media_id}"),
+                    "status": "PUBLISHED",
+                    "reconciled": True,
+                }
+            raise PublishingUncertainOutcomeError(
+                f"Publish container call failed: {exc}",
+                container_id=container_id,
+                details={"caption": caption[:100], "error": str(exc)},
+            )
 
         # Step 5: Verify & Fetch Permalink
         metadata = self.get_media_metadata(media_id)
@@ -463,6 +505,45 @@ class MetaInstagramClient:
         except Exception as exc:
             return {"status": "ERROR", "error": str(exc)}
 
+    def get_recent_media(self, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Retrieves recent media published by this Instagram account for reconciliation.
+        """
+        if not self.is_configured:
+            return []
+        url = f"{GRAPH_API_BASE_URL}/{self.account_id}/media"
+        params = {
+            "fields": "id,caption,media_type,timestamp,permalink",
+            "limit": str(limit),
+            "access_token": self.access_token,
+        }
+        try:
+            resp = requests.get(url, params=params, timeout=self.timeout)
+            data = resp.json()
+            if "error" in data:
+                logger.warning(f"Error fetching recent media from Meta: {data['error'].get('message')}")
+                return []
+            return data.get("data", [])
+        except Exception as exc:
+            logger.warning(f"Failed to query recent media from Meta: {exc}")
+            return []
+
+    def _reconcile_container(self, container_id: str, caption: str) -> Optional[Dict[str, Any]]:
+        """
+        Reconciles whether a container or post was actually published after an interrupted request.
+        """
+        try:
+            recent = self.get_recent_media(limit=5)
+            clean_sub = caption[:50].strip().lower() if caption else ""
+            for m in recent:
+                post_cap = m.get("caption", "").lower()
+                if clean_sub and (clean_sub in post_cap or post_cap in clean_sub):
+                    logger.info(f"[RECONCILE] Found published media {m.get('id')} matching caption on Instagram")
+                    return m
+        except Exception as exc:
+            logger.warning(f"Container reconciliation query failed: {exc}")
+        return None
+
     @staticmethod
     def _check_api_error(response_data: Dict[str, Any], context: str) -> None:
         if "error" in response_data:
@@ -470,6 +551,26 @@ class MetaInstagramClient:
             msg = err.get("message", "Unknown Meta Graph API error")
             code = err.get("code")
             subcode = err.get("error_subcode")
+
+            # Detect authentication failure
+            if code in (190, 102, 10) or (code == 100 and subcode == 33):
+                raise PublishingAuthError(
+                    f"Meta authentication failure during {context}: {msg} (Code: {code}, Subcode: {subcode})",
+                    details=response_data,
+                )
+            # Detect rate limiting
+            if code in (4, 17, 32, 613):
+                raise PublishingRateLimitError(
+                    f"Meta API rate limit reached during {context}: {msg} (Code: {code})",
+                    details=response_data,
+                )
+            # Detect invalid parameters / media specification
+            if code in (100, 36003):
+                raise PublishingValidationError(
+                    f"Meta media validation failure during {context}: {msg} (Code: {code}, Subcode: {subcode})",
+                    details=response_data,
+                )
+
             raise MetaGraphAPIError(
                 f"Meta Graph API error during {context}: {msg} (Code: {code}, Subcode: {subcode})",
                 error_code=code,

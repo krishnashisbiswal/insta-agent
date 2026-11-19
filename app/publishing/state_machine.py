@@ -44,6 +44,7 @@ class PublishingState(str, enum.Enum):
     RETRY_PENDING = "RETRY_PENDING"
     NEEDS_REVIEW = "NEEDS_REVIEW"
     DRY_RUN = "DRY_RUN"
+    UNCERTAIN = "UNCERTAIN"
 
 
 VALID_TRANSITIONS: Dict[PublishingState, Set[PublishingState]] = {
@@ -101,13 +102,23 @@ VALID_TRANSITIONS: Dict[PublishingState, Set[PublishingState]] = {
         PublishingState.DRY_RUN,
     },
     PublishingState.UPLOADING: {
+        PublishingState.UPLOADING,  # Retry attempt
         PublishingState.PROCESSING,
         PublishingState.PUBLISHED,
         PublishingState.FAILED,
         PublishingState.RETRY_PENDING,
         PublishingState.CANCELLED,
+        PublishingState.UNCERTAIN,
     },
     PublishingState.PROCESSING: {
+        PublishingState.PROCESSING,
+        PublishingState.PUBLISHED,
+        PublishingState.FAILED,
+        PublishingState.RETRY_PENDING,
+        PublishingState.CANCELLED,
+        PublishingState.UNCERTAIN,
+    },
+    PublishingState.UNCERTAIN: {
         PublishingState.PUBLISHED,
         PublishingState.FAILED,
         PublishingState.RETRY_PENDING,
@@ -138,6 +149,24 @@ class DuplicateJobError(Exception):
     pass
 
 
+def compute_video_fingerprint(video_path: Path | str) -> str:
+    """Computes SHA-256 fingerprint from video bytes to guarantee zero duplicate video uploads."""
+    p = Path(video_path)
+    if not p.exists() or not p.is_file():
+        return ""
+    hasher = hashlib.sha256()
+    with open(p, "rb") as f:
+        while chunk := f.read(65536):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def compute_content_fingerprint(topic: str, caption: str = "") -> str:
+    """Computes SHA-256 fingerprint for topic and caption text to detect content duplication."""
+    norm = f"{topic.strip().lower()}:{caption.strip().lower()}"
+    return hashlib.sha256(norm.encode("utf-8")).hexdigest()
+
+
 class DatabasePublishingStateMachine:
     """
     Authoritative state machine backed by the database.
@@ -150,10 +179,13 @@ class DatabasePublishingStateMachine:
         topic: str,
         content_format: str = "REEL",
         scheduled_date: Optional[str] = None,
+        video_fingerprint: Optional[str] = None,
     ) -> str:
         norm = f"{account_id.strip()}:{niche_id.strip()}:{topic.strip().lower()}:{content_format.upper()}"
         if scheduled_date:
             norm += f":{scheduled_date.strip()}"
+        if video_fingerprint:
+            norm += f":{video_fingerprint.strip()}"
         return hashlib.sha256(norm.encode("utf-8")).hexdigest()
 
     @classmethod
@@ -167,6 +199,9 @@ class DatabasePublishingStateMachine:
         content_format: str = "REEL",
         scheduled_date: Optional[str] = None,
         custom_idempotency_key: Optional[str] = None,
+        video_fingerprint: Optional[str] = None,
+        content_fingerprint: Optional[str] = None,
+        attempt_id: Optional[str] = None,
     ) -> PublishingJobModel:
         idempotency_key = custom_idempotency_key or cls.compute_idempotency_key(
             account_id=account_id,
@@ -174,6 +209,7 @@ class DatabasePublishingStateMachine:
             topic=topic,
             content_format=content_format,
             scheduled_date=scheduled_date,
+            video_fingerprint=video_fingerprint,
         )
 
         existing = db.query(PublishingJobModel).filter_by(idempotency_key=idempotency_key).first()
@@ -182,6 +218,37 @@ class DatabasePublishingStateMachine:
                 f"Job with idempotency key '{idempotency_key}' already exists "
                 f"(job_id: {existing.job_id}, state: {existing.state})"
             )
+
+        # Enforce video fingerprint duplicate prevention
+        if video_fingerprint:
+            existing_v = db.query(PublishingJobModel).filter(
+                PublishingJobModel.account_id == account_id,
+                PublishingJobModel.video_fingerprint == video_fingerprint,
+                PublishingJobModel.state.in_([
+                    PublishingState.PUBLISHED.value,
+                    PublishingState.UPLOADING.value,
+                    PublishingState.PROCESSING.value,
+                    PublishingState.UNCERTAIN.value,
+                ]),
+            ).first()
+            if existing_v:
+                raise DuplicateJobError(
+                    f"Duplicate video prevented: identical video binary already exists in job "
+                    f"'{existing_v.job_id}' (state: {existing_v.state})"
+                )
+
+        # Enforce content fingerprint duplicate prevention
+        if content_fingerprint:
+            existing_c = db.query(PublishingJobModel).filter(
+                PublishingJobModel.account_id == account_id,
+                PublishingJobModel.content_fingerprint == content_fingerprint,
+                PublishingJobModel.state == PublishingState.PUBLISHED.value,
+            ).first()
+            if existing_c:
+                raise DuplicateJobError(
+                    f"Duplicate content prevented: identical topic/caption already published in job "
+                    f"'{existing_c.job_id}'"
+                )
 
         now = time.time()
         init_history = [{
@@ -200,6 +267,9 @@ class DatabasePublishingStateMachine:
             content_format=content_format.upper(),
             state=PublishingState.CREATED.value,
             topic=topic,
+            video_fingerprint=video_fingerprint,
+            content_fingerprint=content_fingerprint,
+            attempt_id=attempt_id,
             history_json=json.dumps(init_history),
             created_at=now,
             updated_at=now,
@@ -234,7 +304,7 @@ class DatabasePublishingStateMachine:
 
         from_state = PublishingState(job.state)
         allowed = VALID_TRANSITIONS.get(from_state, set())
-        if to_state_enum not in allowed:
+        if to_state_enum != from_state and to_state_enum not in allowed:
             raise InvalidStateTransitionError(
                 f"Cannot transition job {job_id} from {from_state.value} to {to_state_enum.value}. "
                 f"Allowed transitions: {[s.value for s in allowed]}"
@@ -270,6 +340,14 @@ class DatabasePublishingStateMachine:
                 job.rendered_assets_json = json.dumps(metadata["rendered_assets"])
             if "script_data" in metadata:
                 job.script_json = json.dumps(metadata["script_data"])
+            if "video_fingerprint" in metadata:
+                job.video_fingerprint = metadata["video_fingerprint"]
+            if "content_fingerprint" in metadata:
+                job.content_fingerprint = metadata["content_fingerprint"]
+            if "attempt_id" in metadata:
+                job.attempt_id = metadata["attempt_id"]
+            if "recovery_state" in metadata:
+                job.recovery_state = metadata["recovery_state"]
 
         # Release lease if transitioning to terminal state
         if to_state_enum in (PublishingState.PUBLISHED, PublishingState.FAILED, PublishingState.CANCELLED, PublishingState.DRY_RUN):
@@ -363,6 +441,23 @@ class PublishingStateMachine:
                 connect_args={"check_same_thread": False},
             )
             Base.metadata.create_all(bind=self._engine)
+            try:
+                from sqlalchemy import text
+                with self._engine.connect() as conn:
+                    res = conn.execute(text("PRAGMA table_info(publishing_jobs)"))
+                    cols = {row[1] for row in res.fetchall()}
+                    if cols:
+                        if "video_fingerprint" not in cols:
+                            conn.execute(text("ALTER TABLE publishing_jobs ADD COLUMN video_fingerprint VARCHAR(64)"))
+                        if "content_fingerprint" not in cols:
+                            conn.execute(text("ALTER TABLE publishing_jobs ADD COLUMN content_fingerprint VARCHAR(64)"))
+                        if "attempt_id" not in cols:
+                            conn.execute(text("ALTER TABLE publishing_jobs ADD COLUMN attempt_id VARCHAR(64)"))
+                        if "recovery_state" not in cols:
+                            conn.execute(text("ALTER TABLE publishing_jobs ADD COLUMN recovery_state VARCHAR(64)"))
+                        conn.commit()
+            except Exception:
+                pass
             self._SessionFactory = sessionmaker(bind=self._engine, autoflush=False, autocommit=False)
             self._db = self._SessionFactory()
         else:
@@ -381,6 +476,7 @@ class PublishingStateMachine:
         topic: str,
         content_format: str = "REEL",
         scheduled_date: Optional[str] = None,
+        video_fingerprint: Optional[str] = None,
     ) -> str:
         return DatabasePublishingStateMachine.compute_idempotency_key(
             account_id=account_id,
@@ -388,6 +484,7 @@ class PublishingStateMachine:
             topic=topic,
             content_format=content_format,
             scheduled_date=scheduled_date,
+            video_fingerprint=video_fingerprint,
         )
 
     def create_job(
@@ -399,6 +496,9 @@ class PublishingStateMachine:
         content_format: str = "REEL",
         scheduled_date: Optional[str] = None,
         custom_idempotency_key: Optional[str] = None,
+        video_fingerprint: Optional[str] = None,
+        content_fingerprint: Optional[str] = None,
+        attempt_id: Optional[str] = None,
     ) -> PublishingJobModel:
         db = self._get_db()
         return DatabasePublishingStateMachine.create_job(
@@ -410,6 +510,9 @@ class PublishingStateMachine:
             content_format=content_format,
             scheduled_date=scheduled_date,
             custom_idempotency_key=custom_idempotency_key,
+            video_fingerprint=video_fingerprint,
+            content_fingerprint=content_fingerprint,
+            attempt_id=attempt_id,
         )
 
     def transition(
