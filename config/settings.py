@@ -83,6 +83,18 @@ PUBLISHED_LOG_FILE = STORAGE_DIR / "published_history.json"
 CONTENT_QUEUE_FILE = STORAGE_DIR / "content_queue.json"
 
 # ---------------------------------------------------------------------------
+# AI IMAGE GENERATION SETTINGS
+# ---------------------------------------------------------------------------
+IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "pollinations").strip().lower()
+IMAGE_FALLBACK_PROVIDER = os.getenv("IMAGE_FALLBACK_PROVIDER", "mock").strip().lower()
+IMAGE_MODEL = os.getenv("IMAGE_MODEL", "flux").strip()
+IMAGE_TIMEOUT = int(os.getenv("IMAGE_TIMEOUT", "30"))
+IMAGE_MAX_RETRIES = int(os.getenv("IMAGE_MAX_RETRIES", "3"))
+ALLOW_STATIC_FALLBACK = os.getenv("ALLOW_STATIC_FALLBACK", "false").strip().lower() in ("true", "1")
+GENERATED_BROLL_DIR = BASE_DIR / "assets" / "generated_broll"
+GENERATED_BROLL_DIR.mkdir(parents=True, exist_ok=True)
+
+# ---------------------------------------------------------------------------
 # VIDEO RENDERING SETTINGS
 # ---------------------------------------------------------------------------
 VIDEO_WIDTH = 1080

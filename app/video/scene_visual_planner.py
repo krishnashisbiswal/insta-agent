@@ -63,6 +63,14 @@ class SceneVisualPlan:
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
+    @property
+    def primary_subject(self) -> str:
+        return self.main_subject
+
+    @property
+    def action(self) -> str:
+        return self.subject_action
+
 
 class SceneVisualPlanner:
     """
@@ -579,6 +587,17 @@ class SceneVisualPlanner:
             estimated_duration=est_duration,
         )
         return cls.validate_and_repair_plan(plan)
+
+    @classmethod
+    def create_scene_visual_plan(
+        cls,
+        scene: Dict[str, Any],
+        topic: str = "",
+        scene_idx: int = 0,
+        total_scenes: int = 5,
+    ) -> SceneVisualPlan:
+        """Alias for plan_scene_visual supporting varied keyword arguments."""
+        return cls.plan_scene_visual(scene_dict=scene, scene_idx=scene_idx, total_scenes=total_scenes, topic=topic)
 
     # =========================================================================
     # VALIDATION & AUTOMATIC REPAIR (TASK 5)
