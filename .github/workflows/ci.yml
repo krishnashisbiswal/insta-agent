@@ -13,9 +13,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Least-privilege permissions: read-only access to repository contents
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         python-version: ['3.11', '3.12']
@@ -53,7 +58,7 @@ jobs:
 
       - name: Verify Key Imports
         run: |
-          python -c "import app.autonomous.daily_algorithm_publisher; import app.video.dynamic_visual_engine; import app.api.main; import app.storage.permanent_visual_memory; print('All key imports succeeded.')"
+          python -c "import app.autonomous.daily_algorithm_publisher; import app.video.dynamic_visual_engine; import app.api.main; import app.storage.permanent_visual_memory; import app.utils.ffmpeg_resolver; print('All key imports succeeded.')"
 
       - name: Run Startup Preflight Validation (Dry-Run)
         env:

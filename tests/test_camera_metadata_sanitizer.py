@@ -29,7 +29,8 @@ def test_sanitize_and_spoof_camera_metadata(tmp_path):
     assert clean_mp4.stat().st_size > 1000
 
     # Probe with ffmpeg to verify Lavf encoder is gone and Apple iPhone tags are present
-    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+    from app.utils.ffmpeg_resolver import get_ffmpeg_binary
+    ffmpeg_exe = get_ffmpeg_binary() or imageio_ffmpeg.get_ffmpeg_exe()
     res = subprocess.run([ffmpeg_exe, "-i", str(clean_mp4)], stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
     probe_output = res.stderr
 

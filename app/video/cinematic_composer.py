@@ -657,11 +657,8 @@ def sanitize_and_spoof_camera_metadata(video_path: Path) -> Path:
 
     import subprocess
     import shutil
-    try:
-        import imageio_ffmpeg
-        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-    except Exception:
-        ffmpeg_exe = shutil.which("ffmpeg") or "ffmpeg"
+    from app.utils.ffmpeg_resolver import get_ffmpeg_binary
+    ffmpeg_exe = get_ffmpeg_binary() or "ffmpeg"
 
     clean_tmp = video_path.parent / f"clean_{int(time.time()*1000)}_{video_path.name}"
 

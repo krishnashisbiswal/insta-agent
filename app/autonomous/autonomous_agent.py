@@ -152,7 +152,8 @@ def run_autonomous_reel_cycle(
 
     # Generate GIF preview
     try:
-        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+        from app.utils.ffmpeg_resolver import get_ffmpeg_binary
+        ffmpeg = get_ffmpeg_binary() or imageio_ffmpeg.get_ffmpeg_exe()
         cmd = [
             ffmpeg, "-y",
             "-ss", "0", "-t", "10",

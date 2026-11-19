@@ -74,15 +74,50 @@ class DailyAlgorithmPublisher:
         """
         Startup validation to ensure all dependencies, tools, directories,
         configuration, and credentials are valid before publishing.
+        Clearly categorizes findings into:
+        - CRITICAL ERROR: Blocks execution.
+        - WARNING: Sub-optimal configuration that may affect output quality.
+        - OPTIONAL COMPONENT UNAVAILABLE: Gracefully degraded non-critical features.
         """
-        issues: List[str] = []
+        critical_errors: List[str] = []
         warnings: List[str] = []
+        optional_unavailable: List[str] = []
 
-        # 1. System FFmpeg binary
-        if not shutil.which("ffmpeg"):
-            issues.append("FFmpeg executable not found on system PATH. Video encoding will fail.")
+        # 1. Python version verification (>= 3.11 required)
+        if sys.version_info < (3, 11):
+            critical_errors.append(
+                f"Unsupported Python version: {sys.version_info.major}.{sys.version_info.minor}. "
+                f"Insta-Agent requires Python >= 3.11."
+            )
 
-        # 2. Writable directories
+        # 2. Core Python package dependencies
+        required_packages = [
+            ("google.genai", "google-genai"),
+            ("moviepy", "moviepy"),
+            ("PIL", "Pillow"),
+            ("imagehash", "imagehash"),
+            ("edge_tts", "edge-tts"),
+            ("sqlalchemy", "SQLAlchemy"),
+            ("pydantic", "pydantic"),
+        ]
+        for mod_name, pkg_name in required_packages:
+            try:
+                __import__(mod_name)
+            except ImportError as e:
+                critical_errors.append(f"Required package '{pkg_name}' is missing ({e}). Run: pip install -r requirements.txt")
+
+        # 3. Centralized FFmpeg binary resolution & execution validation
+        from app.utils.ffmpeg_resolver import get_ffmpeg_binary, is_ffmpeg_available, get_ffmpeg_diagnostics
+        ffmpeg_available = is_ffmpeg_available()
+        if not ffmpeg_available:
+            diag = get_ffmpeg_diagnostics()
+            evaluated = [c.get("source") for c in diag.get("candidates_evaluated", [])]
+            critical_errors.append(
+                f"FFmpeg executable not found or failed execution validation (evaluated sources: {evaluated}). "
+                f"Video composition will fail."
+            )
+
+        # 4. Storage & Output Directory Writable Permissions
         required_dirs = [
             STORAGE_DIR,
             PROJECT_ROOT / "output" / "reels",
@@ -94,43 +129,63 @@ class DailyAlgorithmPublisher:
         for d in required_dirs:
             try:
                 d.mkdir(parents=True, exist_ok=True)
-                probe = d / f".perm_probe_{os.getpid()}_{int(time.time())}"
+                probe = d / f".perm_probe_{os.getpid()}_{int(time.time()*1000)}"
                 probe.write_text("probe")
                 probe.unlink()
             except Exception as e:
-                issues.append(f"Storage path {d} is not writable: {e}")
+                critical_errors.append(f"Storage path {d} is not writable: {e}")
 
-        # 3. Gemini API Key
+        # 5. Database & Storage Initialization
+        try:
+            from app.models.saas_models import init_db
+            init_db()
+        except Exception as e:
+            critical_errors.append(f"Database initialization failed: {e}")
+
+        # 6. LLM Engine (Gemini)
         gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
         if not gemini_key:
-            warnings.append("GEMINI_API_KEY is not configured. Falling back to offline template generation.")
+            optional_unavailable.append("GEMINI_API_KEY is not configured; falling back to offline template generation.")
 
-        # 4. Instagram Credentials (mandatory for live publishing)
+        # 7. Neural Voice Synthesis (Sarvam AI / Edge TTS)
+        sarvam_key = os.getenv("SARVAM_API_KEY", "").strip()
+        voice_engine = os.getenv("VOICE_ENGINE", "edge_tts").lower().strip()
+        if voice_engine == "sarvam" and not sarvam_key:
+            warnings.append("VOICE_ENGINE is 'sarvam' but SARVAM_API_KEY is not set; falling back to Edge-TTS neural voices.")
+
+        # 8. Instagram Credentials (mandatory for live publishing; optional in dry-run)
         if not dry_run:
             from app.instagram.uploader import InstagramUploader
             uploader = InstagramUploader()
             if not uploader.has_direct_credentials():
-                issues.append(
-                    "Production publishing requires Instagram credentials. "
+                critical_errors.append(
+                    "Production live publishing requires Instagram credentials. "
                     "Provide INSTAGRAM_SESSION_DATA, INSTAGRAM_SESSION_ID, or INSTAGRAM_USERNAME/PASSWORD. "
                     "Use --dry-run for offline verification."
                 )
+        else:
+            optional_unavailable.append("Running in --dry-run mode: Live Instagram network upload is disabled.")
 
         status_dict = {
-            "valid": len(issues) == 0,
-            "ffmpeg": bool(shutil.which("ffmpeg")),
-            "issues": issues,
+            "valid": len(critical_errors) == 0,
+            "critical_errors": critical_errors,
             "warnings": warnings,
+            "optional_unavailable": optional_unavailable,
+            "ffmpeg": ffmpeg_available,
+            "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
             "dry_run": dry_run,
+            "issues": critical_errors,  # Backward compatibility alias
         }
 
+        for opt in optional_unavailable:
+            logger.info(f"[PREFLIGHT OPTIONAL] {opt}")
         for w in warnings:
-            logger.warning(f"[STARTUP VALIDATION WARNING] {w}")
-        for err in issues:
-            logger.error(f"[STARTUP VALIDATION ERROR] {err}")
+            logger.warning(f"[PREFLIGHT WARNING] {w}")
+        for err in critical_errors:
+            logger.error(f"[PREFLIGHT CRITICAL ERROR] {err}")
 
         if not status_dict["valid"] and not dry_run:
-            raise EnvironmentError(f"Startup validation failed: {'; '.join(issues)}")
+            raise EnvironmentError(f"Startup validation failed with critical errors: {'; '.join(critical_errors)}")
 
         return status_dict
 
