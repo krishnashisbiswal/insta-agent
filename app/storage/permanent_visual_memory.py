@@ -52,7 +52,7 @@ LOCK_FILE = STORAGE_DIR / "visual_memory.lock"
 # 64-bit hashes: distance <= 8 represents >= 87.5% perceptual similarity
 DEFAULT_PHASH_THRESHOLD = 8
 DEFAULT_DHASH_THRESHOLD = 8
-DEFAULT_COLOR_SIMILARITY_THRESHOLD = 0.94
+DEFAULT_COLOR_SIMILARITY_THRESHOLD = 0.98
 
 
 def _atomic_replace_json(target_path: Path, data: Dict[str, Any], indent: int = 2) -> None:
@@ -207,6 +207,14 @@ class PermanentVisualMemory:
             return 0.0
         dot = sum(a * b for a, b in zip(vec1, vec2))
         return max(0.0, min(1.0, dot))
+
+    @staticmethod
+    def _vector_std(vec: List[float]) -> float:
+        """Computes standard deviation of a float vector."""
+        if not vec or len(vec) < 2:
+            return 0.0
+        m = sum(vec) / len(vec)
+        return math.sqrt(sum((x - m) ** 2 for x in vec) / len(vec))
 
     # =========================================================================
     # 3. DURABLE REGISTRY PERSISTENCE WITH TRANSACTIONAL INTEGRITY
@@ -496,17 +504,18 @@ class PermanentVisualMemory:
                         rec,
                     )
 
-            # Check color/spatial layout embedding
+            # Check color/spatial layout embedding (meaningful only for textured layouts with spatial variance)
             hist_emb = rec.get("color_embedding")
             if hist_emb and cand_color:
-                c_sim = cls.cosine_similarity(cand_color, hist_emb)
-                if c_sim >= color_threshold:
-                    return (
-                        True,
-                        f"Color layout near-duplicate match (Cosine similarity {c_sim:.3f} >= {color_threshold}) "
-                        f"against record {rec_id[:12]}",
-                        rec,
-                    )
+                if cls._vector_std(hist_emb) >= 0.005 and cls._vector_std(cand_color) >= 0.005:
+                    c_sim = cls.cosine_similarity(cand_color, hist_emb)
+                    if c_sim >= color_threshold:
+                        return (
+                            True,
+                            f"Color layout near-duplicate match (Cosine similarity {c_sim:.3f} >= {color_threshold}) "
+                            f"against record {rec_id[:12]}",
+                            rec,
+                        )
 
         return False, None, None
 

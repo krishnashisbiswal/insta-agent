@@ -1,16 +1,16 @@
 {
-  "topic": "Stop wearing Pyrite blindly until you understand how this solar mineral interacts with your 5th house karmic memory and creative blockages.",
+  "topic": "Stop wearing Pyrite blindly until you understand how this solar mineral interacts with your 5th house karmic memory and creative blockages",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 7.4,
+  "agent_evolution_level": 7.7,
   "hook": {
-    "id": "pyrite_stop",
+    "id": "negative_command_pyrite",
     "name": "Negative Command",
-    "spoken": "पायराइट को आँख मूँदकर पहनना बंद करें, जब तक आप इसके प्रभाव को न समझें।",
+    "spoken": "पायराइट को बिना सोचे-समझे पहनना बंद कीजिए।",
     "on_screen": "STOP WEARING PYRITE BLINDLY",
-    "why_it_works": "Uses a strong negative command to immediately halt scrolling and address a common misconception among gemstone users.",
+    "why_it_works": "Uses a strong negative command on a common habit to immediately grab attention and establish astrological authority.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
@@ -47,11 +47,11 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "70 chars (Target: <=125)"
+        "detail": "93 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
-        "detail": "7 visual scenes with dynamic pacing (avg 4.0s)"
+        "detail": "7 visual scenes with dynamic pacing (avg 6.1s)"
       },
       "high_value_cta": {
         "score": 100,
@@ -63,9 +63,9 @@
       }
     }
   },
-  "duration_seconds": 33.12,
-  "generated_at": "2026-11-17 12:18:42",
-  "algorithm_phase": "Midday Spiritual Reset & Chart Curiosity",
+  "duration_seconds": 40.31,
+  "generated_at": "2026-11-19 21:39:09",
+  "algorithm_phase": "Late Night Subconscious & Gemstone Truth",
   "daily_post_enforced": true,
   "comment_consultations_handled": 0,
   "q_reward_score": 0.922

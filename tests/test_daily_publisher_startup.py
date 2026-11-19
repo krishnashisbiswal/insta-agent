@@ -48,7 +48,8 @@ def test_daily_algorithm_publisher_instantiation_without_network(tmp_path: Path)
     from app.autonomous.daily_algorithm_publisher import DailyAlgorithmPublisher
 
     tracker_file = tmp_path / "test_tracker.json"
-    with patch.dict(os.environ, {"INSTAGRAM_SESSION_ID": ""}):
+    with patch.dict(os.environ, {"INSTAGRAM_SESSION_ID": "", "INSTAGRAM_USERNAME": ""}):
         publisher = DailyAlgorithmPublisher(tracker_file=tracker_file)
         assert publisher.tracker_file == tracker_file
-        assert publisher.has_posted_today() is False
+        with patch("app.autonomous.daily_algorithm_publisher.InstagramUploader.has_direct_credentials", return_value=False):
+            assert publisher.has_posted_today() is False

@@ -939,8 +939,8 @@ def create_cinematic_reel_video(
             fps=VIDEO_FPS,
             codec="libx264",
             audio_codec="aac",
-            preset="veryfast",
-            threads=4,
+            preset="ultrafast",
+            threads=8,
             ffmpeg_params=["-crf", "22", "-pix_fmt", "yuv420p"],
         )
 
