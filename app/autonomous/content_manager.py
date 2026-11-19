@@ -33,36 +33,32 @@ class ContentManager:
         self.history_file.parent.mkdir(parents=True, exist_ok=True)
 
     def load_history(self) -> List[Dict[str, Any]]:
-        """Load list of previously generated/published reels."""
-        if not self.history_file.exists():
-            return []
-        try:
-            with open(self.history_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as exc:
-            logger.warning(f"Error reading history file: {exc}")
-            return []
+        """Load list of previously generated/published reels with automated recovery."""
+        from app.storage.safe_store import safe_read_json
+        return safe_read_json(
+            self.history_file,
+            default_factory=list,
+            validate_fn=lambda d: isinstance(d, list),
+        )
 
     def load_queue(self) -> List[Dict[str, Any]]:
-        """Load current topic queue."""
-        if not self.queue_file.exists():
-            return []
-        try:
-            with open(self.queue_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as exc:
-            logger.warning(f"Error reading queue file: {exc}")
-            return []
+        """Load current topic queue with automated recovery."""
+        from app.storage.safe_store import safe_read_json
+        return safe_read_json(
+            self.queue_file,
+            default_factory=list,
+            validate_fn=lambda d: isinstance(d, list),
+        )
 
     def save_queue(self, queue: List[Dict[str, Any]]):
-        """Save topic queue to disk."""
-        with open(self.queue_file, "w", encoding="utf-8") as f:
-            json.dump(queue, f, indent=2, ensure_ascii=False)
+        """Save topic queue to disk atomically."""
+        from app.storage.safe_store import atomic_write_json
+        atomic_write_json(self.queue_file, queue, indent=2, make_backup=True)
 
     def save_history(self, history: List[Dict[str, Any]]):
-        """Save history to disk."""
-        with open(self.history_file, "w", encoding="utf-8") as f:
-            json.dump(history, f, indent=2, ensure_ascii=False)
+        """Save history to disk atomically."""
+        from app.storage.safe_store import atomic_write_json
+        atomic_write_json(self.history_file, history, indent=2, make_backup=True)
 
     def refill_queue_with_gemini(
         self,

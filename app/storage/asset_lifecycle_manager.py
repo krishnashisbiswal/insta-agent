@@ -102,72 +102,23 @@ class AssetLifecycleManager:
 
     @classmethod
     def _read_jobs_file(cls) -> Dict[str, Any]:
-        if not JOBS_REGISTRY_FILE.exists():
-            initial = {
+        from app.storage.safe_store import safe_read_json
+        return safe_read_json(
+            JOBS_REGISTRY_FILE,
+            default_factory=lambda: {
                 "schema_version": "1.0.0",
                 "last_updated": datetime.now(timezone.utc).isoformat(),
                 "jobs": {},
-            }
-            cls._write_jobs_file(initial)
-            return initial
-
-        try:
-            with open(JOBS_REGISTRY_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as exc:
-            logger.error(f"Error reading asset lifecycle jobs: {exc}")
-            # Scan for any valid temporary recovery files
-            try:
-                candidates = sorted(
-                    JOBS_REGISTRY_FILE.parent.glob(f"*{JOBS_REGISTRY_FILE.stem}*.tmp*"),
-                    key=lambda p: p.stat().st_mtime_ns if p.exists() else 0,
-                    reverse=True,
-                )
-                for cand in candidates:
-                    try:
-                        with open(cand, "r", encoding="utf-8") as tf:
-                            recovered = json.load(tf)
-                        if isinstance(recovered, dict) and "jobs" in recovered:
-                            logger.warning(f"[AssetLifecycleManager] Recovered jobs registry from {cand.name}")
-                            return recovered
-                    except Exception:
-                        continue
-            except Exception:
-                pass
-            return {"schema_version": "1.0.0", "jobs": {}}
+            },
+            validate_fn=lambda d: isinstance(d, dict) and "jobs" in d,
+        )
 
     @classmethod
     def _write_jobs_file(cls, data: Dict[str, Any]) -> None:
-        """Atomic transactional write with fsync and backoff retries using unique per-process/thread temporary file."""
-        JOBS_REGISTRY_FILE.parent.mkdir(parents=True, exist_ok=True)
-        unique_tmp = JOBS_REGISTRY_FILE.parent / f".tmp_{JOBS_REGISTRY_FILE.stem}_{os.getpid()}_{threading.get_ident()}_{time.time_ns()}_{uuid.uuid4().hex[:8]}.tmp"
+        """Atomic transactional write with fsync and backoff retries via safe_store."""
+        from app.storage.safe_store import atomic_write_json
         data["last_updated"] = datetime.now(timezone.utc).isoformat()
-        try:
-            with open(unique_tmp, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
-                f.flush()
-                os.fsync(f.fileno())
-
-            for attempt in range(5):
-                try:
-                    os.replace(unique_tmp, JOBS_REGISTRY_FILE)
-                    return
-                except (PermissionError, FileNotFoundError, OSError) as err:
-                    if attempt == 4:
-                        try:
-                            if JOBS_REGISTRY_FILE.exists():
-                                os.remove(JOBS_REGISTRY_FILE)
-                            os.rename(unique_tmp, JOBS_REGISTRY_FILE)
-                            return
-                        except Exception:
-                            raise err
-                    time.sleep(0.02 * (attempt + 1))
-        finally:
-            if unique_tmp.exists():
-                try:
-                    unique_tmp.unlink()
-                except Exception:
-                    pass
+        atomic_write_json(JOBS_REGISTRY_FILE, data, indent=2, make_backup=True)
 
     # =========================================================================
     # 2. JOB LIFECYCLE MANAGEMENT

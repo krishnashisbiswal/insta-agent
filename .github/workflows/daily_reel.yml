@@ -33,9 +33,10 @@ concurrency:
   group: daily-publishing
   cancel-in-progress: false
 
-# Least-privilege permissions: read-only access to repository contents
+# Least-privilege permissions: read access to contents and actions artifacts
 permissions:
   contents: read
+  actions: read
 
 jobs:
   build-and-publish:
@@ -66,6 +67,39 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt
+
+      - name: Restore Persistent State Cache
+        id: restore-state-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            storage/
+          key: insta-agent-state-${{ github.run_id }}
+          restore-keys: |
+            insta-agent-state-
+
+      - name: Fallback Restore State from Previous Artifact (if cache miss)
+        if: steps.restore-state-cache.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "State cache miss. Checking for previous successful workflow artifact..."
+          mkdir -p /tmp/artifact_restore
+          if gh run list --workflow=daily_reel.yml --status=success --limit 1 --json databaseId -q '.[0].databaseId' > /tmp/latest_run_id.txt 2>/dev/null; then
+            LATEST_RUN=$(cat /tmp/latest_run_id.txt)
+            if [ -n "$LATEST_RUN" ] && [ "$LATEST_RUN" != "null" ]; then
+              echo "Downloading previous artifact from run $LATEST_RUN..."
+              if gh run download "$LATEST_RUN" --pattern "daily-reel-output-*" --dir /tmp/artifact_restore 2>/dev/null; then
+                python -m app.storage.state_manager restore --source /tmp/artifact_restore
+              fi
+            fi
+          fi
+          rm -rf /tmp/artifact_restore /tmp/latest_run_id.txt
+
+      - name: Validate & Synchronize State Integrity
+        run: |
+          python -m app.storage.state_manager validate
+          python -m app.storage.state_manager audit
 
       - name: Validate Environment & Preflight
         env:
@@ -111,6 +145,19 @@ jobs:
           fi
           python app/autonomous/daily_algorithm_publisher.py $EXTRA_ARGS
 
+      - name: Create Safe State Backup Snapshot
+        if: always()
+        run: |
+          python -m app.storage.state_manager backup
+
+      - name: Save Persistent State Cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            storage/
+          key: insta-agent-state-${{ github.run_id }}
+
       - name: Save Generated Reel Package and Runtime State as Artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -121,4 +168,4 @@ jobs:
             storage/
             output/reels/
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 30

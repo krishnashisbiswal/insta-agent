@@ -59,36 +59,10 @@ def _atomic_replace_json(target_path: Path, data: Dict[str, Any], indent: int = 
     """
     Safely writes JSON data to a unique per-process, per-thread temporary file
     and performs an atomic replacement with backoff retries for Windows file-system locking.
+    Delegates to the centralized safe_store engine.
     """
-    target_path = Path(target_path)
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    unique_tmp = target_path.parent / f".tmp_{target_path.stem}_{os.getpid()}_{threading.get_ident()}_{time.time_ns()}_{uuid.uuid4().hex[:8]}.tmp"
-    try:
-        with open(unique_tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=indent, ensure_ascii=False)
-            f.flush()
-            os.fsync(f.fileno())
-
-        for attempt in range(5):
-            try:
-                os.replace(unique_tmp, target_path)
-                return
-            except (PermissionError, FileNotFoundError, OSError) as err:
-                if attempt == 4:
-                    try:
-                        if target_path.exists():
-                            os.remove(target_path)
-                        os.rename(unique_tmp, target_path)
-                        return
-                    except Exception:
-                        raise err
-                time.sleep(0.02 * (attempt + 1))
-    finally:
-        if unique_tmp.exists():
-            try:
-                unique_tmp.unlink()
-            except Exception:
-                pass
+    from app.storage.safe_store import atomic_write_json
+    atomic_write_json(target_path, data, indent=indent, make_backup=True)
 
 
 class PermanentVisualMemory:

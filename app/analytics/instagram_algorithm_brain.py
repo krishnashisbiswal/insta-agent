@@ -100,8 +100,8 @@ class InstagramAlgorithmBrain:
 
         # Cache state
         try:
-            with open(self.metrics_file, "w", encoding="utf-8") as f:
-                json.dump(state, f, indent=2, ensure_ascii=False)
+            from app.storage.safe_store import atomic_write_json
+            atomic_write_json(self.metrics_file, state, indent=2, make_backup=True)
         except Exception:
             pass
 

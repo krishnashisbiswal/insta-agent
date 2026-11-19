@@ -214,19 +214,18 @@ class TrendDiscoveryEngine:
         self.history_file.parent.mkdir(parents=True, exist_ok=True)
 
     def load_history(self) -> List[Dict[str, Any]]:
-        """Load persistent history of generated topics to prevent any duplicate content."""
-        if not self.history_file.exists():
-            return []
-        try:
-            with open(self.history_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
+        """Load persistent history of generated topics with automated recovery."""
+        from app.storage.safe_store import safe_read_json
+        return safe_read_json(
+            self.history_file,
+            default_factory=list,
+            validate_fn=lambda d: isinstance(d, list),
+        )
 
     def save_history(self, history: List[Dict[str, Any]]) -> None:
-        """Save history of generated topics to disk."""
-        with open(self.history_file, "w", encoding="utf-8") as f:
-            json.dump(history, f, indent=2, ensure_ascii=False)
+        """Save history of generated topics to disk atomically."""
+        from app.storage.safe_store import atomic_write_json
+        atomic_write_json(self.history_file, history, indent=2, make_backup=True)
 
     def record_generated_topic(self, topic_info: Dict[str, Any]) -> None:
         """Record topic into diversity history."""

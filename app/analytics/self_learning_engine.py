@@ -138,27 +138,26 @@ class SelfLearningEngine:
             self.save_playbook(DEFAULT_PLAYBOOK)
             return DEFAULT_PLAYBOOK.copy()
 
-        try:
-            with open(self.playbook_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as exc:
-            logger.warning(f"Error loading playbook: {exc}. Using default.")
-            return DEFAULT_PLAYBOOK.copy()
+        from app.storage.safe_store import safe_read_json
+        return safe_read_json(
+            self.playbook_path,
+            default_factory=lambda: DEFAULT_PLAYBOOK.copy(),
+            validate_fn=lambda d: isinstance(d, dict),
+        )
 
     def save_playbook(self, playbook: Dict[str, Any]):
-        """Persist updated playbook to disk."""
-        with open(self.playbook_path, "w", encoding="utf-8") as f:
-            json.dump(playbook, f, indent=2, ensure_ascii=False)
+        """Persist updated playbook to disk atomically."""
+        from app.storage.safe_store import atomic_write_json
+        atomic_write_json(self.playbook_path, playbook, indent=2, make_backup=True)
 
     def load_history(self) -> List[Dict[str, Any]]:
-        """Load published history records."""
-        if not self.history_path.exists():
-            return []
-        try:
-            with open(self.history_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
+        """Load published history records with automated recovery."""
+        from app.storage.safe_store import safe_read_json
+        return safe_read_json(
+            self.history_path,
+            default_factory=list,
+            validate_fn=lambda d: isinstance(d, list),
+        )
 
     def should_upgrade_today(self) -> bool:
         """Check if daily self-upgrade has already run today."""

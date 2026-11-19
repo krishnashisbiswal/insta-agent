@@ -104,15 +104,8 @@ class ReinforcementEvolutionEngine:
         self.brain_data = self.load_brain()
 
     def load_brain(self) -> Dict[str, Any]:
-        """Loads persistent reinforcement learning state."""
-        if self.brain_file.exists():
-            try:
-                with open(self.brain_file, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.warning(f"Failed to load reinforcement brain: {e}")
-
-        # Initialize default RL brain state
+        """Loads persistent reinforcement learning state with automated recovery."""
+        from app.storage.safe_store import safe_read_json
         default_state = {
             "version": "2.0.0",
             "evolution_level": 2.0,
@@ -129,15 +122,18 @@ class ReinforcementEvolutionEngine:
                 "INSIGHT 4: Generating unique, photorealistic 9:16 visuals for every scene prevents viewer fatigue and boosts Explore indexing.",
             ],
         }
-        self.save_brain(default_state)
-        return default_state
+        return safe_read_json(
+            self.brain_file,
+            default_factory=lambda: default_state,
+            validate_fn=lambda d: isinstance(d, dict) and "version" in d,
+        )
 
     def save_brain(self, data: Optional[Dict[str, Any]] = None) -> None:
-        """Saves reinforcement state to disk."""
+        """Saves reinforcement state to disk atomically."""
+        from app.storage.safe_store import atomic_write_json
         if data is None:
             data = self.brain_data
-        with open(self.brain_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        atomic_write_json(self.brain_file, data, indent=2, make_backup=True)
 
     def select_action(self, category: str) -> Dict[str, Any]:
         """
@@ -212,8 +208,8 @@ class ReinforcementEvolutionEngine:
         # Sync with evolution playbook
         if PLAYBOOK_FILE.exists():
             try:
-                with open(PLAYBOOK_FILE, "r", encoding="utf-8") as f:
-                    pb = json.load(f)
+                from app.storage.safe_store import atomic_write_json, safe_read_json
+                pb = safe_read_json(PLAYBOOK_FILE, default_factory=dict)
                 pb["evolution_level"] = self.brain_data["evolution_level"]
                 pb["total_training_cycles"] = epochs
                 pb["daily_golden_rules"] = [
@@ -223,8 +219,7 @@ class ReinforcementEvolutionEngine:
                     "Rule 4: DM Consultation Booking - Instruct viewers to send a Direct Message (DM) to book their consultation for full analysis. (Zero mention of bio link).",
                     "Rule 5: Zero Reused Images - DynamicVisualEngine generates unique, dedicated photorealistic 9:16 visuals for each individual scene.",
                 ]
-                with open(PLAYBOOK_FILE, "w", encoding="utf-8") as f:
-                    json.dump(pb, f, indent=2, ensure_ascii=False)
+                atomic_write_json(PLAYBOOK_FILE, pb, indent=2, make_backup=True)
             except Exception as e:
                 logger.warning(f"Failed to sync playbook: {e}")
 

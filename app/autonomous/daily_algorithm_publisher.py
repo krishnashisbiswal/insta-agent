@@ -190,17 +190,16 @@ class DailyAlgorithmPublisher:
         return status_dict
 
     def load_tracker(self) -> Dict[str, Any]:
-        if not self.tracker_file.exists():
-            return {"last_post_date": None, "total_posts": 0, "history": []}
-        try:
-            with open(self.tracker_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {"last_post_date": None, "total_posts": 0, "history": []}
+        from app.storage.safe_store import safe_read_json
+        return safe_read_json(
+            self.tracker_file,
+            default_factory=lambda: {"last_post_date": None, "total_posts": 0, "history": []},
+            validate_fn=lambda d: isinstance(d, dict) and "history" in d,
+        )
 
     def save_tracker(self, data: Dict[str, Any]) -> None:
-        with open(self.tracker_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        from app.storage.safe_store import atomic_write_json
+        atomic_write_json(self.tracker_file, data, indent=2, make_backup=True)
 
     def has_posted_today(self, tz: str = TIMEZONE) -> bool:
         """
