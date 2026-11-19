@@ -43,9 +43,11 @@ jobs:
           cache: 'pip'
 
       - name: Install System Fonts & FFmpeg
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update -o Acquire::http::Timeout="15" -o Acquire::Retries="3"
-          sudo apt-get install -y --no-install-recommends ffmpeg fonts-noto-core fonts-deva
+          sudo apt-get update -qq -o Acquire::http::Timeout="15" -o Acquire::Retries="3"
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg fonts-noto-core fonts-deva
 
       - name: Install Dependencies
         run: |
