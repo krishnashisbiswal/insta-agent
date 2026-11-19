@@ -127,6 +127,7 @@ class MetaInstagramClient:
         thumb_offset_ms: Optional[int] = None,
         max_poll_seconds: int = 300,
         dry_run: bool = False,
+        container_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Uploads and publishes a Reel using Meta's official resumable upload API.
@@ -146,8 +147,25 @@ class MetaInstagramClient:
                 "file": str(video_path),
                 "file_size_bytes": file_size,
                 "caption": caption[:100] + ("..." if len(caption) > 100 else ""),
-                "status": "SIMULATED_READY",
+                "status": "DRY_RUN",
+                "publishing_outcome": "DRY_RUN",
             }
+
+        # Step 0: Pre-publish idempotency check if container was previously created
+        if container_id:
+            existing = self._reconcile_container(container_id=container_id, caption=caption)
+            if existing and existing.get("id"):
+                logger.info(f"Idempotency match: Reel already published on Meta Instagram account (Media ID: {existing['id']})")
+                return {
+                    "success": True,
+                    "dry_run": False,
+                    "media_id": str(existing["id"]),
+                    "container_id": container_id,
+                    "permalink": existing.get("permalink", f"https://www.instagram.com/reel/{existing['id']}"),
+                    "status": "PUBLISHED_VERIFIED",
+                    "publishing_outcome": "PUBLISHED_VERIFIED",
+                    "reconciled": True,
+                }
 
         # Step 1: Initialize Resumable Container
         init_url = f"{GRAPH_API_BASE_URL}/{self.account_id}/media"
@@ -211,10 +229,11 @@ class MetaInstagramClient:
                 return {
                     "success": True,
                     "dry_run": False,
-                    "media_id": media_id,
+                    "media_id": str(media_id),
                     "container_id": container_id,
                     "permalink": reconciled.get("permalink", f"https://www.instagram.com/reel/{media_id}"),
-                    "status": "PUBLISHED",
+                    "status": "PUBLISHED_VERIFIED",
+                    "publishing_outcome": "PUBLISHED_VERIFIED",
                     "reconciled": True,
                 }
             raise PublishingUncertainOutcomeError(
@@ -229,10 +248,11 @@ class MetaInstagramClient:
         return {
             "success": True,
             "dry_run": False,
-            "media_id": media_id,
+            "media_id": str(media_id),
             "container_id": container_id,
             "permalink": metadata.get("permalink", f"https://www.instagram.com/reel/{media_id}"),
-            "status": "PUBLISHED",
+            "status": "PUBLISHED_VERIFIED",
+            "publishing_outcome": "PUBLISHED_VERIFIED",
         }
 
     # -------------------------------------------------------------------------

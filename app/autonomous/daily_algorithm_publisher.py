@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 # Project root
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+CONTENT_DIR = PROJECT_ROOT / "insta content"
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -40,6 +41,17 @@ from app.autonomous.timing_engine import (
     seconds_until_next_optimal,
 )
 from app.instagram.uploader import InstagramUploader
+from app.publishing.publishing_errors import (
+    DuplicatePublishPreventedError,
+    PublishingAuthError,
+    PublishingConfigError,
+    PublishingError,
+    PublishingNetworkError,
+    PublishingRateLimitError,
+    PublishingUncertainOutcomeError,
+    PublishingValidationError,
+)
+from app.publishing.state_machine import compute_video_fingerprint
 from app.video.cinematic_composer import create_cinematic_reel_video
 from app.video.smart_voice_router import clean_pronunciation_for_hindi, determine_smart_voice
 from app.video.tts_engine import generate_speech
@@ -124,7 +136,7 @@ class DailyAlgorithmPublisher:
             PROJECT_ROOT / "output" / "audio",
             PROJECT_ROOT / "output" / "frames",
             PROJECT_ROOT / "assets" / "generated_broll",
-            PROJECT_ROOT / "insta content",
+            CONTENT_DIR,
         ]
         for d in required_dirs:
             try:
@@ -157,12 +169,16 @@ class DailyAlgorithmPublisher:
         if not dry_run:
             from app.instagram.uploader import InstagramUploader
             uploader = InstagramUploader()
-            if not uploader.has_direct_credentials():
+            if not uploader.has_credentials():
                 critical_errors.append(
                     "Production live publishing requires Instagram credentials. "
-                    "Provide INSTAGRAM_SESSION_DATA, INSTAGRAM_SESSION_ID, or INSTAGRAM_USERNAME/PASSWORD. "
+                    "Provide INSTAGRAM_USER_ID & INSTAGRAM_ACCESS_TOKEN (Meta Graph API, recommended) or "
+                    "INSTAGRAM_SESSION_DATA, INSTAGRAM_SESSION_ID, or INSTAGRAM_USERNAME/PASSWORD (Direct). "
                     "Use --dry-run for offline verification."
                 )
+            else:
+                method = uploader.get_preferred_method()
+                logger.info(f"Instagram publisher credential check passed: selected method is '{method}'.")
         else:
             optional_unavailable.append("Running in --dry-run mode: Live Instagram network upload is disabled.")
 
@@ -204,16 +220,48 @@ class DailyAlgorithmPublisher:
     def has_posted_today(self, tz: str = TIMEZONE) -> bool:
         """
         Check if today's single video has already been published.
-        Dual-layer verification:
-        1. Live Instagram profile feed inspection (ground truth: checks if Reel actually exists on Instagram)
-        2. Local post tracker JSON fallback
+        Multi-layer verification:
+        1. Official Meta Graph API check (if configured)
+        2. Direct Instagram profile feed inspection (if direct login configured)
+        3. Local post tracker JSON fallback
         """
         today_str = get_current_time(tz).strftime("%Y-%m-%d")
+        uploader = InstagramUploader()
 
-        # 1. Live Instagram account check (ground truth)
-        try:
-            uploader = InstagramUploader()
-            if uploader.has_direct_credentials():
+        # 1. Official Meta Graph API check (preferred)
+        if uploader.has_graph_credentials():
+            try:
+                from app.instagram.meta_graph_api import MetaInstagramClient
+                from datetime import datetime
+                from app.autonomous.timing_engine import get_tz
+                client = MetaInstagramClient(
+                    instagram_account_id=uploader.user_id,
+                    access_token=uploader.access_token,
+                )
+                recent = client.get_recent_media(limit=1)
+                if recent:
+                    latest = recent[0]
+                    ts_str = latest.get("timestamp", "")
+                    if ts_str:
+                        tz_obj = get_tz(tz)
+                        clean_ts = ts_str.replace("+0000", "+00:00")
+                        dt = datetime.fromisoformat(clean_ts).astimezone(tz_obj)
+                        if dt.strftime("%Y-%m-%d") == today_str:
+                            logger.info(f"Verified live Reel posted on Instagram via Meta Graph API today: {latest.get('id')} at {dt.strftime('%H:%M:%S')}")
+                            tracker = self.load_tracker()
+                            tracker["last_post_date"] = today_str
+                            tracker["last_media_code"] = latest.get("id")
+                            self.save_tracker(tracker)
+                            return True
+                        else:
+                            logger.info(f"Meta Graph API check: No reel posted today ({today_str}). Latest post was on {dt.strftime('%Y-%m-%d')}.")
+                            return False
+            except Exception as exc:
+                logger.debug(f"Meta Graph API profile verification skipped/failed: {exc}")
+
+        # 2. Live direct account check (if direct credentials exist)
+        elif uploader.has_direct_credentials():
+            try:
                 cl = uploader._init_direct_client()
                 clips = cl.user_clips(cl.user_id, amount=1)
                 if clips:
@@ -231,23 +279,27 @@ class DailyAlgorithmPublisher:
                     else:
                         logger.info(f"Live Instagram profile check: No reel posted today ({today_str}). Latest post was {latest.code} on {latest_dt.strftime('%Y-%m-%d')}.")
                         return False
-        except Exception as exc:
-            logger.debug(f"Live Instagram profile verification skipped/failed: {exc}")
+            except Exception as exc:
+                logger.debug(f"Live Instagram profile verification skipped/failed: {exc}")
 
-        # 2. Local tracker fallback
+        # 3. Local tracker fallback
         tracker = self.load_tracker()
         return tracker.get("last_post_date") == today_str
 
     def record_post_today(self, post_info: Dict[str, Any], tz: str = TIMEZONE) -> None:
-        """Record today's completed video ONLY if actually published to Instagram."""
+        """Record today's completed video ONLY if verified published to Instagram."""
+        outcome = post_info.get("publishing_outcome")
         ig_res = post_info.get("instagram_upload", {})
         media_id = ig_res.get("media_id")
         media_code = ig_res.get("media_code", "")
         media_url = ig_res.get("media_url", "")
 
-        # Never record a false positive if upload failed or was dry run
-        if not media_id or ig_res.get("mode") == "DRY_RUN":
-            logger.warning("[DAILY PUBLISHER] Skipping tracker update: Reel was not verified published on Instagram.")
+        # Strictly enforce: ONLY PUBLISHED_VERIFIED with valid media_id can be recorded
+        if outcome != "PUBLISHED_VERIFIED" or not media_id or ig_res.get("mode") == "DRY_RUN":
+            logger.warning(
+                f"[DAILY PUBLISHER] Skipping tracker update: Reel outcome is '{outcome}' "
+                f"(not PUBLISHED_VERIFIED with confirmed media_id)."
+            )
             return
 
         tracker = self.load_tracker()
@@ -259,19 +311,20 @@ class DailyAlgorithmPublisher:
             "timestamp": int(time.time()),
             "topic": post_info.get("topic", ""),
             "seo_score": post_info.get("seo_score", 90),
-            "media_id": media_id,
+            "media_id": str(media_id),
             "media_code": media_code,
             "media_url": media_url,
             "video_path": str(post_info.get("video_path", "")),
         })
         tracker[today_str] = {
             "published_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "media_id": media_id,
+            "media_id": str(media_id),
             "media_code": media_code,
             "media_url": media_url,
             "topic": post_info.get("topic", ""),
         }
         self.save_tracker(tracker)
+        logger.info(f"[DAILY PUBLISHER] Successfully recorded post for {today_str} (Media ID: {media_id})")
 
     def produce_trending_reel(
         self,
@@ -410,13 +463,13 @@ class DailyAlgorithmPublisher:
             script_data=script_data,
             language=active_lang,
         )
-        final_caption = caption_res["full_caption"]
-        hashtags = caption_res["hashtags"]
+        final_caption = caption_res.get("full_caption") or caption_res.get("final_caption", "")
+        hashtags = caption_res.get("hashtags", [])
 
         seo_audit = caption_res.get("seo_audit") or verify_seo_integrity(script_data, final_caption, hashtags)
         print(f" -> SEO Score:        {seo_audit['overall_seo_score']}/100 [{seo_audit['verdict']}]")
 
-        dest_dir = PROJECT_ROOT / "insta content"
+        dest_dir = CONTENT_DIR
         dest_dir.mkdir(parents=True, exist_ok=True)
 
         final_video_dest = dest_dir / "viral_reel_video.mp4"
@@ -434,9 +487,14 @@ class DailyAlgorithmPublisher:
         with open(caption_dest, "w", encoding="utf-8") as f:
             f.write(caption_text_to_save.strip() + "\n")
 
-        from moviepy import VideoFileClip
-        with VideoFileClip(str(final_video_dest)) as v_chk:
-            final_duration = round(v_chk.duration, 2)
+        final_duration = float(target_dur)
+        try:
+            from moviepy import VideoFileClip
+            with VideoFileClip(str(final_video_dest)) as v_chk:
+                if v_chk.duration:
+                    final_duration = round(v_chk.duration, 2)
+        except Exception as ve:
+            logger.debug(f"Video duration probe notice: {ve}")
 
         playbook = self.learning_engine.load_playbook() if hasattr(self, "learning_engine") else {}
         overview_dest = dest_dir / "content_overview.json"
@@ -471,15 +529,38 @@ class DailyAlgorithmPublisher:
         # 7. Live Instagram Publishing
         if dry_run:
             print("\n[STEP 7/7] Dry run mode enabled. Video safely packaged into insta content/ ready for review.")
-            res_info["instagram_upload"] = {"status": "dry_run", "message": "Video generated ready for review in insta content/"}
+            uploader = InstagramUploader()
+            upload_res = uploader.upload_reel(
+                video_path=final_video_dest,
+                caption=caption_text,
+                force_dry_run=True,
+            )
+            res_info["instagram_upload"] = upload_res
+            res_info["publishing_outcome"] = "DRY_RUN"
             AssetLifecycleManager.update_job_state(
                 job_id=lifecycle_job_id,
-                new_state=JobState.VALIDATED,
+                new_state=JobState.COMPLETED,
                 message="Dry-run completed. Package preserved in insta content/ for review.",
             )
         else:
             uploader = InstagramUploader()
-            if uploader.has_credentials():
+            if not uploader.has_credentials():
+                print("\n[STEP 7/7] ⚠️ No live Instagram credentials configured in .env / GitHub Secrets.")
+                print(" -> Required: INSTAGRAM_USER_ID and INSTAGRAM_ACCESS_TOKEN (Meta Graph API) or INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD / INSTAGRAM_SESSION_DATA (Direct)")
+                no_creds_err = "Missing Instagram publishing credentials in production mode"
+                res_info["publishing_outcome"] = "NO_CREDENTIALS"
+                res_info["instagram_upload"] = {
+                    "success": False,
+                    "status": "NO_CREDENTIALS",
+                    "publishing_outcome": "NO_CREDENTIALS",
+                    "error": no_creds_err,
+                }
+                res_info["instagram_upload_error"] = no_creds_err
+                AssetLifecycleManager.mark_failed(
+                    job_id=lifecycle_job_id,
+                    error_message=no_creds_err,
+                )
+            else:
                 print("\n[STEP 7/7] Publishing Reel to Instagram live account...")
                 try:
                     AssetLifecycleManager.update_job_state(
@@ -488,17 +569,22 @@ class DailyAlgorithmPublisher:
                         message="Uploading Reel to Instagram",
                     )
                     full_post_caption = final_caption + "\n\n" + " ".join(hashtags)
+                    
+                    fingerprint = compute_video_fingerprint(final_video_dest)
+                    res_info["video_fingerprint"] = fingerprint
+
                     upload_res = uploader.upload_reel(
                         video_path=final_video_dest,
                         caption=full_post_caption,
                     )
-                    print(f" -> Instagram Post Status: {upload_res.get('status', 'OK')} [ID: {upload_res.get('media_id', 'N/A')}]")
                     res_info["instagram_upload"] = upload_res
-
-                    # Production-Grade Verified Cleanup once published
                     media_id = upload_res.get("media_id")
-                    if upload_res.get("status") == "PUBLISHED" or media_id:
-                        print(f"\n[INSTAGRAM SUCCESS] Reel published successfully! Link: {upload_res.get('media_url')}")
+                    status = upload_res.get("status")
+                    outcome = upload_res.get("publishing_outcome")
+
+                    if (status in ("PUBLISHED", "PUBLISHED_VERIFIED") or outcome == "PUBLISHED_VERIFIED") and media_id:
+                        res_info["publishing_outcome"] = "PUBLISHED_VERIFIED"
+                        print(f"\n[INSTAGRAM REEL PUBLISHED AND VERIFIED] Media ID: {media_id} | Link: {upload_res.get('media_url')}")
                         AssetLifecycleManager.record_published(
                             job_id=lifecycle_job_id,
                             media_id=str(media_id),
@@ -522,40 +608,55 @@ class DailyAlgorithmPublisher:
                         except Exception as ce:
                             logger.warning(f"Lifecycle cleanup notice: {ce}")
                     else:
-                        print(f"\n[INSTAGRAM NOTICE] Live upload did not return confirmed media_id: {upload_res}")
+                        failure_reason = upload_res.get("error") or f"Live upload did not return confirmed media_id: {upload_res}"
+                        print(f"\n[INSTAGRAM UPLOAD FAILED] {failure_reason}")
+                        res_info["publishing_outcome"] = upload_res.get("publishing_outcome", "UPLOAD_FAILED")
+                        res_info["instagram_upload_error"] = failure_reason
                         AssetLifecycleManager.mark_failed(
                             job_id=lifecycle_job_id,
-                            error_message=f"Live upload did not return confirmed media_id: {upload_res}",
+                            error_message=failure_reason,
                         )
                 except Exception as e:
-                    print(f" -> ⚠️ Instagram Upload Notice: {e}. Video safely delivered to insta content/.")
+                    e_str = str(e).lower()
+                    if isinstance(e, PublishingAuthError) or "auth" in e_str or "login" in e_str or "checkpoint" in e_str or "challenge" in e_str or "qe/expose" in e_str:
+                        outcome = "AUTHENTICATION_FAILED"
+                    elif isinstance(e, TimeoutError) or "processing" in e_str or "timeout" in e_str:
+                        outcome = "PROCESSING_FAILED"
+                    elif isinstance(e, DuplicatePublishPreventedError):
+                        outcome = "ALREADY_PUBLISHED"
+                    else:
+                        outcome = "UPLOAD_FAILED"
+
+                    print(f"\n[INSTAGRAM PUBLISHING FAILED] Stage: {outcome}. Error: {e}. Video safely delivered to insta content/.")
+                    res_info["publishing_outcome"] = outcome
                     res_info["instagram_upload_error"] = str(e)
                     AssetLifecycleManager.mark_failed(
                         job_id=lifecycle_job_id,
-                        error_message=f"Instagram upload exception: {e}",
+                        error_message=f"Instagram upload exception ({outcome}): {e}",
                     )
-            else:
-                print("\n[STEP 7/7] ⚠️ No live Instagram credentials in .env / Secrets. Video safely delivered to insta content/ and artifacts.")
 
         # 8. Autonomous Community Retention & AI Comment Consultation
-        print("\n[STEP 8/8] Running AI Comment Consultation & Community Retention Agent...")
-        try:
-            comment_agent = CommentAgent()
-            media_id = res_info.get("instagram_upload", {}).get("media_id")
-            uploader_inst = uploader if 'uploader' in locals() else InstagramUploader()
-            consultation_replies = comment_agent.process_reel_comments(
-                uploader=uploader_inst,
-                media_id=media_id,
-                topic=topic,
-                dry_run=dry_run,
-            )
-            res_info["comment_consultations"] = len(consultation_replies)
-            overview_data["comment_consultations_handled"] = len(consultation_replies)
-            with open(overview_dest, "w", encoding="utf-8") as f:
-                json.dump(overview_data, f, indent=2, ensure_ascii=False)
-            print(f" -> Comment Retention Agent handled {len(consultation_replies)} astrological consultations.")
-        except Exception as e:
-            logger.warning(f"Comment retention notice: {e}")
+        if res_info.get("publishing_outcome") == "PUBLISHED_VERIFIED":
+            print("\n[STEP 8/8] Running AI Comment Consultation & Community Retention Agent...")
+            try:
+                comment_agent = CommentAgent()
+                media_id = res_info.get("instagram_upload", {}).get("media_id")
+                uploader_inst = uploader if 'uploader' in locals() else InstagramUploader()
+                consultation_replies = comment_agent.process_reel_comments(
+                    uploader=uploader_inst,
+                    media_id=media_id,
+                    topic=topic,
+                    dry_run=dry_run,
+                )
+                res_info["comment_consultations"] = len(consultation_replies)
+                overview_data["comment_consultations_handled"] = len(consultation_replies)
+                with open(overview_dest, "w", encoding="utf-8") as f:
+                    json.dump(overview_data, f, indent=2, ensure_ascii=False)
+                print(f" -> Comment Retention Agent handled {len(consultation_replies)} astrological consultations.")
+            except Exception as e:
+                logger.warning(f"Comment retention notice: {e}")
+        else:
+            print(f"\n[STEP 8/8] Skipping comment consultation (Reel was not published: {res_info.get('publishing_outcome')}).")
 
         # 9. Real-Time Algorithm Feedback Ingestion & Q-Value Evolution
         print("\n[STEP 9/9] Syncing live Instagram algorithm feedback & evolving Q-learning brain...")
@@ -566,16 +667,39 @@ class DailyAlgorithmPublisher:
             print(f" -> Evolved Brain Level: {fb['evolution_level']} (Q-Reward: {fb['reward_score']})")
             overview_data["agent_evolution_level"] = fb["evolution_level"]
             overview_data["q_reward_score"] = fb["reward_score"]
+            overview_data["publishing_outcome"] = res_info.get("publishing_outcome")
             with open(overview_dest, "w", encoding="utf-8") as f:
                 json.dump(overview_data, f, indent=2, ensure_ascii=False)
         except Exception as e:
             logger.warning(f"Reinforcement feedback notice: {e}")
 
         print("\n" + "=" * 75)
-        print("  DAILY VIRAL REEL PRODUCTION COMPLETE!")
-        print(f"  Topic:    {topic}")
-        print(f"  Saved to: {final_video_dest}")
-        print(f"  Size:     {res_info['size_mb']} MB")
+        outcome = res_info.get("publishing_outcome", "UNKNOWN")
+        if outcome == "PUBLISHED_VERIFIED":
+            print("  INSTAGRAM REEL PUBLISHED AND VERIFIED")
+            print("  DAILY VIRAL REEL PRODUCTION COMPLETE!")
+            print(f"  Topic:    {topic}")
+            print(f"  Media ID: {res_info.get('instagram_upload', {}).get('media_id')}")
+            print(f"  Link:     {res_info.get('instagram_upload', {}).get('media_url')}")
+            print(f"  Saved to: {final_video_dest}")
+            print(f"  Size:     {res_info['size_mb']} MB")
+        elif outcome == "DRY_RUN":
+            print("  DRY RUN COMPLETED — VIDEO GENERATED LOCALLY")
+            print(f"  Topic:    {topic}")
+            print(f"  Saved to: {final_video_dest}")
+            print(f"  Size:     {res_info['size_mb']} MB")
+        elif outcome == "NO_CREDENTIALS":
+            print("  VIDEO GENERATION COMPLETED — NO PUBLISHING CREDENTIALS CONFIGURED")
+            print(f"  Topic:    {topic}")
+            print(f"  Saved to: {final_video_dest}")
+            print(f"  Size:     {res_info['size_mb']} MB")
+        else:
+            print("  VIDEO GENERATION COMPLETED — INSTAGRAM PUBLISHING FAILED")
+            print(f"  Topic:    {topic}")
+            print(f"  Outcome:  {outcome}")
+            print(f"  Reason:   {res_info.get('instagram_upload_error', 'Upload failed')}")
+            print(f"  Saved to: {final_video_dest}")
+            print(f"  Size:     {res_info['size_mb']} MB")
         print("=" * 75)
 
         return res_info
@@ -601,7 +725,11 @@ class DailyAlgorithmPublisher:
             secs, win_name, nxt = seconds_until_next_optimal(tz)
             print(f"[DAILY PUBLISHER] Today's video ({today_str}) has ALREADY been published to Instagram.")
             print(f"[DAILY PUBLISHER] Next optimal algorithm window: {nxt.strftime('%Y-%m-%d %H:%M')} ({win_name}) in {secs // 3600}h {(secs % 3600) // 60}m.")
-            return {"status": "already_posted_today", "next_post_time": str(nxt)}
+            return {
+                "status": "already_posted_today",
+                "publishing_outcome": "ALREADY_PUBLISHED",
+                "next_post_time": str(nxt),
+            }
 
         # Check algorithm engagement window and velocity score
         in_peak, peak_name = is_in_optimal_window(tz)
@@ -634,8 +762,8 @@ class DailyAlgorithmPublisher:
             category=category,
         )
 
-        # Record in daily tracker only if live published with confirmed media_id
-        if not dry_run and result.get("instagram_upload", {}).get("media_id"):
+        # Record in daily tracker ONLY if live published with confirmed media_id and verified outcome
+        if not dry_run and result.get("publishing_outcome") == "PUBLISHED_VERIFIED" and result.get("instagram_upload", {}).get("media_id"):
             self.record_post_today(result, tz=tz)
 
         return result
@@ -712,9 +840,23 @@ if __name__ == "__main__":
     if args.daemon:
         publisher.run_continuous_daemon()
     else:
-        publisher.run_daily_algorithm_cycle(
+        result = publisher.run_daily_algorithm_cycle(
             force=args.force,
             dry_run=args.dry_run,
             topic=args.topic,
             category=args.category,
         )
+
+        outcome = result.get("publishing_outcome")
+        # In non-dry-run mode, publishing must be verified or already published
+        if not args.dry_run:
+            if outcome in ("UPLOAD_FAILED", "PROCESSING_FAILED", "AUTHENTICATION_FAILED"):
+                logger.error(f"[CLI EXIT] Exiting with code 1 due to publishing failure: {outcome}")
+                sys.exit(1)
+            elif outcome == "NO_CREDENTIALS":
+                logger.error("[CLI EXIT] Exiting with code 1: No Instagram credentials configured.")
+                sys.exit(1)
+            elif outcome not in ("PUBLISHED_VERIFIED", "ALREADY_PUBLISHED"):
+                if result.get("status") not in ("already_posted_today", "off_peak_deferred"):
+                    logger.error(f"[CLI EXIT] Exiting with code 1: Publication not verified (outcome: {outcome})")
+                    sys.exit(1)

@@ -56,6 +56,7 @@ class InstagramUploader:
         session_data: Optional[str] = None,
         user_id: Optional[str] = None,
         access_token: Optional[str] = None,
+        session_file: Optional[Path] = None,
     ):
         self.username = (username if username is not None else INSTAGRAM_USERNAME).strip()
         self.password = (password if password is not None else INSTAGRAM_PASSWORD).strip()
@@ -67,11 +68,16 @@ class InstagramUploader:
         ).strip()
         self.user_id = (user_id if user_id is not None else INSTAGRAM_USER_ID).strip()
         self.access_token = (access_token if access_token is not None else INSTAGRAM_ACCESS_TOKEN).strip()
+        self.session_file = Path(session_file) if session_file is not None else IG_SESSION_FILE
         self._instagrapi_client = None
 
     def has_direct_credentials(self) -> bool:
         """Check if Direct Instagram account credentials or session are configured."""
-        has_session = bool(self.session_id or self.session_data or IG_SESSION_FILE.exists())
+        has_session = bool(
+            self.session_id
+            or self.session_data
+            or (self.session_file and self.session_file.exists() and self.session_file.stat().st_size > 10 and bool(self.username or self.session_id or self.session_data))
+        )
         return bool((self.username and self.password) or has_session)
 
     def has_graph_credentials(self) -> bool:
@@ -83,16 +89,28 @@ class InstagramUploader:
         return self.has_direct_credentials() or self.has_graph_credentials()
 
     def get_preferred_method(self) -> str:
-        """Determine whether to use direct instagrapi or official Graph API."""
-        if INSTAGRAM_UPLOAD_METHOD == "direct" and self.has_direct_credentials():
-            return "direct"
-        if INSTAGRAM_UPLOAD_METHOD == "graph_api" and self.has_graph_credentials():
-            return "graph_api"
-        # Auto-detect: prefer direct if username/password is present, otherwise graph_api
-        if self.has_direct_credentials():
-            return "direct"
+        """
+        Determine whether to use official Meta Graph API or direct instagrapi.
+        Prioritizes official Meta Graph API for production reliability.
+        """
+        upload_method = os.getenv("INSTAGRAM_UPLOAD_METHOD", INSTAGRAM_UPLOAD_METHOD).strip().lower()
+        if upload_method == "graph_api":
+            if self.has_graph_credentials():
+                return "graph_api"
+            raise PublishingConfigError(
+                "INSTAGRAM_UPLOAD_METHOD is set to 'graph_api' but INSTAGRAM_USER_ID or INSTAGRAM_ACCESS_TOKEN is missing."
+            )
+        if upload_method == "direct":
+            if self.has_direct_credentials():
+                return "direct"
+            raise PublishingConfigError(
+                "INSTAGRAM_UPLOAD_METHOD is set to 'direct' but direct credentials/session are missing."
+            )
+        # Auto-detect: Prioritize official Meta Graph API for production stability
         if self.has_graph_credentials():
             return "graph_api"
+        if self.has_direct_credentials():
+            return "direct"
         return "dry_run"
 
     # -----------------------------------------------------------------------
@@ -110,7 +128,7 @@ class InstagramUploader:
 
         # Check if full session data was passed via environment variable (e.g. GitHub Actions)
         session_data_env = self.session_data or os.getenv("INSTAGRAM_SESSION_DATA", "").strip()
-        if session_data_env and (not IG_SESSION_FILE.exists() or IG_SESSION_FILE.stat().st_size == 0):
+        if session_data_env and (not self.session_file.exists() or self.session_file.stat().st_size == 0):
             try:
                 raw_json = session_data_env
                 if not session_data_env.startswith("{"):
@@ -121,51 +139,77 @@ class InstagramUploader:
                             raw_json = decoded
                     except Exception:
                         pass
-                IG_SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
-                IG_SESSION_FILE.write_text(raw_json, encoding="utf-8")
+                self.session_file.parent.mkdir(parents=True, exist_ok=True)
+                self.session_file.write_text(raw_json, encoding="utf-8")
                 print(f"[INSTAGRAM DIRECT] Restored session file from INSTAGRAM_SESSION_DATA.")
             except Exception as e:
                 logger.warning(f"Failed restoring session data: {e}")
 
-        # Try to reuse saved session if available
-        if IG_SESSION_FILE.exists():
+        # Try to reuse saved session if available (only if direct credentials or session were provided)
+        if self.session_file.exists() and bool(self.username or self.session_id or self.session_data):
             try:
-                print(f"[INSTAGRAM DIRECT] Loading saved session from {IG_SESSION_FILE.name}...")
-                cl.load_settings(str(IG_SESSION_FILE))
+                print(f"[INSTAGRAM DIRECT] Loading saved session from {self.session_file.name}...")
+                cl.load_settings(str(self.session_file))
                 # Validate if loaded session is still active
                 try:
                     cl.get_timeline_feed()
                     print(f"[INSTAGRAM DIRECT] Saved session is valid and active!")
                     self._instagrapi_client = cl
                     return cl
-                except Exception:
-                    print("[INSTAGRAM DIRECT] Cached session expired. Re-authenticating with credentials...")
+                except Exception as sess_exc:
+                    print(f"[INSTAGRAM DIRECT] Cached session expired or invalid ({sess_exc}). Re-authenticating with credentials...")
                     if self.username and self.password:
-                        cl.login(self.username, self.password)
-                        cl.dump_settings(str(IG_SESSION_FILE))
-                        self._instagrapi_client = cl
-                        return cl
+                        try:
+                            cl.login(self.username, self.password)
+                            cl.dump_settings(str(self.session_file))
+                            self._instagrapi_client = cl
+                            return cl
+                        except Exception as login_exc:
+                            login_str = str(login_exc).lower()
+                            if "qe/expose" in login_str or "404" in login_str:
+                                raise PublishingAuthError(
+                                    f"Direct Instagram login failed at /api/v1/qe/expose/ endpoint (404 Not Found): {login_exc}. "
+                                    f"Instagram has blocked or deprecated this private mobile API endpoint. "
+                                    f"To resolve, configure official Meta Graph API credentials: INSTAGRAM_USER_ID and INSTAGRAM_ACCESS_TOKEN."
+                                ) from login_exc
+                            raise PublishingAuthError(f"Direct Instagram authentication failure: {login_exc}") from login_exc
+            except PublishingAuthError:
+                raise
             except Exception as exc:
                 logger.warning(f"Could not reuse session file: {exc}. Logging in fresh...")
 
         # Login with session ID if provided
-        if self.session_id:
-            print("[INSTAGRAM DIRECT] Authenticating via session ID...")
-            cl.login_by_sessionid(self.session_id)
-        elif self.username and self.password:
-            print(f"[INSTAGRAM DIRECT] Authenticating @{self.username}...")
-            cl.login(self.username, self.password)
-        else:
-            raise RuntimeError(
-                "Missing valid Instagram credentials. Provide INSTAGRAM_SESSION_DATA, INSTAGRAM_SESSION_ID, "
-                "or INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD in .env or GitHub Secrets"
-            )
+        try:
+            if self.session_id:
+                print("[INSTAGRAM DIRECT] Authenticating via session ID...")
+                cl.login_by_sessionid(self.session_id)
+            elif self.username and self.password:
+                print(f"[INSTAGRAM DIRECT] Authenticating @{self.username}...")
+                cl.login(self.username, self.password)
+            else:
+                raise PublishingConfigError(
+                    "Missing valid Instagram credentials. Provide INSTAGRAM_USER_ID & INSTAGRAM_ACCESS_TOKEN (Graph API), "
+                    "or INSTAGRAM_SESSION_DATA, INSTAGRAM_SESSION_ID, or INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD in .env or GitHub Secrets."
+                )
+        except (PublishingAuthError, PublishingConfigError):
+            raise
+        except Exception as exc:
+            exc_str = str(exc).lower()
+            if "qe/expose" in exc_str or "404" in exc_str:
+                raise PublishingAuthError(
+                    f"Direct Instagram login failed at /api/v1/qe/expose/ endpoint (404 Not Found): {exc}. "
+                    f"Instagram has blocked or deprecated this private mobile API endpoint. "
+                    f"To resolve, configure official Meta Graph API credentials: INSTAGRAM_USER_ID and INSTAGRAM_ACCESS_TOKEN."
+                ) from exc
+            if "login" in exc_str or "checkpoint" in exc_str or "challenge" in exc_str or "password" in exc_str:
+                raise PublishingAuthError(f"Direct Instagram authentication failure: {exc}") from exc
+            raise PublishingNetworkError(f"Direct Instagram login network failure: {exc}") from exc
 
         # Save session to avoid repeated logins
         try:
-            IG_SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
-            cl.dump_settings(str(IG_SESSION_FILE))
-            print(f"[INSTAGRAM DIRECT] Session cached to {IG_SESSION_FILE.name}")
+            self.session_file.parent.mkdir(parents=True, exist_ok=True)
+            cl.dump_settings(str(self.session_file))
+            print(f"[INSTAGRAM DIRECT] Session cached to {self.session_file.name}")
         except Exception as exc:
             logger.warning(f"Failed to cache session: {exc}")
 
@@ -247,10 +291,11 @@ class InstagramUploader:
         return {
             "success": True,
             "method": "DIRECT_INSTAGRAPI",
-            "media_id": media_id,
+            "media_id": str(media_id),
             "media_code": media_code,
             "media_url": media_url,
-            "status": "PUBLISHED",
+            "status": "PUBLISHED_VERIFIED",
+            "publishing_outcome": "PUBLISHED_VERIFIED",
         }
 
     # -----------------------------------------------------------------------
@@ -287,12 +332,26 @@ class InstagramUploader:
             access_token=self.access_token,
         )
 
-        return client.publish_reel_resumable(
+        res = client.publish_reel_resumable(
             video_path=video_path,
             caption=caption,
             share_to_feed=share_to_feed,
             max_poll_seconds=max_poll_seconds,
         )
+
+        media_id = res.get("media_id")
+        permalink = res.get("permalink", f"https://www.instagram.com/reel/{media_id}" if media_id else "")
+        return {
+            "success": True,
+            "method": "GRAPH_API_RESUMABLE",
+            "media_id": str(media_id) if media_id else None,
+            "container_id": res.get("container_id", ""),
+            "media_url": permalink,
+            "permalink": permalink,
+            "status": "PUBLISHED_VERIFIED",
+            "publishing_outcome": "PUBLISHED_VERIFIED",
+            "reconciled": res.get("reconciled", False),
+        }
 
     # -----------------------------------------------------------------------
     # METHOD 3: UNIFIED DISPATCHER & DRY-RUN MODE
@@ -305,18 +364,24 @@ class InstagramUploader:
     ) -> Dict[str, Any]:
         """
         Unified upload dispatcher. Automatically chooses between:
-        1. Direct account upload (instagrapi)
-        2. Official Meta Graph API
+        1. Official Meta Graph API (preferred for production)
+        2. Direct account upload (instagrapi)
         3. Dry-Run Preview
         """
-        if force_dry_run or not self.has_credentials():
+        if force_dry_run:
             return self.dry_run_preview(video_path, caption)
 
+        if not self.has_credentials():
+            raise PublishingConfigError(
+                "No Instagram credentials configured. Set INSTAGRAM_USER_ID & INSTAGRAM_ACCESS_TOKEN (Graph API) "
+                "or INSTAGRAM_USERNAME & INSTAGRAM_PASSWORD / INSTAGRAM_SESSION_DATA (Direct)."
+            )
+
         method = self.get_preferred_method()
-        if method == "direct":
-            return self.upload_reel_direct(video_path, caption)
-        elif method == "graph_api":
+        if method == "graph_api":
             return self.upload_reel_resumable(video_path, caption)
+        elif method == "direct":
+            return self.upload_reel_direct(video_path, caption)
         else:
             return self.dry_run_preview(video_path, caption)
 
@@ -338,6 +403,9 @@ class InstagramUploader:
 
         manifest = {
             "mode": "DRY_RUN",
+            "status": "DRY_RUN",
+            "publishing_outcome": "DRY_RUN",
+            "success": True,
             "video_path": str(video_path),
             "video_exists": exists,
             "file_size_mb": round(file_size_mb, 2),
@@ -346,7 +414,7 @@ class InstagramUploader:
             "caption_length": caption_len,
             "caption_within_limit": caption_len <= 2200,
             "credentials_configured": self.has_credentials(),
-            "detected_upload_method": self.get_preferred_method(),
+            "detected_upload_method": self.get_preferred_method() if self.has_credentials() else "dry_run",
         }
 
         manifest_file = OUTPUT_DIR / "latest_upload_manifest.json"
