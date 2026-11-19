@@ -745,7 +745,11 @@ def create_cinematic_reel_video(
     else:
         # STRICT MANDATE: Purge old intermediate b-roll and frame renders before starting fresh generation
         DynamicVisualEngine.purge_old_generated_images()
+        # Plan visuals for all scenes enforcing diversity, emotion detection, and script intelligence
+        from app.video.scene_visual_planner import SceneVisualPlanner
+        reel_plans = SceneVisualPlanner.plan_reel_visuals(scenes=scenes, topic=topic)
         for idx, sc in enumerate(scenes):
+            sc["visual_plan"] = reel_plans[idx].to_dict()
             img_file = DynamicVisualEngine.get_or_generate_scene_image(
                 scene_dict=sc,
                 topic=topic,

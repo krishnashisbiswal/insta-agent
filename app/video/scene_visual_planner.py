@@ -35,20 +35,20 @@ class SceneValidationError(Exception):
 @dataclass
 class SceneVisualPlan:
     """Structured, authoritative visual specification for a single scene."""
-    scene_id: str
-    scene_idx: int
-    exact_narration: str
-    core_meaning: str
-    main_subject: str
-    subject_action: str
-    environment: str
-    time_of_day: str
-    mood: str
-    composition: str
-    camera_framing: str
-    lighting: str
-    color_palette: str
-    visual_style: str
+    scene_id: str = "scene_1"
+    scene_idx: int = 0
+    exact_narration: str = ""
+    core_meaning: str = ""
+    main_subject: str = "cinematic scene subject"
+    subject_action: str = "engaging in intentional cinematic action"
+    environment: str = "atmospheric cinematic setting"
+    time_of_day: str = "morning golden hour"
+    mood: str = "contemplative, cinematic"
+    composition: str = "9:16 vertical portrait composition"
+    camera_framing: str = "35mm prime lens, shallow depth of field"
+    lighting: str = "warm golden hour lighting"
+    color_palette: str = "warm gold, deep amber, dark charcoal"
+    visual_style: str = "cinematic photorealistic 35mm film photograph, 9:16 vertical"
     required_visual_elements: List[str] = field(default_factory=list)
     forbidden_visual_elements: List[str] = field(default_factory=list)
     continuity_requirements: str = "consistent warm cinematic 35mm tone"
@@ -59,9 +59,49 @@ class SceneVisualPlan:
     estimated_duration: float = 4.0
     is_valid: bool = True
     validation_errors: List[str] = field(default_factory=list)
+    # Emotion-aware intelligence fields (Requirement 2)
+    emotion: str = ""
+    emotion_intensity: float = 0.8
+    viewer_feeling: str = ""
+    visual_concept: str = ""
+    visual_metaphor: str = ""
+    camera_angle: str = ""
+    continuity_notes: str = ""
+    image_prompt: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
+        d = asdict(self)
+        # Authoritative Requirement 2 schema
+        d["scene_id"] = self.scene_idx + 1 if isinstance(self.scene_idx, int) else 1
+        d["narration"] = self.exact_narration
+        d["core_meaning"] = self.core_meaning
+        d["emotion"] = self.emotion or self.mood
+        d["emotion_intensity"] = self.emotion_intensity
+        d["viewer_feeling"] = self.viewer_feeling
+        d["visual_concept"] = self.visual_concept or self.core_meaning
+        d["visual_metaphor"] = self.visual_metaphor
+        d["subject"] = self.main_subject
+        d["action"] = self.subject_action
+        d["environment"] = self.environment
+        d["composition"] = self.composition
+        d["lighting"] = self.lighting
+        d["color_palette"] = self.color_palette
+        d["camera_angle"] = self.camera_angle or self.camera_framing
+        d["continuity_notes"] = self.continuity_notes or self.continuity_requirements
+        d["image_prompt"] = self.image_prompt or self.generation_prompt
+        # Backward compatibility aliases
+        d["main_subject"] = self.main_subject
+        d["subject_action"] = self.subject_action
+        d["generation_prompt"] = self.image_prompt or self.generation_prompt
+        return d
+
+    @property
+    def narration(self) -> str:
+        return self.exact_narration
+
+    @property
+    def subject(self) -> str:
+        return self.main_subject
 
     @property
     def primary_subject(self) -> str:
@@ -438,6 +478,119 @@ class SceneVisualPlanner:
         scene_idx: int,
         total_scenes: int,
         topic: str = "",
+        prev_scene: Optional[Dict[str, Any]] = None,
+        next_scene: Optional[Dict[str, Any]] = None,
+        diversity_tracker: Optional[Any] = None,
+    ) -> SceneVisualPlan:
+        """
+        Plans a single scene's visual specification based strictly on its own content,
+        driven by SceneVisualIntelligence for emotion, meaning, and visual metaphor.
+        """
+        from app.video.scene_visual_intelligence import SceneVisualIntelligence, ReelVisualDiversityTracker
+        tracker = diversity_tracker or ReelVisualDiversityTracker()
+
+        scene_id = f"scene_{scene_idx + 1}"
+        spoken = scene_dict.get("spoken_line", "").strip()
+        on_screen = scene_dict.get("on_screen_text", "").strip()
+        vis_desc = scene_dict.get("visual_description", "").strip()
+        est_duration = float(scene_dict.get("estimated_seconds", 4.0))
+
+        # Check concrete specific entity match for backward compatibility
+        scene_text = f"{spoken} {on_screen} {vis_desc}".strip()
+        matched_scene = cls.detect_scene_entity(scene_text)
+        matched_topic = cls.detect_scene_entity(topic)
+
+        # Execute SceneVisualIntelligence
+        spec = SceneVisualIntelligence.analyze_scene(
+            scene_dict=scene_dict,
+            scene_idx=scene_idx,
+            total_scenes=total_scenes,
+            prev_scene=prev_scene,
+            next_scene=next_scene,
+            topic=topic,
+            diversity_tracker=tracker,
+        )
+
+        # Exclusions: forbid generic templates
+        forbidden = [
+            "text overlays", "watermarks", "CGI cartoons", "synthetic 3D rings",
+            "insects", "food", "wireframes", "distorted anatomy"
+        ]
+        # Anti-astrology template enforcement (Requirement 1):
+        if not any(k in scene_text.lower() for k in ["planet", "saturn", "jupiter", "mars", "moon", "sun", "venus", "mercury", "शनि", "ग्रह"]):
+            forbidden.append("floating planets in space")
+        if not any(k in scene_text.lower() for k in ["zodiac", "kundli", "राशि", "कुंडली", "chart"]):
+            forbidden.append("generic zodiac wheel")
+        if not any(k in scene_text.lower() for k in ["temple", "mandir", "मंदिर", "sanctum"]):
+            forbidden.append("generic cartoon temple")
+
+        # Topic isolation and specific entity exclusions
+        if matched_scene:
+            for exc in matched_scene[1].get("exclusions", []):
+                if exc not in forbidden:
+                    forbidden.append(exc)
+
+        if matched_topic and (not matched_scene or matched_topic[0] != matched_scene[0]):
+            if matched_topic[1]["name"] not in forbidden:
+                forbidden.append(matched_topic[1]["name"])
+            for obj in matched_topic[1].get("objects", []):
+                if obj not in forbidden:
+                    forbidden.append(obj)
+
+        # Determine subject, action, environment from spec or matched entity
+        primary_subject = spec.subject
+        action = spec.action
+        environment = spec.environment
+        req_objs = [primary_subject]
+
+        if matched_scene:
+            primary_subject = matched_scene[1]["name"]
+            action = matched_scene[1]["default_action"]
+            environment = matched_scene[1]["default_setting"]
+            req_objs = copy.deepcopy(matched_scene[1].get("objects", [primary_subject]))
+
+        plan = SceneVisualPlan(
+            scene_id=scene_id,
+            scene_idx=scene_idx,
+            exact_narration=spoken or on_screen,
+            core_meaning=spec.core_meaning,
+            main_subject=primary_subject,
+            subject_action=action,
+            environment=environment,
+            time_of_day="morning golden hour",
+            mood=spec.emotion,
+            composition=spec.composition,
+            camera_framing=spec.camera_angle,
+            lighting=spec.lighting,
+            color_palette=spec.color_palette,
+            visual_style=spec.visual_style,
+            required_visual_elements=req_objs,
+            forbidden_visual_elements=forbidden,
+            continuity_requirements=spec.continuity_notes,
+            aspect_ratio="9:16",
+            generation_prompt=spec.image_prompt,
+            validation_criteria=[primary_subject.split()[0].lower()],
+            entity_key=matched_scene[0] if matched_scene else spec.emotion.lower(),
+            estimated_duration=est_duration,
+            emotion=spec.emotion,
+            emotion_intensity=spec.emotion_intensity,
+            viewer_feeling=spec.viewer_feeling,
+            visual_concept=spec.visual_concept,
+            visual_metaphor=spec.visual_metaphor,
+            camera_angle=spec.camera_angle,
+            continuity_notes=spec.continuity_notes,
+            image_prompt=spec.image_prompt,
+            is_valid=True,
+        )
+        return cls.validate_and_repair_plan(plan)
+
+    @classmethod
+    def _legacy_plan_scene_visual(
+        cls,
+        scene_dict: Dict[str, Any],
+        scene_idx: int,
+        total_scenes: int,
+        topic: str = "",
     ) -> SceneVisualPlan:
         """
         Plans a single scene's visual specification based strictly on its own content.
@@ -673,18 +826,25 @@ class SceneVisualPlanner:
     ) -> List[SceneVisualPlan]:
         """
         Plans complete visual specifications for every scene in a Reel,
-        and enforces scene-to-scene visual variety.
+        and enforces scene-to-scene visual variety using ReelVisualDiversityTracker.
         """
+        from app.video.scene_visual_intelligence import ReelVisualDiversityTracker
+        tracker = ReelVisualDiversityTracker()
         total = len(scenes)
-        plans = [
-            cls.plan_scene_visual(
+        plans = []
+        for idx, sc in enumerate(scenes):
+            prev_sc = scenes[idx - 1] if idx > 0 else None
+            next_sc = scenes[idx + 1] if idx + 1 < total else None
+            plan = cls.plan_scene_visual(
                 scene_dict=sc,
                 scene_idx=idx,
                 total_scenes=total,
                 topic=topic,
+                prev_scene=prev_sc,
+                next_scene=next_sc,
+                diversity_tracker=tracker,
             )
-            for idx, sc in enumerate(scenes)
-        ]
+            plans.append(plan)
 
         # Deduplicate consecutive identical visual entities
         plans = cls.deduplicate_reel_plans(plans)

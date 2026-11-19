@@ -1164,20 +1164,31 @@ class DynamicVisualEngine:
         """
         Main production entrypoint: Sourcing and delivering an authentic, high-resolution 1080x1920 visual
         that STRICTLY matches the information conveyed in this specific scene script.
-        Guarantees:
-        1. Visual diversity across scenes (each scene gets a distinct, authentic photographic asset).
-        2. Semantic accuracy based on script (Saturn dialogue -> Saturn visual; Kundli -> Kundli chart; Crystal -> Crystal).
-        3. Zero duplicate images within a single reel.
-        4. Rotated ending visuals so Scene 6 and Scene 7 do NOT repeat identical images across reels.
+        Uses AIImageGenerator to create fresh, script-driven visuals.
         """
-        return cls._legacy_static_broll_fallback(
-            scene_dict=scene_dict,
-            topic=topic,
-            scene_idx=scene_idx,
-            total_scenes=total_scenes,
-            target_file=None,
-            used_images=used_images or set(),
-        )
+        from app.video.ai_image_generator import AIImageGenerator
+        try:
+            return AIImageGenerator.generate_scene_image(
+                scene_dict=scene_dict,
+                topic=topic,
+                scene_idx=scene_idx,
+                total_scenes=total_scenes,
+                reel_slug=reel_slug,
+                used_images=used_images,
+                allow_static_fallback=allow_static_fallback,
+            )
+        except Exception as e:
+            if allow_static_fallback:
+                logger.warning(f"[DynamicVisualEngine] AI generation failed, falling back to static plate: {e}")
+                return cls._legacy_static_broll_fallback(
+                    scene_dict=scene_dict,
+                    topic=topic,
+                    scene_idx=scene_idx,
+                    total_scenes=total_scenes,
+                    target_file=None,
+                    used_images=used_images or set(),
+                )
+            raise
 
     # Backward-compatible alias
     get_or_create_scene_visual = get_or_generate_scene_image

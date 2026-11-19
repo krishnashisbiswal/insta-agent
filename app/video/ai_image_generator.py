@@ -99,10 +99,12 @@ class AIImageGenerator:
             )
 
         # 2. Extract or build generation prompt
-        prompt = getattr(plan, "generation_prompt", "")
+        prompt = getattr(plan, "image_prompt", None) or getattr(plan, "generation_prompt", "")
         if not prompt or not prompt.strip():
             prompt = SceneVisualPlanner.build_scene_visual_prompt(plan)
             plan.generation_prompt = prompt
+            if hasattr(plan, "image_prompt"):
+                plan.image_prompt = prompt
 
         clean_slug = re.sub(r"[^\w]", "_", (reel_slug or topic).lower())[:20].strip("_")
         out_dir = Path(target_dir) if target_dir else GENERATED_BROLL_DIR
@@ -221,7 +223,7 @@ class AIImageGenerator:
                 time.sleep(0.5 * attempt)
                 continue
 
-            # 7. Success! Commit to Permanent Visual Memory
+            # 7. Success! Commit to Permanent Visual Memory & Traceability
             rec = PermanentVisualMemory.record_used_visual(
                 image_input=target_path,
                 source_identity=target_path.name,
@@ -231,6 +233,27 @@ class AIImageGenerator:
                 topic=topic,
                 scene_idx=scene_idx,
             )
+
+            # Persist Script-to-Image Traceability Metadata (Task 10)
+            try:
+                from app.video.scene_visual_intelligence import SceneVisualIntelligence
+                SceneVisualIntelligence.record_traceability(
+                    reel_id=clean_slug,
+                    scene_id=scene_idx + 1,
+                    narration=getattr(plan, "narration", getattr(plan, "exact_narration", "")),
+                    visual_concept=getattr(plan, "visual_concept", getattr(plan, "main_subject", "")),
+                    emotion=getattr(plan, "emotion", getattr(plan, "mood", "")),
+                    image_prompt=prompt,
+                    generation_model=active_provider_name,
+                    image_hash=rec.get("sha256", ""),
+                    quality_review={
+                        "passed": report.passed,
+                        "semantic_relevance_score": getattr(report, "semantic_relevance_score", 1.0),
+                        "rejection_reason": report.rejection_reason,
+                    },
+                )
+            except Exception as tr_err:
+                logger.debug(f"Traceability record notice: {tr_err}")
 
             if used_images is not None:
                 used_images.add(target_path)
