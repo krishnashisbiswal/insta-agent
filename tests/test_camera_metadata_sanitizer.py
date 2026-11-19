@@ -38,8 +38,12 @@ def test_sanitize_and_spoof_camera_metadata(tmp_path):
     assert "Lavf" not in probe_output
     assert "Lavc" not in probe_output
 
-    # Assert Apple QuickTime handler is injected
+    # Assert neutral QuickTime handler is set
     assert "Core Media Video" in probe_output
+
+    # Task 7 Compliance: Assert NO fabricated Apple iPhone hardware metadata tags
+    assert "iPhone 15 Pro Max" not in probe_output
+    assert "make            : Apple" not in probe_output
 
 
 def test_save_clean_photographic_image_strips_metadata(tmp_path):

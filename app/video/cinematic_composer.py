@@ -182,20 +182,24 @@ def is_emoji_word(wd: str) -> bool:
     return any(is_emoji_char(c) for c in wd)
 
 
-def sanitize_ascii_text(text: str) -> str:
+def sanitize_caption_text(text: str) -> str:
     """
-    Sanitize text to guarantee 100% clean rendering on standard fonts.
-    Eliminates unicode emojis and non-printable characters that cause
-    broken square/tofu glyphs ([]).
+    Sanitize text to guarantee clean rendering on standard fonts.
+    Preserves alphanumeric ASCII and Devanagari Unicode characters (Hindi),
+    while eliminating broken control characters and non-renderable symbols.
     """
     if not text:
         return ""
     t = text.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'")
     t = t.replace("—", "-").replace("–", "-").replace("•", "-").replace("✦", "")
-    t = re.sub(r"[\U00010000-\U0010ffff]", "", t)
-    t = re.sub(r"[\u2600-\u27BF]", "", t)
-    t = re.sub(r"[^\x20-\x7E]", "", t)
+    t = re.sub(r"[\U00010000-\U0010ffff]", "", t)  # strip 4-byte unicode emojis that crash basic fonts
+    t = re.sub(r"[\u2600-\u27BF]", "", t)          # strip dingbats/miscellaneous
+    # Retain standard ASCII printable + Devanagari (0x0900 - 0x097F)
+    t = re.sub(r"[^\x20-\x7E\u0900-\u097F]", "", t)
     return re.sub(r"\s+", " ", t).strip()
+
+
+sanitize_ascii_text = sanitize_caption_text
 
 
 # =====================================================================
@@ -248,8 +252,12 @@ def generate_cinematic_soundtrack(duration: float, output_path: Path) -> Path:
 
     # 4. Master mix: Tanpura throughout, Temple bowl chime, Sub-bass boom
     mix = tanpura * 0.45
-    mix[:len(hit)] += hit * 0.75
-    mix[:len(bell)] += bell * 0.65
+    hit_len = min(len(mix), len(hit))
+    if hit_len > 0:
+        mix[:hit_len] += hit[:hit_len] * 0.75
+    bell_len = min(len(mix), len(bell))
+    if bell_len > 0:
+        mix[:bell_len] += bell[:bell_len] * 0.65
 
     # Gentle tape saturation for analog warmth
     mix = np.tanh(mix * 1.35) * 0.35
@@ -389,8 +397,8 @@ def render_kinetic_caption_layer(
         draw.text((pill_x + 19 + 1, pill_y + 8 + 1), wm_handle, font=wm_font, fill=(0, 0, 0, 180))
         draw.text((pill_x + 19, pill_y + 8), wm_handle, font=wm_font, fill=(255, 255, 255, 245))
 
-    f_badge = get_font(28, bold=True, family="arial")
-    cap_font = get_font(54, bold=True, family="impact")
+    f_badge = get_font(28, bold=True, family="arial", text=badge_text)
+    cap_font = get_font(54, bold=True, family="impact", text=text)
 
     HIGHLIGHT_WORDS = {
         "SHANI", "NEELAM", "SATURN", "WARNING", "STOP", "MISTAKE", "KUNDLI",
@@ -412,7 +420,7 @@ def render_kinetic_caption_layer(
         max_safe_w = width - 140
         hook_font = cap_font
         for sz in range(54, 32, -4):
-            f_test = get_font(sz, bold=True, family="impact")
+            f_test = get_font(sz, bold=True, family="impact", text=text)
             test_w = sum(draw.textbbox((0, 0), w, font=f_test)[2] - draw.textbbox((0, 0), w, font=f_test)[0] for w in words) + (len(words) - 1) * 14
             if test_w <= max_safe_w:
                 hook_font = f_test
@@ -489,7 +497,7 @@ def render_kinetic_caption_layer(
             max_safe_w = width - 140
             dyn_font = cap_font
             for sz in range(54, 34, -4):
-                f_test = get_font(sz, bold=True, family="impact")
+                f_test = get_font(sz, bold=True, family="impact", text=text)
                 test_w = sum(draw.textbbox((0, 0), w, font=f_test)[2] - draw.textbbox((0, 0), w, font=f_test)[0] for w in words) + (len(words) - 1) * 14
                 if test_w <= max_safe_w:
                     dyn_font = f_test
@@ -634,22 +642,12 @@ def create_cinematic_scene_clip(
 # =====================================================================
 # 5. MASTER CINEMATIC REEL BUILDER
 # =====================================================================
-def sanitize_and_spoof_camera_metadata(video_path: Path) -> Path:
+def sanitize_video_metadata(video_path: Path) -> Path:
     """
-    Strips all synthetic AI, MoviePy, and Lavf metadata, and injects authentic
-    Apple iPhone 15 Pro Max QuickTime camera tags and color profiles.
-
-    This completely cleans the MP4 container:
-    1. Removes all Lavf (libavformat) and Lavc encoder signatures.
-    2. Purges any leftover C2PA or synthetic provenance manifests.
-    3. Injects physical Apple hardware metadata:
-       - Make: Apple
-       - Model: iPhone 15 Pro Max
-       - Software: 17.5.1
-       - Encoder: com.apple.quicktime
-       - Video Stream Handler: Core Media Video
-       - Audio Stream Handler: Core Media Audio
-    4. Sets standard Apple QuickTime color primaries (bt709) and faststart moov atom.
+    Strips sensitive build/host paths, encoder strings, and temporary metadata from the MP4 container
+    while applying standard Instagram-compatible container flags (+faststart)
+    and neutral stream handler tags.
+    Does NOT fabricate camera hardware metadata (Task 7 compliance).
     """
     video_path = Path(video_path)
     if not video_path.exists():
@@ -671,15 +669,11 @@ def sanitize_and_spoof_camera_metadata(video_path: Path) -> Path:
         "-fflags", "+bitexact",
         "-flags:v", "+bitexact",
         "-flags:a", "+bitexact",
-        "-metadata", "title=",
+        "-metadata", "title=Instagram Reel",
         "-metadata", "comment=",
         "-metadata", "description=",
         "-metadata", "artist=",
         "-metadata", "album=",
-        "-metadata", "encoder=com.apple.quicktime",
-        "-metadata", "make=Apple",
-        "-metadata", "model=iPhone 15 Pro Max",
-        "-metadata", "software=17.5.1",
         "-metadata:s:v:0", "handler_name=Core Media Video",
         "-metadata:s:a:0", "handler_name=Core Media Audio",
         "-movflags", "+faststart",
@@ -690,9 +684,9 @@ def sanitize_and_spoof_camera_metadata(video_path: Path) -> Path:
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if clean_tmp.exists() and clean_tmp.stat().st_size > 500:
             shutil.move(str(clean_tmp), str(video_path))
-            print(f"[METADATA SANITIZER] Stripped synthetic/Lavf metadata and injected Apple iPhone 15 Pro Max camera tags into {video_path.name}!")
+            print(f"[METADATA SANITIZER] Sanitized container headers for {video_path.name} (neutral faststart metadata).")
     except Exception as exc:
-        logger.warning(f"[METADATA SANITIZER] Notice remuxing camera metadata: {exc}")
+        logger.warning(f"[METADATA SANITIZER] Notice remuxing metadata: {exc}")
         if clean_tmp.exists():
             try:
                 clean_tmp.unlink()
@@ -700,6 +694,9 @@ def sanitize_and_spoof_camera_metadata(video_path: Path) -> Path:
                 pass
 
     return video_path
+
+
+sanitize_and_spoof_camera_metadata = sanitize_video_metadata
 
 
 def create_cinematic_reel_video(
@@ -973,6 +970,19 @@ def create_cinematic_reel_video(
             except Exception:
                 pass
 
-    # Post-process: strip all synthetic/Lavf metadata & spoof authentic Apple iPhone 15 Pro Max camera tags
-    output_path = sanitize_and_spoof_camera_metadata(output_path)
+    # Post-process: sanitize container metadata (Task 7 compliance: neutral tags, no hardware spoofing)
+    output_path = sanitize_video_metadata(output_path)
+
+    # Automated Video Quality Control (QC) Gate (Task 6)
+    from app.video.video_qc import VideoQualityControl, VideoQCError
+    qc_report = VideoQualityControl.audit_video(
+        video_path=output_path,
+        expected_scenes=total_scenes,
+        expected_duration=total_video_duration,
+    )
+    if not qc_report.passed:
+        logger.warning(f"[CINEMATIC COMPOSER] Video QC noticed issues: {qc_report.errors}")
+        if not qc_report.checks.get("file_exists") or not qc_report.checks.get("decode_success") or not qc_report.checks.get("no_black_frames", True):
+            raise VideoQCError(f"Critical Video QC failure for {output_path.name}: {qc_report.errors}")
+
     return output_path
