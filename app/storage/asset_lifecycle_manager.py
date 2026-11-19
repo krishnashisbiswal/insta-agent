@@ -124,6 +124,12 @@ class AssetLifecycleManager:
     # 2. JOB LIFECYCLE MANAGEMENT
     # =========================================================================
     @classmethod
+    def get_job(cls, job_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieve job record by ID."""
+        jobs = cls._load_jobs().get("jobs", {})
+        return jobs.get(job_id)
+
+    @classmethod
     def create_job(
         cls,
         topic: str,
