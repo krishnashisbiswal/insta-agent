@@ -1,39 +1,39 @@
 {
-  "topic": "Consultation case study: how a client's 10th house Saturn and Mars opposition caused years of professional stagnation, career roadblocks, and sudden authority clashes, decoded through 5 hidden karmic turning points of Vedic chart foundations.",
+  "topic": "Stop wearing Pyrite blindly until you understand how this solar mineral interacts with your 5th house karmic memory and creative blockages.",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 7.2,
+  "agent_evolution_level": 7.4,
   "hook": {
-    "id": "1",
-    "name": "Cost Confession",
-    "spoken": "दस साल की अथक मेहनत के बाद भी हमारे एक क्लाइंट की पदोन्नति बार-बार क्यों टल रही थी?",
-    "on_screen": "TEN YEARS OF CAREER STAGNATION",
-    "why_it_works": "Highlights deep professional frustration and invites immediate curiosity about hidden karmic blockages.",
+    "id": "pyrite_stop",
+    "name": "Negative Command",
+    "spoken": "पायराइट को आँख मूँदकर पहनना बंद करें, जब तक आप इसके प्रभाव को न समझें।",
+    "on_screen": "STOP WEARING PYRITE BLINDLY",
+    "why_it_works": "Uses a strong negative command to immediately halt scrolling and address a common misconception among gemstone users.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
-        "score": 100.0,
-        "detail": "5 words, 30 chars, ~1.8s spoken (want 5-12 words)"
+        "score": 80,
+        "detail": "4 words, 27 chars, ~1.5s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 75,
-        "detail": "1 concrete marker(s): ten"
+        "score": 15.0,
+        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
       },
       "STAKES": {
-        "score": 20.0,
-        "detail": "0 tension marker(s) - nothing is at stake in this line"
+        "score": 70.0,
+        "detail": "1 tension marker(s): stop"
       },
       "FRONTLOAD": {
         "score": 100.0,
         "detail": "payload at word 1"
       },
       "ADDRESS": {
-        "score": 35.0,
-        "detail": "third person, nobody in the room"
+        "score": 90.0,
+        "detail": "imperative opener (\"stop\")"
       }
     }
   },
@@ -47,7 +47,7 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "83 chars (Target: <=125)"
+        "detail": "70 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
@@ -63,9 +63,9 @@
       }
     }
   },
-  "duration_seconds": 33.32,
-  "generated_at": "2026-11-16 17:29:42",
-  "algorithm_phase": "Algorithmic Indexing & Quiet Hours",
+  "duration_seconds": 33.12,
+  "generated_at": "2026-11-17 12:18:42",
+  "algorithm_phase": "Midday Spiritual Reset & Chart Curiosity",
   "daily_post_enforced": true,
   "comment_consultations_handled": 0,
   "q_reward_score": 0.922
