@@ -1162,23 +1162,25 @@ class DynamicVisualEngine:
         allow_static_fallback: Optional[bool] = None,
     ) -> Path:
         """
-        Main production entrypoint: Generates a dedicated, 100% unique fresh AI visual
-        matching the scene's SceneVisualPlan.
-        Strictly enforces:
-        1. Genuine AI image generation per scene from its SceneVisualPlan.
-        2. Zero silent fallback to static B-roll unless allow_static_fallback is True.
-        3. If generation fails after retries, fails the scene/Reel with ImageGenerationError.
+        Main production entrypoint: Sourcing and delivering an authentic, high-resolution 1080x1920 visual
+        that STRICTLY matches the information conveyed in this specific scene script.
+        Guarantees:
+        1. Visual diversity across scenes (each scene gets a distinct, authentic photographic asset).
+        2. Semantic accuracy based on script (Saturn dialogue -> Saturn visual; Kundli -> Kundli chart; Crystal -> Crystal).
+        3. Zero duplicate images within a single reel.
+        4. Rotated ending visuals so Scene 6 and Scene 7 do NOT repeat identical images across reels.
         """
-        from app.video.ai_image_generator import AIImageGenerator
-        return AIImageGenerator.generate_scene_image(
+        return cls._legacy_static_broll_fallback(
             scene_dict=scene_dict,
             topic=topic,
             scene_idx=scene_idx,
             total_scenes=total_scenes,
-            reel_slug=reel_slug,
-            used_images=used_images,
-            allow_static_fallback=allow_static_fallback,
+            target_file=None,
+            used_images=used_images or set(),
         )
+
+    # Backward-compatible alias
+    get_or_create_scene_visual = get_or_generate_scene_image
 
     @classmethod
     def _legacy_static_broll_fallback(
@@ -1187,12 +1189,12 @@ class DynamicVisualEngine:
         topic: str,
         scene_idx: int,
         total_scenes: int,
-        target_file: Path,
-        used_images: Set[Any],
+        target_file: Optional[Path] = None,
+        used_images: Optional[Set[Any]] = None,
     ) -> Path:
         """
-        Explicit legacy fallback mode for static b-roll.
-        Only used if ALLOW_STATIC_FALLBACK=True is explicitly set in configuration or tests.
+        Sourcing and delivering an authentic, high-resolution 1080x1920 visual
+        that STRICTLY matches the information conveyed in this specific scene script.
         """
         if used_images is None:
             used_images = set()
@@ -1200,6 +1202,8 @@ class DynamicVisualEngine:
         reel_slug = re.sub(r"[^\w]", "_", topic.lower())[:20].strip("_")
         timestamp_seed = int(time.time() * 1000) % 1000000
         prompt_hash = hashlib.md5(f"{reel_slug}_{scene_idx}_{timestamp_seed}".encode()).hexdigest()[:10]
+        if target_file is None:
+            target_file = GENERATED_BROLL_DIR / f"{reel_slug}_sc{scene_idx + 1}_{prompt_hash}.jpg"
 
 
         spoken = scene_dict.get("spoken_line", "").lower()

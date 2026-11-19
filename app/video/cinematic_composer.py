@@ -611,13 +611,10 @@ def create_cinematic_scene_clip(
         crop_w = int(width / scale)
         crop_h = int(height / scale)
 
-        # Organic handheld camera micro-movement (camera breathing)
-        shake_x = int(3.0 * math.sin(t * 3.1) + 1.5 * math.cos(t * 7.3))
-        shake_y = int(2.5 * math.cos(t * 2.7) + 1.2 * math.sin(t * 5.9))
-
+        # Smooth, stable cinematic zoom without artificial vibration or jitter
         drift_y = int(14 * frac)
-        c_left = bcx - (crop_w // 2) + shake_x
-        c_top = bcy - (crop_h // 2) - drift_y + shake_y
+        c_left = bcx - (crop_w // 2)
+        c_top = bcy - (crop_h // 2) - drift_y
         c_right = c_left + crop_w
         c_bottom = c_top + crop_h
 
@@ -629,12 +626,7 @@ def create_cinematic_scene_clip(
         active_ov = combined_beat_overlays[beat_idx]
         frame_img.paste(active_ov, (0, 0), active_ov)
 
-        frame_arr = np.array(frame_img)
-        # Subtle 35mm optical sensor grain to break synthetic AI pixel distributions
-        grain = np.random.randint(-3, 4, frame_arr.shape, dtype=np.int16)
-        clean_arr = np.clip(frame_arr.astype(np.int16) + grain, 0, 255).astype(np.uint8)
-
-        return clean_arr
+        return np.array(frame_img)
 
     return VideoClip(make_frame, duration=duration)
 
