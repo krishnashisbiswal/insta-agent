@@ -537,29 +537,37 @@ class SceneVisualPlanner:
                 if obj not in forbidden:
                     forbidden.append(obj)
 
-        # Determine subject, action, environment from spec (SceneVisualIntelligence is authoritative)
-        primary_subject = spec.subject or (matched_scene[1]["name"] if matched_scene else "expressive protagonist")
-        action = spec.action or (matched_scene[1]["default_action"] if matched_scene else "interacting with environment")
-        environment = spec.environment or (matched_scene[1]["default_setting"] if matched_scene else "cinematic setting")
-        req_objs = [primary_subject]
-
-        # Only enhance with specific entity objects if spec is generic
-        if not spec.subject and matched_scene:
+        # Determine subject, action, environment from spec or matched_scene
+        is_generic_spec = not spec.subject or any(w in spec.subject.lower() for w in ["protagonist", "expressive", "solitary", "person", "embodying"])
+        if matched_scene and is_generic_spec:
             primary_subject = matched_scene[1]["name"]
             action = matched_scene[1]["default_action"]
             environment = matched_scene[1]["default_setting"]
             req_objs = copy.deepcopy(matched_scene[1].get("objects", [primary_subject]))
+        else:
+            primary_subject = spec.subject or (matched_scene[1]["name"] if matched_scene else "expressive protagonist")
+            action = spec.action or (matched_scene[1]["default_action"] if matched_scene else "interacting with environment")
+            environment = spec.environment or (matched_scene[1]["default_setting"] if matched_scene else "cinematic setting")
+            req_objs = [primary_subject]
 
-            # Enhance kundli_chart with dynamic house and planet intelligence only if explicitly a chart
-            if matched_scene[0] == "kundli_chart" and any(k in scene_text.lower() for k in ["kundli", "कुंडली", "birth chart", "जन्मपत्रिका"]):
-                from app.video.kundli_chart_generator import KundliChartGenerator, HOUSE_METADATA
-                h_num, p_name = KundliChartGenerator.extract_house_and_planet(scene_text)
-                if h_num and h_num in HOUSE_METADATA:
-                    meta = HOUSE_METADATA[h_num]
-                    p_clause = f" with {p_name}" if p_name else ""
-                    primary_subject = f"authentic Vedic Kundli birth chart with illuminated {meta['name_en']}{p_clause}"
-                    action = f"radiant amber-gold light specifically illuminating the {meta['name_en']} ({meta['sanskrit']}) grid with Sanskrit glyphs"
-                    req_objs = [f"diamond Kundli chart with glowing {meta['name_en']}", f"Sanskrit {meta['sanskrit']} markings"]
+        # Enhance kundli_chart with dynamic house and planet intelligence only if explicitly a chart
+        if matched_scene and matched_scene[0] == "kundli_chart" and any(k in scene_text.lower() for k in ["kundli", "कुंडली", "birth chart", "जन्मपत्रिका"]):
+            from app.video.kundli_chart_generator import KundliChartGenerator, HOUSE_METADATA
+            h_num, p_name = KundliChartGenerator.extract_house_and_planet(scene_text)
+            if h_num and h_num in HOUSE_METADATA:
+                meta = HOUSE_METADATA[h_num]
+                p_clause = f" with {p_name}" if p_name else ""
+                primary_subject = f"authentic Vedic Kundli birth chart with illuminated {meta['name_en']}{p_clause}"
+                action = f"radiant amber-gold light specifically illuminating the {meta['name_en']} ({meta['sanskrit']}) grid with Sanskrit glyphs"
+                req_objs = [f"diamond Kundli chart with glowing {meta['name_en']}", f"Sanskrit {meta['sanskrit']} markings"]
+
+        # Ensure generation prompt satisfies standard prompt completeness
+        clean_gen_prompt = (
+            f"cinematic photorealistic 9:16 vertical luxury photograph of {primary_subject}, "
+            f"{action}, {environment}, lighting: {spec.lighting}, {spec.composition}, "
+            f"warm 35mm film grain, 8k resolution, authentic organic textures, "
+            f"no text overlays, no watermarks, no cgi cartoons, no flat solid colors"
+        )
 
         plan = SceneVisualPlan(
             scene_id=scene_id,
@@ -580,7 +588,7 @@ class SceneVisualPlanner:
             forbidden_visual_elements=forbidden,
             continuity_requirements=spec.continuity_notes,
             aspect_ratio="9:16",
-            generation_prompt=spec.image_prompt,
+            generation_prompt=clean_gen_prompt,
             validation_criteria=[primary_subject.split()[0].lower()],
             entity_key=matched_scene[0] if matched_scene else spec.emotion.lower(),
             estimated_duration=est_duration,
@@ -591,7 +599,7 @@ class SceneVisualPlanner:
             visual_metaphor=spec.visual_metaphor,
             camera_angle=spec.camera_angle,
             continuity_notes=spec.continuity_notes,
-            image_prompt=spec.image_prompt,
+            image_prompt=clean_gen_prompt,
             is_valid=True,
         )
         return cls.validate_and_repair_plan(plan)

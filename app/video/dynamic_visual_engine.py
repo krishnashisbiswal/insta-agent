@@ -1168,7 +1168,7 @@ class DynamicVisualEngine:
         """
         from app.video.ai_image_generator import AIImageGenerator
         try:
-            return AIImageGenerator.generate_scene_image(
+            res = AIImageGenerator.generate_scene_image(
                 scene_dict=scene_dict,
                 topic=topic,
                 scene_idx=scene_idx,
@@ -1177,6 +1177,9 @@ class DynamicVisualEngine:
                 used_images=used_images,
                 allow_static_fallback=allow_static_fallback,
             )
+            if used_images is not None:
+                used_images.add(res)
+            return res
         except Exception as e:
             if allow_static_fallback:
                 logger.warning(f"[DynamicVisualEngine] AI generation failed, falling back to static plate: {e}")

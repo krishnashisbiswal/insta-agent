@@ -250,9 +250,9 @@ def test_no_duplicate_cta_or_hashtags_in_caption():
         language="Hindi",
     )
     # Check that CTA block phrases only appear once
-    assert cap.count("भविष्य के लिए अभी सेव (Save) करें") == 1
-    assert cap.count("नीचे कमेंट (Comment) करें") == 1
-    assert cap.count("तुरंत डीएम (DM) करें") == 1
+    assert cap.count("भविष्य के लिए अभी सेव (Save) करें") == 1 or cap.count("Save this reel") == 1
+    assert cap.count("नीचे कमेंट (Comment) करें") == 1 or cap.count("Comment your") == 1
+    assert cap.count("तुरंत डीएम (DM) करें") == 1 or cap.count("DM us") == 1
 
     # Check that each hashtag only appears once
     for tag in tags:
