@@ -1076,6 +1076,9 @@ INSTAGRAM ALGORITHM SEO & EXPLORER SEARCH INDEXING:
     is_astrology = profile.niche_id in ("astrology_vedic", "astrology")
     is_hindi = "hindi" in language.lower() or "hi" in language.lower() or "hinglish" in language.lower()
 
+    num_points = 5
+    total_scenes_target = 7
+
     if is_hindi:
         # Dynamically determine point count from topic (defaults to 5 points for viral retention)
         m_pts = re.search(r"^\s*([456])\b", topic) or re.search(r"\b([456])\s*(?:points?|signs?|mistakes?|flaws?|reasons?|placements?|yogas?|rules?|insights?|secrets?|meanings?|ways?|lessons?|bhav|galti|lakshan)\b", topic, re.I)

@@ -207,10 +207,11 @@ class AIImageGenerator:
                 continue
 
             # 6. Quality & Relevance Gate
+            should_check_perm = active_provider_name not in ("curated", "mock", "synthetic")
             report: VisualValidationReport = VisionQualityGate.validate_scene_image(
                 image_input=target_path,
                 plan=plan,
-                check_permanent_duplicates=True,
+                check_permanent_duplicates=should_check_perm,
                 used_reel_hashes=used_reel_hashes,
             )
 

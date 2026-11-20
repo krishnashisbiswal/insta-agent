@@ -411,22 +411,29 @@ class MockImageProvider(BaseImageProvider):
 
         # Match strictly to authentic curated photography based on script prompt
         target_plate = None
-        if any(k in p_lower for k in ["tiger", "tigers eye", "टाइगर"]):
-            target_plate = cinematic_dir / "crystal_tigers_eye.jpg"
+        # 1. Call to Action / Consultation / Altar / Welcoming Hands (Scene 7)
+        if any(k in p_lower for k in ["dm", "consultation", "welcoming hands", "hands presenting", "save reel", "havan", "temple", "यज्ञ", "अग्नि", "mandir"]):
+            target_plate = cinematic_dir / "4_sacred_havan.jpg"
+        # 2. Tiger Eye Macro (Scene 1)
+        elif any(k in p_lower for k in ["tiger", "tigers eye", "टाइगर"]):
+            target_plate = cinematic_dir / "fresh_tiger_eye_macro.jpg"
+        # 3. Rahu & Sun Eclipse Conflict (Scene 2)
         elif any(k in p_lower for k in ["rahu", "sun rahu", "grahan", "eclipse", "सूर्य और राहु"]):
             target_plate = cinematic_dir / "planet_rahu.jpg"
+        # 4. Mars Planetary Energy (Scene 4)
         elif any(k in p_lower for k in ["mars", "mangal", "मंगल"]):
-            target_plate = cinematic_dir / "planet_mars.jpg"
+            target_plate = cinematic_dir / "fresh_planet_mars_hubble.jpg"
+        # 5. Saturn / Shani Drishti (Scene 5)
         elif any(k in p_lower for k in ["saturn", "shani", "शनि", "drishti", "aspect"]):
-            target_plate = cinematic_dir / "planet_saturn.jpg"
-        elif any(k in p_lower for k in ["emerald", "पन्ना", "gemstone", "sapphire", "रत्न", "remedies"]):
-            target_plate = cinematic_dir / "gemstone_emerald.jpg"
-        elif any(k in p_lower for k in ["dm", "consultation", "temple", "hand", "मंदिर"]):
-            target_plate = cinematic_dir / "temple_sanctum_golden_diyas.jpg"
+            target_plate = cinematic_dir / "3_shani_saturn.jpg"
+        # 6. Caution against Blind Remedies / Gemstone Warning (Scene 6)
+        elif any(k in p_lower for k in ["emerald", "sapphire", "neelam", "gemstone", "रत्न", "remedies"]):
+            target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
+        # 7. 12th House / Kundli Chart (Scene 3)
         elif any(k in p_lower for k in ["12th house", "12th", "बारहवें", "kundli", "chart", "parchment"]):
-            target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
+            target_plate = cinematic_dir / "2_kundli_chart.jpg"
         else:
-            target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
+            target_plate = cinematic_dir / "2_kundli_chart.jpg"
 
         if target_plate and target_plate.exists():
             with Image.open(target_plate) as raw_img:

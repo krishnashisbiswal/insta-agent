@@ -1330,25 +1330,22 @@ class DynamicVisualEngine:
 
         candidates: List[Path] = []
 
-        # (A) Call to Action / DM Consultation / Temple Sanctum (Scene 7)
+        # (A) Call to Action / DM Consultation / Sacred Havan (Scene 7)
         if is_last_scene:
             cta_pool = [
+                CINEMATIC_BROLL_DIR / "4_sacred_havan.jpg",
                 CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-                CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
-                CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
             ]
             rot_idx = int(hashlib.md5(f"{topic}_cta".encode()).hexdigest(), 16) % len(cta_pool)
             candidates.extend(cta_pool[rot_idx:] + cta_pool[:rot_idx])
 
-        # (B) Caution against Blind Remedies / Warning / Fire Altar (Scene 6)
+        # (B) Caution against Blind Remedies / Warning / Blue Sapphire (Scene 6)
         elif is_caution_scene:
             caution_pool = [
                 CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg",
-                CINEMATIC_BROLL_DIR / "gemstone_ruby.jpg",
                 CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg",
-                CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
-                CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+                CINEMATIC_BROLL_DIR / "gemstone_ruby.jpg",
             ]
             rot_idx = int(hashlib.md5(f"{topic}_caution".encode()).hexdigest(), 16) % len(caution_pool)
             candidates.extend(caution_pool[rot_idx:] + caution_pool[:rot_idx])
@@ -1357,23 +1354,23 @@ class DynamicVisualEngine:
         else:
             # 0. Tiger's Eye Gemstone (Strict 1:1 match for tiger eye scenes & hook)
             if any(k in scene_txt for k in ["tiger", "tigers eye", "टाइगर"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "fresh_tiger_eye_macro.jpg")
             elif is_hook_scene and curated_master_plate:
                 candidates.append(curated_master_plate)
 
             # 1. Specific Planets & Cosmic Alignments (Highest Priority: match exact celestial entity)
             if any(k in scene_txt for k in ["tiger", "tigers eye", "टाइगर"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "fresh_tiger_eye_macro.jpg")
             if (any(k in scene_txt for k in ["rahu", "राहु"]) and any(k in scene_txt for k in ["surya", "sun", "सूर्य"])) or "sun rahu" in scene_txt:
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_rahu.jpg")
             if any(k in scene_txt for k in ["mangal", "mars", "मंगल"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "planet_mars.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "fresh_planet_mars_hubble.jpg")
             if any(k in scene_txt for k in ["shani", "saturn", "शनि", "drishti", "दृष्टि"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "planet_saturn.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "3_shani_saturn.jpg")
             if any(k in scene_txt for k in ["emerald", "पन्ना", "gemstone", "sapphire", "नीलम", "रत्न"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg")
             if any(k in scene_txt for k in ["12th", "बारहवें", "बारहवां", "twelfth", "vyaya", "व्यय", "kundli", "कुंडली"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg")
             if any(k in scene_txt for k in ["guru", "brihaspati", "jupiter", "गुरु", "बृहस्पति"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_jupiter.jpg")
             if any(k in scene_txt for k in ["chandra", "moon", "चंद्रमा", "चन्द्र"]):
