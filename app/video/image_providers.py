@@ -192,8 +192,8 @@ class PollinationsImageProvider(BaseImageProvider):
 
         encoded_prompt = urllib.parse.quote(clean_prompt)
         url = (
-            f"https://image.pollinations.ai/prompt/{encoded_prompt}"
-            f"?width={width}&height={height}&nologo=true&seed={gen_seed}"
+            f"https://pollinations.ai/prompt/{encoded_prompt}"
+            f"?width={width}&height={height}&nologo=true&enhance=true&seed={gen_seed}"
         )
 
         req = urllib.request.Request(

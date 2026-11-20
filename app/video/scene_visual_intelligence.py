@@ -490,8 +490,8 @@ class SceneVisualIntelligence:
         try:
             from app.agents.gemini_client import generate_text, parse_json_response
 
-            prompt = f"""You are an elite cinematic director for high-retention vertical 9:16 Instagram Reels.
-Analyze this exact scene script narration and create a script-driven visual specification.
+            prompt = f"""You are the master creative visual director for @neodivinestore.in, a premium Vedic Astrology, Gemstone Energy, and Sacred Karma Instagram channel.
+Your goal is to design SUPER ATTRACTIVE, EYE-CATCHING, HIGH-QUALITY, SCRIPT-DRIVEN visual scenes that make Reels go viral.
 
 Reel Context:
 Topic: "{topic}"
@@ -501,31 +501,38 @@ On-screen text: "{on_screen}"
 Previous scene context: "{prev_narration}"
 Next scene context: "{next_narration}"
 
-STRICT VISUAL DIRECTION RULES:
-1. SCRIPT CONTEXT IS THE ABSOLUTE SOURCE OF TRUTH: The visual must directly illustrate or evoke the exact situation, emotion, object, or action described in the spoken narration.
-2. If the scene describes waking up at 3 AM with insomnia/restlessness, depict a person awake in bed in a dark moody bedroom looking at the clock.
-3. If the scene describes an anxious client consulting for guidance, depict a cinematic, emotionally expressive person in a warm study.
-4. If the scene describes a specific sacred or physical object (e.g. authentic 5-mukhi Nepali Rudraksha bead, pure copper water vessel, raw golden pyrite), depict a photorealistic macro hero shot of that exact item.
-5. If the scene describes energy protection / aura / bio-energy, depict a peaceful person in soft meditation with a subtle, harmonic golden light boundary.
-6. NO UNRELATED HARDCODED VISUALS: Never show horoscope charts, kundli grids, zodiac wheels, floating planets, or meditating silhouettes UNLESS the spoken narration explicitly tells the audience to look at a horoscope chart or astronomy.
+CREATIVE DIRECTION MANDATE (HIGH-END AESTHETIC):
+1. SCRIPT IS PRIMARY TRUTH: The visual must directly illustrate or evoke the exact situation, emotion, object, or action in the spoken narration.
+2. SACRED, MAJESTIC & CINEMATIC VIBE: The channel's visual universe is majestic, mystical, rich, and visually breathtaking.
+   - Use dramatic lighting: Golden hour rays, warm amber oil lamps, celestial dusk, glowing auric light, deep chiaroscuro, volumetric haze.
+   - Rich color grading: Imperial gold, deep midnight indigo, warm terracotta, emerald green, royal sapphire blue, warm sandstone.
+3. STRICT BAN ON LOW-EFFORT / MUNDANE MODERN CLICHÉS:
+   - NEVER generate: mundane domestic scenes (dining tables, kitchen, modern bedrooms, alarm clocks, casual hoodies, people slouching on phones, grey concrete).
+   - NEVER generate: cheap flat clip-art, generic floating cartoon planets, or synthetic plastic 3D wireframes.
+4. MEANING-DRIVEN SACRED VISUAL TRANSLATIONS:
+   - For Planetary Influences (Saturn / Shani, Rahu, Jupiter, etc.): Majestic ancient stone monuments standing against dramatic skies, golden light breaking through storms, wise contemplative Vedic sage studying sacred palm leaves, or celestial rays in dusk.
+   - For Career Growth / Wealth / Breakthrough: Triumphant seeker standing atop an ancient temple sanctuary at sunrise, golden light washing over stone pillars, visual metaphor of permanent success.
+   - For Karmic Struggle / Delay / Realization: Deeply focused craftsman shaping a sacred stone, or an intense portrait of a seeker with piercing focused gaze in moody cinematic lighting.
+   - For Gemstones / Remedies / Warnings: Extreme macro shot of an authentic radiant gemstone (Neelam, Ruby, Emerald, Pyrite) glowing with inner divine fire, resting on sacred Sanskrit scriptures or silk, crystal clear refraction.
+   - For Chart / House Analysis / CTA: Sacred golden Kundli diagram inscribed on ancient aged parchment, brass astrolabe, warm candlelit sanctuary.
 
 Return ONLY a valid JSON object with the following fields:
 {{
-  "core_meaning": "Concise summary of what this scene communicates",
+  "core_meaning": "What this scene actually communicates",
   "emotion": "Dominant emotion from: Fear, Anxiety, Loneliness, Sadness, Confusion, Frustration, Betrayal, Hope, Curiosity, Mystery, Confidence, Peace, Relief, Empowerment, Awe, Devotion, Joy, Urgency, Realization, Transformation",
   "emotion_intensity": 0.85,
   "viewer_feeling": "What the viewer should feel",
-  "visual_concept": "Specific visual idea matching this narration",
-  "visual_metaphor": "Metaphor if appropriate, or literal visual",
-  "subject": "Primary subject of the scene",
-  "action": "What the subject is doing",
-  "environment": "Atmospheric physical setting",
-  "composition": "Cinematic framing (e.g. extreme macro close-up, dramatic medium shot)",
-  "lighting": "Lighting direction and quality matching the mood",
-  "color_palette": "3-4 cohesive color tones",
-  "camera_angle": "Camera perspective",
-  "visual_style": "Cinematic photorealism, Documentary realism, or Ethereal spiritual realism",
-  "image_prompt": "Complete vertical 9:16 prompt describing subject, action, lighting, environment, 35mm lens, photorealistic textures, no text overlays, no watermarks, no logos"
+  "visual_concept": "Eye-catching, majestic visual idea",
+  "visual_metaphor": "Metaphor matching the Vedic/astrological narrative",
+  "subject": "Hero subject (majestic, dignified, captivating)",
+  "action": "Action or posture with emotional resonance",
+  "environment": "Grand, atmospheric, or mystical setting",
+  "composition": "Cinematic vertical 9:16 framing",
+  "lighting": "Dramatic golden hour, volumetric rays, or glowing aura",
+  "color_palette": "Rich cohesive palette (e.g. Imperial Gold, Midnight Indigo)",
+  "camera_angle": "Cinematic camera angle",
+  "visual_style": "Cinematic photorealism or Ethereal spiritual realism",
+  "image_prompt": "Concise (under 320 chars) prompt with maximum aesthetic punch: vertical 9:16 cinematic masterpiece, 8k, [Subject & Action], [Atmospheric Environment], [Dramatic Lighting & Palette], hyper-realistic, award-winning photography, no text overlays, no watermarks"
 }}"""
 
             res = generate_text(prompt)
@@ -852,25 +859,15 @@ Return ONLY a valid JSON object with the following fields:
         """
         Builds the 14-point detailed, non-generic prompt adhering to vertical 9:16 format.
         """
-        # Exclusions preventing generic templates
-        negative_constraints = (
-            "no text overlays, no watermarks, no logos, no generic floating planets in space, "
-            "no generic zodiac wheels, no CGI cartoons, no 3D wireframe rings, no distorted anatomy, "
-            "no flat solid color cards, no generic meditation clip-art"
-        )
-
+        # High-impact, punchy vertical 9:16 prompt with upfront quality and lighting tokens
         prompt = (
-            f"cinematic photorealistic 9:16 vertical portrait composition, {visual_style}. "
-            f"Hero subject: {subject}. "
-            f"Action & posture: {action}. {posture}. "
-            f"Environment: {environment}. "
-            f"Emotional atmosphere: {emotion}, conveying visual metaphor of {metaphor}. "
-            f"Cinematic composition: {composition}. "
-            f"Lighting: {lighting}. "
+            f"vertical 9:16 cinematic masterpiece, 8k, hyper-detailed, award-winning photography. "
+            f"{subject}, {action}. {posture}. "
+            f"Atmospheric environment: {environment}. "
+            f"Mood & lighting: {lighting}, {emotion}. "
             f"Color grading: {color_palette}. "
-            f"Camera details: shot on 35mm masterwork prime lens, natural optical bokeh, rich volumetric atmospheric haze, "
-            f"authentic tactile surface textures, clear centered vertical space suitable for dynamic captions. "
-            f"Negative constraints: {negative_constraints}."
+            f"Shot on 35mm masterwork lens, rich volumetric lighting, sharp focus, stunning tactile textures. "
+            f"no text overlays, no watermarks, no logos, no cgi cartoons, no flat solid colors"
         )
         return prompt
 
