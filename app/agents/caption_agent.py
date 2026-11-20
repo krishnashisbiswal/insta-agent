@@ -136,25 +136,37 @@ Return ONLY valid JSON in this exact structure:
         data = generate_json(prompt)
     except Exception as exc:
         logger.warning(f"Gemini caption generation error ({exc}). Generating high-retention fallback caption...")
-        is_hi = "hindi" in language.lower() or "hi" in language.lower()
-        if is_hi:
+        lang_lower = (language or "").lower()
+        if "english" in lang_lower or lang_lower == "en":
             data = {
-                "visible_first_line": f"{script_hook[:100]} ⚠️",
-                "caption_body": f"वैदिक ज्योतिष के अनुसार, बिना संपूर्ण जन्म कुंडली और दशा विश्लेषण के कोई भी रत्न या उपाय अपनाना गंभीर ऊर्जा टकराव पैदा कर सकता है।\n\nगलत कदम उठाने से अचानक धन हानि, तनाव और कार्यों में रुकावटें आने लगती हैं। इंटरनेट के सामान्य नुस्खों या अंधविश्वास से बचें। केवल अपनी व्यक्तिगत जन्म कुंडली की ग्रह स्थिति जांचकर ही सही निर्णय लें।\n\n⚠️ चेतावनी: बिना सटीक विश्लेषण के कोई भी उपाय या रत्न उल्टा असर कर सकता है।",
-                "cta": "यह रील तुरंत सेव करें और अपनी कुंडली में ग्रह स्थिति नीचे कमेंट करें। सटीक व्यक्तिगत विश्लेषण के लिए हमें तुरंत DM करें! 🙏✨",
+                "visible_first_line": f"{(topic or script_hook)[:100]} ⚠️",
+                "caption_body": (
+                    "According to Vedic Astrology, adopting remedies or wearing unverified stones without analyzing your complete birth chart can cause severe energetic conflict.\n\n"
+                    "Generic online tips or blindly following generalized advice often leads to unexpected setbacks and blockages. Always verify the exact house placement, planetary aspects, and current dasha in your personal Kundli.\n\n"
+                    "⚠️ Warning: Never perform blind remedies without individualized chart consultation."
+                ),
+                "cta": "Save this reel and comment your planetary placement below. Send us a Direct Message (DM) to book your personalized consultation! 🙏✨",
                 "hashtags": ["#VedicAstrology", "#KundliAnalysis", "#Kundali", "#Jyotish", "#NeoDivineStore"],
             }
         else:
+            # Roman script Hinglish for modern Indian social media audience
+            clean_first = topic if (topic and not any('\u0900' <= c <= '\u097f' for c in topic)) else "Kundli ka ye secret planetary alignment aapki life badal sakta hai"
             data = {
-                "visible_first_line": f"{script_hook[:100]} ⚠️",
-                "caption_body": f"According to Vedic Astrology, adopting remedies or wearing unverified stones without analyzing your complete birth chart can cause severe energetic conflict.\n\nGeneric online tips or blindly following generalized advice often leads to unexpected setbacks and blockages. Always verify the exact house placement, planetary aspects, and current dasha in your personal Kundli.\n\n⚠️ Warning: Never perform blind remedies without individualized chart consultation.",
-                "cta": "Save this reel and comment your planetary placement below. Send us a Direct Message (DM) to book your personalized consultation! 🙏✨",
+                "visible_first_line": f"{clean_first[:100]} ⚠️",
+                "caption_body": (
+                    "Vedic Astrology ke according, bina complete Janam Kundli aur Dasha analysis ke koi bhi gemstone ya remedy apnaana heavy energy conflict create kar sakta hai.\n\n"
+                    "Galat kadam uthane se sudden financial loss, career mein unexpected delay aur high stress aane lagta hai. Social media ke generic totke ya bina calculation ke remedies se bachein. Apni personal Kundli ki graha sthiti check karke hi right decision lein.\n\n"
+                    "⚠️ Warning: Bina authentic Kundli analysis ke koi bhi blind remedy ulta asar kar sakti hai."
+                ),
+                "cta": "Ye reel future ke liye SAVE kar lijiye aur apni Kundli ka planet placement neeche COMMENT karke batayein. Personalized deep consultation ke liye humein direct DM karein! 🙏✨",
                 "hashtags": ["#VedicAstrology", "#KundliAnalysis", "#Kundali", "#Jyotish", "#NeoDivineStore"],
             }
 
     full = data.get("full_caption", "")
     if not full:
-        first = data.get("visible_first_line", script_hook)
+        # Default first line to Roman Hinglish if script_hook is Devanagari
+        default_hook = topic if (topic and not any('\u0900' <= c <= '\u097f' for c in topic)) else "Kundli ka ye planetary secret aapki life badal sakta hai 🔮"
+        first = data.get("visible_first_line") or default_hook
         body = data.get("caption_body", "")
         cta = data.get("cta", "")
         tags = " ".join(data.get("hashtags", []))

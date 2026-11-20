@@ -144,18 +144,28 @@ def enforce_perfect_100_seo(
     3. Guarantees 4-layer viral engagement box (Save + Share + Comment + DM).
     4. Guarantees Explore search keyword coverage.
     """
-    is_hindi = language.lower() in ["hindi", "hi"]
+    lang_lower = (language or "").lower()
+    is_pure_english = lang_lower in ["english", "en"]
     clean_lines = [line.strip() for line in caption_text.split("\n") if line.strip()]
 
     # 1. First line hook optimization
-    first_line = clean_lines[0] if clean_lines else (topic or "अपनी कुंडली का यह गुप्त योग जानिए! 🔮")
+    default_roman_hook = topic if (topic and not any('\u0900' <= c <= '\u097f' for c in topic)) else "Kundli ka ye secret yog janiye! 🔮"
+    first_line = clean_lines[0] if clean_lines else default_roman_hook
+
+    # If first_line contains Devanagari but audience expects Roman Hinglish / English, sanitize to Roman
+    if not is_pure_english and any('\u0900' <= c <= '\u097f' for c in first_line):
+        if topic and not any('\u0900' <= c <= '\u097f' for c in topic):
+            first_line = topic[:112].rsplit(" ", 1)[0] + "... 🔮"
+        else:
+            first_line = "Kundli ka ye planetary alignment aapki life badal sakta hai 🔮"
+
     # Sanitize first-person rookie mistakes to client case studies
     first_line = re.sub(r"\b(?:मैंने|मुझे)\s+(?:अपनी\s+)?कुंडली\s+बिना\s+(?:देखे|दिखाए|जांचे)\b", "क्लाइंट ने बिना कुंडली जांचे", first_line)
     first_line = re.sub(r"\bमेरा\s+नुकसान\b", "क्लाइंट का नुकसान", first_line)
     if len(first_line) > 120:
         first_line = first_line[:112].rsplit(" ", 1)[0] + "... 🔮"
     elif len(first_line) < 15:
-        first_line = f"{first_line} | वैदिक ज्योतिष रहस्य 🔮"
+        first_line = f"{first_line} | Vedic Astrology 🔮"
 
     # 2. Body text preservation - strip trailing hashtags and duplicate CTAs
     body_lines = clean_lines[1:] if len(clean_lines) > 1 else []
@@ -171,7 +181,7 @@ def enforce_perfect_100_seo(
         if any(kw in line_s.lower() for kw in [
             "रील तुरंत सेव करें", "save this reel", "सेव (save) करें", "कमेंट (comment) करें",
             "comment your", "डीएम (dm) करें", "dm us", "personal kundli analysis",
-            "व्यक्तिगत विश्लेषण के लिए हमें तुरंत डीएम"
+            "व्यक्तिगत विश्लेषण के लिए हमें तुरंत डीएम", "save karein", "share karein", "comment karein"
         ]):
             continue
         filtered_body.append(line_s)
@@ -180,15 +190,16 @@ def enforce_perfect_100_seo(
     body_text = re.sub(r"\bमेरा\s+नुकसान\b", "क्लाइंट का नुकसान", body_text)
 
     # 3. 4-Layer Viral Engagement CTA
-    if is_hindi:
-        cta_block = (
-            "📌 इस महत्वपूर्ण जानकारी को भविष्य के लिए अभी सेव (Save) करें और अपने परिजनों के साथ शेयर (Share) करें।\n"
-            "💬 अपनी कुंडली में ग्रह की सही स्थिति जानने के लिए नीचे कमेंट (Comment) करें और व्यक्तिगत विश्लेषण के लिए हमें तुरंत डीएम (DM) करें!"
-        )
-    else:
+    if is_pure_english:
         cta_block = (
             "📌 Save this reel for future reference and share with someone who needs this cosmic guidance.\n"
             "💬 Comment your planetary placement below to check your alignment and DM us for personal Kundli analysis!"
+        )
+    else:
+        # High-converting Roman script Hinglish CTA for modern social media
+        cta_block = (
+            "📌 Ye reel future ke liye abhi Save karein aur doston ke saath Share karein.\n"
+            "💬 Apni Kundli mein planetary placement janne ke liye neeche Comment karein aur personal analysis ke liye humein direct DM karein!"
         )
 
     # 4. Hashtags strictly clamped to 4-5 targeted tags
