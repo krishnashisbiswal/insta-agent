@@ -1,35 +1,35 @@
 {
-  "topic": "The hidden frequency of Amethyst and how it unlocks the dormant potential of your 8th house Rahu placement.",
+  "topic": "Secret Kundli Placement: When 2nd House Wealth Clashes With 8th House Rahu",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 12.1,
+  "agent_evolution_level": 12.8,
   "hook": {
-    "id": "amethyst_rahu_unlock",
-    "name": "Eighth House Mystery",
-    "spoken": "कुंडली के आठवें भाव में राहु है? अमेथिस्ट की गुप्त आवृत्ति इसे सक्रिय करती है।",
-    "on_screen": "UNLOCK 8TH HOUSE RAHU",
-    "why_it_works": "Directly addresses a specific, complex astrological placement and offers an energetic solution.",
+    "id": "insider_leak",
+    "name": "Insider Leak",
+    "spoken": "कुंडली के दूसरे भाव में धन और आठवें भाव में राहु अचानक सब कुछ क्यों बदल देते हैं?",
+    "on_screen": "SECRET KUNDLI PLACEMENT CLASH",
+    "why_it_works": "Leverages the insider leak formula by exposing hidden astrological clashes that affect personal wealth and destiny.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
         "score": 80,
-        "detail": "4 words, 21 chars, ~1.5s spoken (want 5-12 words)"
+        "detail": "4 words, 29 chars, ~1.5s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 75,
-        "detail": "1 concrete marker(s): 8"
+        "score": 15.0,
+        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
       },
       "STAKES": {
-        "score": 20.0,
-        "detail": "0 tension marker(s) - nothing is at stake in this line"
+        "score": 70.0,
+        "detail": "1 tension marker(s): secret"
       },
       "FRONTLOAD": {
         "score": 100.0,
-        "detail": "payload at word 2"
+        "detail": "payload at word 1"
       },
       "ADDRESS": {
         "score": 35.0,
@@ -47,11 +47,11 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "78 chars (Target: <=125)"
+        "detail": "81 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
-        "detail": "7 visual scenes with dynamic pacing (avg 6.3s)"
+        "detail": "7 visual scenes with dynamic pacing (avg 6.5s)"
       },
       "high_value_cta": {
         "score": 100,
@@ -63,8 +63,8 @@
       }
     }
   },
-  "duration_seconds": 30.18,
-  "generated_at": "2026-11-19 23:36:14",
-  "algorithm_phase": "Late Night Subconscious & Gemstone Truth",
+  "duration_seconds": 37.67,
+  "generated_at": "2026-11-20 16:22:17",
+  "algorithm_phase": "Algorithmic Indexing & Quiet Hours",
   "daily_post_enforced": true
 }

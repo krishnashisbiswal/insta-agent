@@ -549,6 +549,17 @@ class SceneVisualPlanner:
             environment = matched_scene[1]["default_setting"]
             req_objs = copy.deepcopy(matched_scene[1].get("objects", [primary_subject]))
 
+            # Enhance kundli_chart with dynamic house and planet intelligence
+            if matched_scene[0] == "kundli_chart":
+                from app.video.kundli_chart_generator import KundliChartGenerator, HOUSE_METADATA
+                h_num, p_name = KundliChartGenerator.extract_house_and_planet(scene_text)
+                if h_num and h_num in HOUSE_METADATA:
+                    meta = HOUSE_METADATA[h_num]
+                    p_clause = f" with {p_name}" if p_name else ""
+                    primary_subject = f"authentic Vedic Kundli birth chart with illuminated {meta['name_en']}{p_clause}"
+                    action = f"radiant amber-gold light specifically illuminating the {meta['name_en']} ({meta['sanskrit']}) grid with Sanskrit glyphs"
+                    req_objs = [f"diamond Kundli chart with glowing {meta['name_en']}", f"Sanskrit {meta['sanskrit']} markings"]
+
         plan = SceneVisualPlan(
             scene_id=scene_id,
             scene_idx=scene_idx,

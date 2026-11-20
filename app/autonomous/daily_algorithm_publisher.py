@@ -539,7 +539,7 @@ class DailyAlgorithmPublisher:
             res_info["publishing_outcome"] = "DRY_RUN"
             AssetLifecycleManager.update_job_state(
                 job_id=lifecycle_job_id,
-                new_state=JobState.COMPLETED,
+                new_state=JobState.VALIDATED,
                 message="Dry-run completed. Package preserved in insta content/ for review.",
             )
         else:

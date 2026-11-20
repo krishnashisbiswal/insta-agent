@@ -817,6 +817,11 @@ def create_cinematic_reel_video(
         elif any(w in sc_context for w in ["career", "business", "job", "saturn", "shani", "success", "करियर", "व्यापार"]):
             return "CAREER SHIFT"
         elif any(w in sc_context for w in ["kundli", "house", "chart", "horoscope", "bhav", "लग्न", "भाव"]):
+            from app.video.kundli_chart_generator import KundliChartGenerator, HOUSE_METADATA
+            h_num, _ = KundliChartGenerator.extract_house_and_planet(sc_context)
+            if h_num and h_num in HOUSE_METADATA:
+                meta = HOUSE_METADATA[h_num]
+                return f"{h_num}TH HOUSE: {meta['sanskrit'].upper()}"
             return "KUNDLI SECRET"
         elif any(w in sc_context for w in ["truth", "myth", "lie", "reality", "सच", "रहस्य"]):
             return "SHOCKING TRUTH"

@@ -1,0 +1,91 @@
+"""
+Tests for Dynamic Vedic Kundli Chart Visual Generator.
+Verifies:
+1. Extraction of houses (1-12) and planets across English, Hindi (direct & oblique cases).
+2. Dynamic 1080x1920 chart generation with house highlighting.
+3. Anti-repetition: Distinct houses produce distinct visual outputs.
+"""
+
+from pathlib import Path
+from PIL import Image
+import pytest
+
+from app.video.kundli_chart_generator import (
+    KundliChartGenerator,
+    HOUSE_METADATA,
+    DEVANAGARI_NUMERALS,
+)
+
+
+def test_house_and_planet_extraction():
+    """Verify extraction handles diverse Hindi inflections and English terms."""
+    # 8th house with Rahu (oblique case 'आठवें')
+    h8, p8 = KundliChartGenerator.extract_house_and_planet("कुंडली के आठवें भाव में राहु है")
+    assert h8 == 8
+    assert p8 is not None and "राहु" in p8
+
+    # 2nd house of wealth ('दूसरे')
+    h2, _ = KundliChartGenerator.extract_house_and_planet("दूसरे भाव में जब धन योग बनता है")
+    assert h2 == 2
+
+    # 10th house career with Saturn
+    h10, p10 = KundliChartGenerator.extract_house_and_planet("When Saturn transits your 10th house")
+    assert h10 == 10
+    assert p10 is not None and "SATURN" in p10
+
+    # 7th house marriage
+    h7, _ = KundliChartGenerator.extract_house_and_planet("सप्तम भाव में विवाह का योग")
+    assert h7 == 7
+
+    # 5th house intellect ('पंचम')
+    h5, _ = KundliChartGenerator.extract_house_and_planet("पंचम भाव पूर्व जन्म के कर्म दिखाता है")
+    assert h5 == 5
+
+    # 12th house foreign / losses ('द्वादश')
+    h12, _ = KundliChartGenerator.extract_house_and_planet("12th house foreign settlement")
+    assert h12 == 12
+
+
+def test_dynamic_chart_rendering(tmp_path: Path):
+    """Verify dynamic chart generates valid 1080x1920 image with correct metadata."""
+    chart_p2 = tmp_path / "chart_h2.jpg"
+    chart_p8 = tmp_path / "chart_h8.jpg"
+
+    out2 = KundliChartGenerator.generate_dynamic_chart(
+        highlight_house=2,
+        planet_name="गुरु (JUPITER)",
+        title="2ND HOUSE: WEALTH & FAMILY",
+        output_path=chart_p2,
+    )
+    assert out2.exists()
+    with Image.open(out2) as img2:
+        assert img2.size == (1080, 1920)
+        assert img2.mode == "RGB"
+
+    out8 = KundliChartGenerator.generate_dynamic_chart(
+        highlight_house=8,
+        planet_name="राहु (RAHU)",
+        title="8TH HOUSE: TRANSFORMATION",
+        output_path=chart_p8,
+    )
+    assert out8.exists()
+    with Image.open(out8) as img8:
+        assert img8.size == (1080, 1920)
+        assert img8.mode == "RGB"
+
+    # Distinct houses must produce distinct files
+    bytes2 = chart_p2.read_bytes()
+    bytes8 = chart_p8.read_bytes()
+    assert bytes2 != bytes8
+
+
+def test_house_metadata_integrity():
+    """Verify all 12 houses have complete English, Hindi, and Sanskrit metadata."""
+    for h in range(1, 13):
+        assert h in HOUSE_METADATA
+        meta = HOUSE_METADATA[h]
+        assert "name_hi" in meta
+        assert "name_en" in meta
+        assert "sanskrit" in meta
+        assert "significance" in meta
+        assert h in DEVANAGARI_NUMERALS

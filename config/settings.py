@@ -88,7 +88,7 @@ CONTENT_QUEUE_FILE = STORAGE_DIR / "content_queue.json"
 # ---------------------------------------------------------------------------
 IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "pollinations").strip().lower()
 IMAGE_FALLBACK_PROVIDER = os.getenv("IMAGE_FALLBACK_PROVIDER", "mock").strip().lower()
-IMAGE_MODEL = os.getenv("IMAGE_MODEL", "flux").strip()
+IMAGE_MODEL = os.getenv("IMAGE_MODEL", "").strip()
 IMAGE_TIMEOUT = int(os.getenv("IMAGE_TIMEOUT", "30"))
 IMAGE_MAX_RETRIES = int(os.getenv("IMAGE_MAX_RETRIES", "3"))
 ALLOW_STATIC_FALLBACK = os.getenv("ALLOW_STATIC_FALLBACK", "false").strip().lower() in ("true", "1")

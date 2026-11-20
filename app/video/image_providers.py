@@ -166,7 +166,7 @@ class PollinationsImageProvider(BaseImageProvider):
 
     name = "pollinations"
 
-    def __init__(self, model: str = "flux", timeout: int = 30, max_retries: int = 3, **kwargs: Any):
+    def __init__(self, model: Optional[str] = None, timeout: int = 30, max_retries: int = 3, **kwargs: Any):
         super().__init__(model=model, timeout=timeout, max_retries=max_retries, **kwargs)
 
     def validate_config(self) -> None:
@@ -183,10 +183,16 @@ class PollinationsImageProvider(BaseImageProvider):
     ) -> bytes:
         gen_seed = seed if seed is not None else random.randint(100000, 99999999)
         encoded_prompt = urllib.parse.quote(prompt.strip())
-        model_name = self.model or "flux"
+        model_name = self.model or ""
+        # Pollinations made 'flux' a paid tier (HTTP 402); default/turbo models are free
+        model_param = (
+            f"&model={model_name}"
+            if model_name and model_name.lower() not in ("flux", "default", "none")
+            else ""
+        )
         url = (
             f"https://image.pollinations.ai/prompt/{encoded_prompt}"
-            f"?width={width}&height={height}&nologo=true&seed={gen_seed}&model={model_name}"
+            f"?width={width}&height={height}&nologo=true&seed={gen_seed}{model_param}"
         )
 
         req = urllib.request.Request(

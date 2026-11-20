@@ -1166,6 +1166,27 @@ class DynamicVisualEngine:
         that STRICTLY matches the information conveyed in this specific scene script.
         Uses AIImageGenerator to create fresh, script-driven visuals.
         """
+        # Dynamic Astrological Chart Routing: If scene specifically mentions a Kundli house or chart,
+        # generate a dedicated, authentic 1080x1920 chart highlighting that exact house!
+        spoken = str(scene_dict.get("spoken_line", "") or scene_dict.get("spoken_words", ""))
+        on_screen = str(scene_dict.get("on_screen_text", ""))
+        combined_text = f"{spoken} {on_screen}".strip()
+
+        try:
+            from app.video.kundli_chart_generator import KundliChartGenerator
+            h_num, p_name = KundliChartGenerator.extract_house_and_planet(combined_text)
+            if h_num is not None or any(k in combined_text.lower() for k in ["kundli", "कुंडली", "birth chart", "जन्मपत्रिका"]):
+                chart_img = KundliChartGenerator.generate_dynamic_chart(
+                    highlight_house=h_num,
+                    planet_name=p_name,
+                    title=f"KUNDLI: {h_num}TH HOUSE" if h_num else "VEDIC KUNDLI BIRTH CHART",
+                )
+                if chart_img and chart_img.exists():
+                    logger.info(f"[DynamicVisualEngine] Delivered dynamic script-driven Kundli chart for scene {scene_idx + 1} (House {h_num}): {chart_img.name}")
+                    return chart_img
+        except Exception as ce:
+            logger.debug(f"Dynamic chart generator notice: {ce}")
+
         from app.video.ai_image_generator import AIImageGenerator
         try:
             return AIImageGenerator.generate_scene_image(
@@ -1375,6 +1396,18 @@ class DynamicVisualEngine:
 
             # 1. Kundli / Birth Chart / Astrological Houses
             if any(k in scene_txt for k in ["kundli", "कुंडली", "birth chart", "भाव", "लग्न", "house", "केंद्र", "त्रिकोण", "जन्मपत्रिका"]):
+                try:
+                    from app.video.kundli_chart_generator import KundliChartGenerator
+                    house_num, planet_name = KundliChartGenerator.extract_house_and_planet(scene_txt)
+                    dynamic_chart = KundliChartGenerator.generate_dynamic_chart(
+                        highlight_house=house_num,
+                        planet_name=planet_name,
+                        title=f"KUNDLI: {house_num}TH HOUSE" if house_num else None,
+                    )
+                    if dynamic_chart and dynamic_chart.exists():
+                        candidates.append(dynamic_chart)
+                except Exception as e:
+                    logger.debug(f"Dynamic chart generation fallback notice: {e}")
                 candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
                 candidates.append(CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg")
 

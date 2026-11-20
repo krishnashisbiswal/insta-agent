@@ -578,15 +578,28 @@ class SceneVisualIntelligence:
                 "a scholarly dimly-lit astrological study with warm candlelight, brass instruments, and antique manuscripts"
             )
 
-        # Specific Astrological: Kundli / 5th House analysis
-        if any(w in text_lower for w in ["kundli", "कुंडली", "5th house", "पंचम भाव", "house"]):
+        # Specific Astrological: Dynamic Kundli House analysis & chart mapping
+        from app.video.kundli_chart_generator import KundliChartGenerator, HOUSE_METADATA
+        house_num, planet_name = KundliChartGenerator.extract_house_and_planet(text_lower)
+        if house_num and house_num in HOUSE_METADATA:
+            meta = HOUSE_METADATA[house_num]
+            planet_clause = f" with {planet_name} placement" if planet_name else ""
             return (
-                "Examining the planetary positions in the 5th house of intellect and karmic memory",
-                "A scholar's hand holding an antique brass compass over an intricate hand-drawn Vedic Kundli parchment chart illuminated by the warm amber glow of an oil lamp",
-                "Tracing the geometric houses of karma on ancient parchment",
-                "A weathered aged parchment birth chart with authentic Devanagari Sanskrit house divisions",
-                "being carefully studied with fine brass measuring instruments under gentle warm task lighting",
-                "a quiet scholarly sanctuary with shelves of leather-bound palm-leaf treatises and warm ambient glow"
+                f"Analyzing the astrological influence of the {meta['name_en']}{planet_clause} governing {meta['significance']}",
+                f"An authentic ancient North Indian Vedic Kundli birth chart on dark celestial parchment where the {meta['name_en']} ({meta['name_hi']}) is prominently highlighted and glowing in brilliant golden-amber light",
+                f"Illuminating the karmic blueprint of {meta['sanskrit']} ({meta['significance']})",
+                f"An authentic weathered parchment Vedic Kundli birth chart with glowing {meta['name_en']}{planet_clause}",
+                f"displaying intricate Sanskrit planetary glyphs and fine geometric house divisions with radiant golden aura on {meta['name_en']}",
+                "a quiet astrological scholar sanctuary bathed in warm candlelight with brass astrolabe and palm-leaf manuscripts"
+            )
+        elif any(w in text_lower for w in ["kundli", "कुंडली", "birth chart", "जन्मपत्रिका", "horoscope chart", "house", "भाव"]):
+            return (
+                "Examining the overall geometry and planetary alignments in an authentic Vedic Kundli birth chart",
+                "A complete North Indian diamond Vedic Kundli birth chart drawn in gold leaf on dark celestial parchment, glowing with sacred geometry",
+                "Tracing the cosmic web of destiny across the twelve astrological houses",
+                "An authentic complete North Indian diamond-grid Kundli birth chart",
+                "delicately illuminated by warm oil lamps revealing all twelve Sanskrit houses and planetary degrees",
+                "an ancient stone observatory library at dusk with brass armillary sphere and astrological texts"
             )
 
         # Specific Astrological: Shani / Saturn planetary influence
