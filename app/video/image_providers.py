@@ -413,56 +413,31 @@ class MockImageProvider(BaseImageProvider):
 
         # Match strictly to authentic curated photography based on script prompt
         target_plate = None
-        if any(k in p_lower for k in ["dm", "consultation", "welcoming hands", "hands presenting", "save reel", "havan", "temple", "यज्ञ", "अग्नि", "mandir"]):
-            target_plate = cinematic_dir / "4_sacred_havan.jpg"
-        elif any(k in p_lower for k in ["pyrite", "पायराइट"]):
-            cands = [
-                cinematic_dir / "crystal_pyrite_cluster.jpg",
-                cinematic_dir / "crystal_citrine_quartz.jpg",
-                cinematic_dir / "crystal_tigers_eye.jpg",
-                cinematic_dir / "crystal_clear_quartz.jpg",
-                cinematic_dir / "crystal_green_aventurine.jpg",
-                cinematic_dir / "crystal_selenite.jpg",
-                cinematic_dir / "sacred_geometric_yantra.jpg",
-            ]
-            valid = [c for c in cands if c.exists()]
-            target_plate = valid[s_val % len(valid)] if valid else None
-        elif any(k in p_lower for k in ["rudraksha", "रुद्राक्ष", "mukhi", "मुख"]):
-            cands = [
-                cinematic_dir / "rudraksha_sacred_beads.jpg",
-                cinematic_dir / "sacred_geometric_yantra.jpg",
-                cinematic_dir / "crystal_clear_quartz.jpg",
-                cinematic_dir / "crystal_citrine_quartz.jpg",
-                cinematic_dir / "crystal_green_aventurine.jpg",
-                cinematic_dir / "crystal_tigers_eye.jpg",
-                cinematic_dir / "crystal_selenite.jpg",
-            ]
-            valid = [c for c in cands if c.exists()]
-            target_plate = valid[s_val % len(valid)] if valid else None
+        if any(k in p_lower for k in ["rudraksha", "रुद्राक्ष", "mukhi", "मुख"]):
+            primary = cinematic_dir / "rudraksha_sacred_beads.jpg"
+            target_plate = primary if primary.exists() else None
         elif any(k in p_lower for k in ["amethyst", "कटेला", "जामुनिया"]):
-            cands = [
-                cinematic_dir / "crystal_amethyst_cluster.jpg",
-                cinematic_dir / "crystal_clear_quartz.jpg",
-                cinematic_dir / "crystal_selenite.jpg",
-            ]
-            valid = [c for c in cands if c.exists()]
-            target_plate = valid[s_val % len(valid)] if valid else None
-        elif any(k in p_lower for k in ["tourmaline", "टूमलाइन"]):
-            cands = [
-                cinematic_dir / "crystal_black_tourmaline.jpg",
-                cinematic_dir / "crystal_clear_quartz.jpg",
-                cinematic_dir / "crystal_selenite.jpg",
-            ]
-            valid = [c for c in cands if c.exists()]
-            target_plate = valid[s_val % len(valid)] if valid else None
+            primary = cinematic_dir / "crystal_amethyst_cluster.jpg"
+            target_plate = primary if primary.exists() else None
+        elif any(k in p_lower for k in ["pyrite", "पायराइट"]):
+            primary = cinematic_dir / "crystal_pyrite_cluster.jpg"
+            target_plate = primary if primary.exists() else None
+        elif any(k in p_lower for k in ["tourmaline", "टूमलाइन", "टूरमैलीन"]):
+            primary = cinematic_dir / "crystal_black_tourmaline.jpg"
+            target_plate = primary if primary.exists() else None
         elif any(k in p_lower for k in ["tiger", "tigers eye", "टाइगर"]):
-            cands = [
-                cinematic_dir / "fresh_tiger_eye_macro.jpg",
-                cinematic_dir / "crystal_tigers_eye.jpg",
-                cinematic_dir / "crystal_citrine_quartz.jpg",
-            ]
-            valid = [c for c in cands if c.exists()]
-            target_plate = valid[s_val % len(valid)] if valid else None
+            primary = cinematic_dir / "fresh_tiger_eye_macro.jpg"
+            target_plate = primary if primary.exists() else (cinematic_dir / "crystal_tigers_eye.jpg")
+        elif any(k in p_lower for k in ["citrine", "सिट्रीन"]):
+            primary = cinematic_dir / "crystal_citrine_quartz.jpg"
+            target_plate = primary if primary.exists() else None
+        elif any(k in p_lower for k in ["jupiter", "guru", "बृहस्पति"]):
+            from app.video.kundli_chart_generator import KundliChartGenerator
+            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
+                scene_dict={"spoken_line": "Guru Jupiter in 9th house"},
+                topic="Jupiter Placement",
+                scene_idx=1,
+            )
         elif any(k in p_lower for k in ["rahu", "sun rahu", "grahan", "eclipse", "सूर्य और राहु"]):
             from app.video.kundli_chart_generator import KundliChartGenerator
             target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
@@ -484,8 +459,6 @@ class MockImageProvider(BaseImageProvider):
                 topic="Shani Karmic Impact",
                 scene_idx=4,
             )
-        elif any(k in p_lower for k in ["emerald", "sapphire", "neelam", "gemstone", "रत्न", "remedies"]):
-            target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
         elif any(k in p_lower for k in ["12th house", "12th", "बारहवें"]):
             from app.video.kundli_chart_generator import KundliChartGenerator
             target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
@@ -493,6 +466,10 @@ class MockImageProvider(BaseImageProvider):
                 topic="12th House Drain",
                 scene_idx=2,
             )
+        elif any(k in p_lower for k in ["emerald", "sapphire", "neelam", "gemstone", "रत्न", "remedies"]):
+            target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
+        elif any(k in p_lower for k in ["dm", "consultation", "welcoming hands", "hands presenting", "save reel", "havan", "fire altar", "temple", "यज्ञ", "अग्नि", "mandir"]):
+            target_plate = cinematic_dir / "4_sacred_havan.jpg"
         elif any(k in p_lower for k in ["kundli", "chart", "parchment", "birth chart"]):
             from app.video.kundli_chart_generator import KundliChartGenerator
             target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(

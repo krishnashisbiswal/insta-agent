@@ -313,9 +313,10 @@ class VisionQualityGate:
 
         # Generic style exclusions are negative prompt constraints, not entity contaminations
         STYLE_EXCLUSIONS = {"3d renders", "cgi cartoons", "animated illustrations", "stock models", "wireframes", "cartoons", "cgi", "drawings"}
+        topic_lower = getattr(plan, "topic", "").lower()
         for forb in forbidden:
             forb_clean = forb.lower().strip()
-            if forb_clean and forb_clean not in STYLE_EXCLUSIONS:
+            if forb_clean and forb_clean not in STYLE_EXCLUSIONS and forb_clean not in topic_lower:
                 if forb_clean in positive_prompt or forb_clean in subject_text:
                     relevance_score = 0.3
                     rejection_reason = f"Topic contamination: Scene forbidden element '{forb}' was detected in scene subject/prompt."

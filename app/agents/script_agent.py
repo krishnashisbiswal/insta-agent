@@ -174,19 +174,56 @@ Return ONLY valid JSON in this exact structure:
         data = generate_json(prompt)
     except Exception as exc:
         logger.warning(f"Gemini hook generation failed ({exc}). Using high-retention fallback hooks...")
+        t_low = (topic or "").lower()
+        if any(k in t_low for k in ["rudraksha", "रुद्राक्ष", "mukhi"]):
+            h1_spoken = "क्या आपका 5-Mukhi Rudraksha आपकी कुंडली की energy से clash कर रहा है?"
+            h1_onscreen = "RUDRAKSHA ENERGY CLASH"
+            h2_spoken = "कुंडली के ग्रह तय करते हैं कि कौन सा रुद्राक्ष आपको सूट करेगा।"
+            h2_onscreen = "RUDRAKSHA KUNDLI RULES"
+        elif any(k in t_low for k in ["amethyst", "एमेथिस्ट"]):
+            h1_spoken = "क्या आपका Amethyst crystal आपकी कुंडली की energy से clash कर रहा है?"
+            h1_onscreen = "AMETHYST ENERGY CLASH"
+            h2_spoken = "कुंडली में शनि और गुरु तय करते हैं कि एमेथिस्ट काम करेगा या नहीं।"
+            h2_onscreen = "AMETHYST KUNDLI RULES"
+        elif any(k in t_low for k in ["pyrite", "पायराइट"]):
+            h1_spoken = "क्या आपका Pyrite stone आपकी wealth energy को block कर रहा है?"
+            h1_onscreen = "PYRITE MONEY CLASH"
+            h2_spoken = "कुंडली का दूसरा भाव तय करता है कि पायराइट काम करेगा या नहीं।"
+            h2_onscreen = "PYRITE WEALTH RULES"
+        elif any(k in t_low for k in ["citrine", "सिट्रीन"]):
+            h1_spoken = "क्या आपका Citrine stone आपकी कुंडली के धन भाव से clash कर रहा है?"
+            h1_onscreen = "CITRINE WEALTH CLASH"
+            h2_spoken = "कुंडली के 2nd और 11th भाव तय करते हैं कि सिट्रीन फल देगा या नहीं।"
+            h2_onscreen = "CITRINE WEALTH RULES"
+        elif any(k in t_low for k in ["tourmaline", "टूरमैलीन"]):
+            h1_spoken = "क्या आपका Black Tourmaline आपकी aura frequency से match नहीं कर रहा?"
+            h1_onscreen = "TOURMALINE SHIELD CLASH"
+            h2_spoken = "कुंडली के सुरक्षा भाव तय करते हैं कि टूरमैलीन काम करेगा या नहीं।"
+            h2_onscreen = "TOURMALINE AURA RULES"
+        elif any(k in t_low for k in ["sapphire", "neelam", "नीलम"]):
+            h1_spoken = "बिना कुंडली जांचे Neelam पहनना mental peace को क्यों disrupt कर सकता है?"
+            h1_onscreen = "NEELAM DANGER CLASH"
+            h2_spoken = "शनि की दृष्टि तय करती है कि नीलम वरदान बनेगा या भारी नुकसान देगा।"
+            h2_onscreen = "SHANI NEELAM RULES"
+        else:
+            h1_spoken = "टाइगर आई पहनने के बाद भी आपका मन शांत क्यों नहीं हो रहा?"
+            h1_onscreen = "TIGER EYE NOT WORKING"
+            h2_spoken = "कुंडली के ये पांच भाव तय करते हैं कि रत्न काम करेगा या नहीं।"
+            h2_onscreen = "5 KUNDLI CHART TURNING POINTS"
+
         data = [
             {
                 "id": "viral_hook_1",
                 "name": "The Unspoken Dilemma",
-                "spoken": "टाइगर आई पहनने के बाद भी आपका मन शांत क्यों नहीं हो रहा?",
-                "on_screen": "TIGER EYE NOT WORKING",
+                "spoken": h1_spoken,
+                "on_screen": h1_onscreen,
                 "why_it_works": "Direct emotional question addressing ineffective spiritual practice"
             },
             {
                 "id": "viral_hook_2",
                 "name": "The Chart Turning Point",
-                "spoken": "कुंडली के ये पांच भाव तय करते हैं कि रत्न काम करेगा या नहीं।",
-                "on_screen": "5 KUNDLI CHART TURNING POINTS",
+                "spoken": h2_spoken,
+                "on_screen": h2_onscreen,
                 "why_it_works": "Numbered authority hook building curiosity about astrological turning points"
             },
             {
@@ -948,22 +985,117 @@ def _generate_fallback_reel_data(
     total_scenes_target: int = 7,
     num_points: int = 5,
 ) -> Dict[str, Any]:
-    """Generates structured 7-scene retention fallback data when Gemini API hits quota limits."""
+    """Generates structured 7-scene retention fallback data smartly adapted to the topic."""
+    t_lower = (topic or "").lower()
+
+    # Detect primary subject entity from topic
+    if any(k in t_lower for k in ["rudraksha", "रुद्राक्ष", "mukhi"]):
+        entity_name = "5-Mukhi Rudraksha"
+        hook_on_screen = "RUDRAKSHA ENERGY CLASH"
+        hook_spoken = "क्या आपका 5-Mukhi Rudraksha आपकी कुंडली की energy के साथ clash कर रहा है?"
+        hook_visual = "Extreme macro photograph of authentic sacred 5-Mukhi Rudraksha beads showing natural deep crevices and facets on dark antique Sanskrit parchment"
+        secondary_crystal = "Amethyst Crystal"
+        sec_visual = "Deep purple natural raw amethyst crystal cluster glowing under cinematic directional lighting"
+    elif any(k in t_lower for k in ["amethyst", "एमेथिस्ट"]):
+        entity_name = "Amethyst Crystal"
+        hook_on_screen = "AMETHYST ENERGY CLASH"
+        hook_spoken = "क्या आपका Amethyst crystal आपकी कुंडली की energy के साथ clash कर रहा है?"
+        hook_visual = "Extreme macro photograph of raw deep purple Amethyst crystal cluster with natural light refractions on dark velvet parchment"
+        secondary_crystal = "5-Mukhi Rudraksha"
+        sec_visual = "Authentic sacred five mukhi rudraksha beads resting on ancient Vedic chart"
+    elif any(k in t_lower for k in ["pyrite", "पायराइट"]):
+        entity_name = "Golden Pyrite"
+        hook_on_screen = "PYRITE MONEY CLASH"
+        hook_spoken = "क्या आपका Pyrite stone आपकी कुंडली की wealth energy को block कर रहा है?"
+        hook_visual = "Macro photograph of shimmering golden pyrite crystal cluster with brassy cubic crystals on dark velvet"
+        secondary_crystal = "Citrine Quartz"
+        sec_visual = "Golden radiant citrine quartz crystal cluster with natural facets"
+    elif any(k in t_lower for k in ["citrine", "सिट्रीन"]):
+        entity_name = "Citrine Quartz"
+        hook_on_screen = "CITRINE WEALTH CLASH"
+        hook_spoken = "क्या आपका Citrine crystal आपकी कुंडली के 2nd house के साथ clash कर रहा है?"
+        hook_visual = "Macro photograph of vibrant golden-yellow citrine crystal gemstone glowing under warm golden light"
+        secondary_crystal = "Yellow Sapphire"
+        sec_visual = "Flawless natural yellow sapphire gemstone on dark velvet"
+    elif any(k in t_lower for k in ["tourmaline", "टूरमैलीन"]):
+        entity_name = "Black Tourmaline"
+        hook_on_screen = "TOURMALINE SHIELD CLASH"
+        hook_spoken = "क्या आपका Black Tourmaline आपकी aura frequency के साथ align नहीं हो रहा?"
+        hook_visual = "Macro photograph of raw needle-textured black tourmaline crystal cluster on dark slate stone"
+        secondary_crystal = "Clear Quartz"
+        sec_visual = "Prismatic clear quartz natural crystal point"
+    elif any(k in t_lower for k in ["sapphire", "neelam", "नीलम"]):
+        entity_name = "Royal Blue Sapphire"
+        hook_on_screen = "NEELAM DANGER CLASH"
+        hook_spoken = "बिना कुंडली जांचे Neelam पहनना आपकी mental peace को क्यों disrupt कर सकता है?"
+        hook_visual = "Macro photograph of radiant royal blue sapphire gemstone showing hexagonal crystal growth lines"
+        secondary_crystal = "Emerald Gemstone"
+        sec_visual = "Flawless faceted natural emerald and blue sapphire gemstones glowing on dark velvet"
+    else:
+        entity_name = "Tiger Eye Gemstone"
+        hook_on_screen = "TIGER EYE NOT WORKING"
+        hook_spoken = "क्या आपका Tiger Eye स्टोन आपकी कुंडली की एनर्जी के साथ क्लैश कर रहा है?"
+        hook_visual = "Extreme macro close-up photograph of a radiant golden-brown Tiger's Eye gemstone and bracelet showing vivid silky chatoyancy resting on dark antique Sanskrit parchment"
+        secondary_crystal = "Royal Blue Sapphire"
+        sec_visual = "Flawless faceted natural emerald and blue sapphire gemstones glowing on dark velvet"
+
+    # Use hook override if provided
+    if selected_hook and selected_hook.get("on_screen"):
+        hook_on_screen = str(selected_hook["on_screen"]).upper().strip()
+    if selected_hook and selected_hook.get("spoken"):
+        hook_spoken = str(selected_hook["spoken"]).strip()
+
+    # Determine planetary scene 2
+    if any(k in t_lower for k in ["jupiter", "guru", "बृहस्पति"]):
+        sc2_spoken = "पहला मुख्य संकेत, जब आपकी कुंडली में Guru Jupiter कमजोर स्थिति में होता है, तो यह higher wisdom और focus को disrupt करता है।"
+        sc2_onscreen = "JUPITER ENERGY CLASH"
+        sc2_badge = "GURU PLACEMENT"
+        sc2_visual = "3D Guru Jupiter planet in Vedic Kundli 9th house with glowing golden aura"
+    else:
+        sc2_spoken = "पहला मुख्य संकेत, जब आपकी कुंडली में Sun और Rahu का ग्रहण संघर्ष आपके nervous system और mental peace को हिला देता है।"
+        sc2_onscreen = "SUN RAHU CONFLICT"
+        sc2_badge = "AURA SHIELD"
+        sc2_visual = "Authentic ancient Vedic Kundli birth chart parchment showing Sun and Rahu planetary positions"
+
+    # Determine planetary scene 4
+    if any(k in t_lower for k in ["mars", "mangal", "मंगल"]):
+        sc4_spoken = "तीसरा कारण, जब Mars की fierce energy गलत भाव में होती है, तो यह aggression और internal stress पैदा करती है।"
+        sc4_onscreen = "MARS OVERHEATING MIND"
+        sc4_badge = "BIO-ENERGY CODE"
+        sc4_visual = "3D Planet Mars in Vedic Kundli 1st house glowing with fierce crimson-amber Martian aura"
+    else:
+        sc4_spoken = "तीसरा कारण, जब Mars की fierce energy गलत भाव में होती है, तो यह aggression और internal stress पैदा करती है।"
+        sc4_onscreen = "MARS MISALIGNMENT"
+        sc4_badge = "BIO-ENERGY CODE"
+        sc4_visual = "Fiery red planet Mars in deep space showing atmospheric dust and cratered surface"
+
+    # Determine planetary scene 5
+    if any(k in t_lower for k in ["saturn", "shani", "शनि"]):
+        sc5_spoken = "चौथा नियम, जब Shani ki dristi आपके chart पर पड़ती है, तो यह unexpected delays और heavy karmic pressure लाती है।"
+        sc5_onscreen = "SHANI KARMIC DELAYS"
+        sc5_badge = "INSTANT CALM"
+        sc5_visual = "3D Planet Saturn in 7th house drawing 3 aspect arrows to 9th, 1st, and 4th house"
+    else:
+        sc5_spoken = "चौथा नियम, जब Shani ki dristi आपके chart पर पड़ती है, तो यह unexpected delays और heavy karmic pressure लाती है।"
+        sc5_onscreen = "SHANI KARMIC IMPACT"
+        sc5_badge = "INSTANT CALM"
+        sc5_visual = "Planet Saturn with majestic cosmic rings in deep starry space"
+
     scenes = [
         {
             "scene_num": 1,
-            "spoken_line": "क्या आपका Tiger Eye स्टोन आपकी कुंडली की एनर्जी के साथ क्लैश कर रहा है?",
-            "on_screen_text": "TIGER EYE NOT WORKING",
+            "spoken_line": hook_spoken,
+            "on_screen_text": hook_on_screen,
             "badge": "SACRED ENERGY SECRET",
-            "visual_description": "Extreme macro close-up photograph of a radiant golden-brown Tiger's Eye gemstone and bracelet showing vivid silky chatoyancy resting on dark antique Sanskrit parchment",
+            "visual_description": hook_visual,
             "estimated_seconds": 3.8,
         },
         {
             "scene_num": 2,
-            "spoken_line": "पहला मुख्य संकेत, जब आपकी कुंडली में Sun और Rahu का ग्रहण संघर्ष आपके nervous system और mental peace को हिला देता है।",
-            "on_screen_text": "SUN RAHU CONFLICT",
-            "badge": "AURA SHIELD",
-            "visual_description": "Authentic ancient Vedic Kundli birth chart parchment showing Sun and Rahu planetary positions",
+            "spoken_line": sc2_spoken,
+            "on_screen_text": sc2_onscreen,
+            "badge": sc2_badge,
+            "visual_description": sc2_visual,
             "estimated_seconds": 4.5,
         },
         {
@@ -976,26 +1108,26 @@ def _generate_fallback_reel_data(
         },
         {
             "scene_num": 4,
-            "spoken_line": "तीसरा कारण, जब Mars की fierce energy गलत भाव में होती है, तो यह aggression और internal stress पैदा करती है।",
-            "on_screen_text": "MARS MISALIGNMENT",
-            "badge": "BIO-ENERGY CODE",
-            "visual_description": "Fiery red planet Mars in deep space showing atmospheric dust and cratered surface",
+            "spoken_line": sc4_spoken,
+            "on_screen_text": sc4_onscreen,
+            "badge": sc4_badge,
+            "visual_description": sc4_visual,
             "estimated_seconds": 4.5,
         },
         {
             "scene_num": 5,
-            "spoken_line": "चौथा नियम, जब Shani ki dristi आपके chart पर पड़ती है, तो यह unexpected delays और heavy karmic pressure लाती है।",
-            "on_screen_text": "SHANI KARMIC IMPACT",
-            "badge": "INSTANT CALM",
-            "visual_description": "Planet Saturn with majestic cosmic rings in deep starry space",
+            "spoken_line": sc5_spoken,
+            "on_screen_text": sc5_onscreen,
+            "badge": sc5_badge,
+            "visual_description": sc5_visual,
             "estimated_seconds": 4.5,
         },
         {
             "scene_num": 6,
-            "spoken_line": "पांचवां नियम: बिना complete birth chart analysis के कोई भी gemstone कभी न पहनें, यह adverse impact दे सकता है।",
+            "spoken_line": f"पांचवां नियम: बिना complete birth chart analysis के कोई भी {entity_name} या {secondary_crystal} कभी न पहनें, यह adverse impact दे सकता है।",
             "on_screen_text": "AVOID BLIND REMEDIES",
             "badge": "SPIRITUAL WARNING",
-            "visual_description": "Flawless faceted natural emerald and blue sapphire gemstones glowing on dark velvet",
+            "visual_description": sec_visual,
             "estimated_seconds": 4.5,
         },
         {
@@ -1009,13 +1141,13 @@ def _generate_fallback_reel_data(
     ]
 
     return {
-        "title": "Tiger Eye & Kundli Energy Blueprint",
+        "title": f"{entity_name} & Kundli Energy Blueprint",
         "topic": topic,
         "niche": getattr(profile, "niche_id", "vedic_astrology"),
         "language": language,
         "visual_theme": "modern_dynamic",
         "scenes": scenes,
-        "caption": "Why your gemstones might clash with your birth chart ⚠️ Always verify your planetary positions before wearing sacred stones.",
+        "caption": f"Why your {entity_name} might clash with your birth chart ⚠️ Always verify your planetary positions before wearing sacred stones.",
         "hashtags": ["#VedicAstrology", "#GemstoneEnergy", "#KundliAnalysis", "#Jyotish", "#NeoDivineStore"],
         "call_to_action": "DM us for personal consultation",
     }

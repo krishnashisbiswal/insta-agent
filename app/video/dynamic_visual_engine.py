@@ -1343,8 +1343,19 @@ class DynamicVisualEngine:
             rot_idx = int(hashlib.md5(f"{topic}_cta".encode()).hexdigest(), 16) % len(cta_pool)
             candidates.extend(cta_pool[rot_idx:] + cta_pool[:rot_idx])
 
-        # (B) Caution against Blind Remedies / Warning / Blue Sapphire (Scene 6)
+        # (B) Caution against Blind Remedies / Warning / Specific Secondary Stone or Blue Sapphire (Scene 6)
         elif is_caution_scene:
+            if any(k in scene_txt for k in ["amethyst", "कटेला", "जामुनिया"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "crystal_amethyst_cluster.jpg")
+            elif any(k in scene_txt for k in ["pyrite", "पायराइट"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "crystal_pyrite_cluster.jpg")
+            elif any(k in scene_txt for k in ["citrine", "सिट्रीन"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg")
+            elif any(k in scene_txt for k in ["tourmaline", "टूमलाइन", "टूरमैलीन"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "crystal_black_tourmaline.jpg")
+            elif any(k in scene_txt for k in ["rudraksha", "रुद्राक्ष", "mukhi"]) and not is_hook_scene:
+                candidates.append(CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg")
+
             caution_pool = [
                 CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg",
                 CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg",

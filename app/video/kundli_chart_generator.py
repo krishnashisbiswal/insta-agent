@@ -669,6 +669,54 @@ class KundliChartGenerator:
             canvas = Image.alpha_composite(canvas, b_blur)
             canvas = Image.alpha_composite(canvas, beam_layer)
 
+        else:
+            # General Planetary & Astrological Placement
+            planet_file_map = {
+                "jupiter": ("planet_jupiter.jpg", (255, 215, 60), "GURU JUPITER"),
+                "guru": ("planet_jupiter.jpg", (255, 215, 60), "GURU JUPITER"),
+                "sun": ("planet_sun.jpg", (255, 200, 40), "SURYA SUN"),
+                "surya": ("planet_sun.jpg", (255, 200, 40), "SURYA SUN"),
+                "moon": ("planet_moon.jpg", (210, 230, 255), "CHANDRA MOON"),
+                "chandra": ("planet_moon.jpg", (210, 230, 255), "CHANDRA MOON"),
+                "mercury": ("planet_mercury.jpg", (100, 240, 160), "BUDHA MERCURY"),
+                "budha": ("planet_mercury.jpg", (100, 240, 160), "BUDHA MERCURY"),
+                "venus": ("planet_venus.jpg", (255, 235, 170), "SHUKRA VENUS"),
+                "shukra": ("planet_venus.jpg", (255, 235, 170), "SHUKRA VENUS"),
+                "ketu": ("planet_ketu.jpg", (180, 120, 240), "KETU SHADOW"),
+            }
+            matched_planet = None
+            for pk, pinfo in planet_file_map.items():
+                if pk in ctx:
+                    matched_planet = pinfo
+                    break
+
+            if matched_planet:
+                p_file, p_glow, p_label = matched_planet
+                header_text = f"{target_house}TH HOUSE • {p_label}"
+                p_path = broll_dir / p_file
+                if p_path.exists():
+                    p_img = Image.open(p_path).convert("RGB")
+                    pw, ph = p_img.size
+                    p_crop = p_img.crop((0, int(ph * 0.16), pw, int(ph * 0.76)))
+                    p_target_sz = 280
+                    p_resized = p_crop.resize((p_target_sz, p_target_sz), Image.Resampling.LANCZOS)
+                    y_p, x_p = np.ogrid[:p_target_sz, :p_target_sz]
+                    r_p = p_target_sz / 2.0
+                    d2_p = ((x_p - r_p) / r_p) ** 2 + ((y_p - r_p) / r_p) ** 2
+                    m_p = np.clip((1.0 - d2_p) * 6.0, 0.0, 1.0)
+                    m_arr_p = (m_p * 255).astype(np.uint8)
+                    p_rgba = p_resized.convert("RGBA")
+                    p_rgba.putalpha(Image.fromarray(m_arr_p))
+
+                    p_aura = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+                    pdraw = ImageDraw.Draw(p_aura)
+                    pdraw.ellipse([cx - 170, cy - 170, cx + 170, cy + 170], fill=(p_glow[0], p_glow[1], p_glow[2], 150))
+                    p_aura = p_aura.filter(ImageFilter.GaussianBlur(26))
+                    canvas = Image.alpha_composite(canvas, p_aura)
+                    canvas.paste(p_rgba, (int(cx - p_target_sz // 2), int(cy - p_target_sz // 2)), p_rgba)
+            else:
+                header_text = f"{target_house}TH HOUSE • ASTROLOGICAL ALIGNMENT"
+
         # 4. Kundli Framework Gold Lines & Roman Numerals
         grid = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         gdraw = ImageDraw.Draw(grid)

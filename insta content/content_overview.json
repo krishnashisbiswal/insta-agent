@@ -1,24 +1,24 @@
 {
-  "topic": "Tiger Eye & Kundli Energy Blueprint: Why your gemstones might clash with your birth chart",
+  "topic": "5-Mukhi Rudraksha & Amethyst: Why Jupiter and Saturn in your Kundli decide your mental peace and focus",
   "framework": "3 to 4 Traits Identification + Comment Planet Placement + DM to Book Consultation",
-  "evolution_level": 15.7,
-  "duration_seconds": 40.59,
+  "evolution_level": 16.0,
+  "duration_seconds": 48.02,
   "scenes": [
     {
       "scene_num": 1,
-      "spoken_line": "क्या आपका Tiger Eye स्टोन आपकी कुंडली की एनर्जी के साथ क्लैश कर रहा है?",
-      "on_screen_text": "TIGER EYE NOT WORKING",
+      "spoken_line": "क्या आपका 5-Mukhi Rudraksha आपकी कुंडली की energy से clash कर रहा है?",
+      "on_screen_text": "RUDRAKSHA ENERGY CLASH",
       "badge": "SACRED ENERGY SECRET",
-      "visual_description": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic, radiant polished Tiger's Eye gemstone and bracelet showing vivid golden chatoyancy, resting prominently on aged Sanskrit parchment, reflecting warm amber volumetric light rays, an opulent astrological sanctuary with soft candlelight and ancient Vedic manuscripts, lighting: intimate directional beam of light illuminating a hidden focal detail, soft surrounding bokeh, Dramatic medium close-up, eye-level engagement, compelling macro / medium close-up, partial occlusion creating intrigue, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
-      "estimated_seconds": 6.5,
+      "visual_description": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours, resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight, a quiet temple altar sanctuary with soft burning brass diyas and warm golden shadows, lighting: intimate directional beam of light illuminating a hidden focal detail, soft surrounding bokeh, Dramatic medium close-up, eye-level engagement, compelling macro / medium close-up, partial occlusion creating intrigue, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
+      "estimated_seconds": 6.1,
       "visual_plan": {
         "scene_id": 1,
         "scene_idx": 0,
-        "exact_narration": "क्या आपका Tiger Eye स्टोन आपकी कुंडली की एनर्जी के साथ क्लैश कर रहा है?",
-        "core_meaning": "The grounding yet intense energetic frequency of genuine Tiger's Eye",
-        "main_subject": "An authentic, radiant polished Tiger's Eye gemstone and bracelet showing vivid golden chatoyancy",
-        "subject_action": "resting prominently on aged Sanskrit parchment, reflecting warm amber volumetric light rays",
-        "environment": "an opulent astrological sanctuary with soft candlelight and ancient Vedic manuscripts",
+        "exact_narration": "क्या आपका 5-Mukhi Rudraksha आपकी कुंडली की energy से clash कर रहा है?",
+        "core_meaning": "The sacred energetic properties and organic structure of authentic Rudraksha beads",
+        "main_subject": "An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours",
+        "subject_action": "resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight",
+        "environment": "a quiet temple altar sanctuary with soft burning brass diyas and warm golden shadows",
         "time_of_day": "morning golden hour",
         "mood": "Curiosity",
         "composition": "Dramatic medium close-up, eye-level engagement, compelling macro / medium close-up, partial occlusion creating intrigue",
@@ -27,7 +27,7 @@
         "color_palette": "rich warm parchment, luminous brass, deep emerald, warm candlelight",
         "visual_style": "Cinematic photorealism",
         "required_visual_elements": [
-          "An authentic, radiant polished Tiger's Eye gemstone and bracelet showing vivid golden chatoyancy"
+          "An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours"
         ],
         "forbidden_visual_elements": [
           "text overlays",
@@ -42,55 +42,59 @@
           "generic cartoon temple",
           "modern computer screen",
           "unrelated gemstones",
-          "modern gadgets"
+          "modern gadgets",
+          "person meditating in deep peaceful mindfulness",
+          "meditator seated in padmasana",
+          "soft morning sun rays",
+          "calm serene posture"
         ],
-        "continuity_requirements": "Preceded by [Opening scene of narrative], leads toward [पहला मुख्य संकेत, जब आपकी कुंडली में Sun]. Maintain Cinematic photorealism tone.",
+        "continuity_requirements": "Preceded by [Opening scene of narrative], leads toward [पहला मुख्य संकेत, जब आपकी कुंडली में Gur]. Maintain Cinematic photorealism tone.",
         "aspect_ratio": "9:16",
-        "generation_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic, radiant polished Tiger's Eye gemstone and bracelet showing vivid golden chatoyancy, resting prominently on aged Sanskrit parchment, reflecting warm amber volumetric light rays, an opulent astrological sanctuary with soft candlelight and ancient Vedic manuscripts, lighting: intimate directional beam of light illuminating a hidden focal detail, soft surrounding bokeh, Dramatic medium close-up, eye-level engagement, compelling macro / medium close-up, partial occlusion creating intrigue, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
+        "generation_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours, resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight, a quiet temple altar sanctuary with soft burning brass diyas and warm golden shadows, lighting: intimate directional beam of light illuminating a hidden focal detail, soft surrounding bokeh, Dramatic medium close-up, eye-level engagement, compelling macro / medium close-up, partial occlusion creating intrigue, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
         "validation_criteria": [
           "an"
         ],
         "entity_key": "kundli_chart",
-        "estimated_duration": 6.5,
+        "estimated_duration": 6.1,
         "is_valid": true,
         "validation_errors": [],
         "emotion": "Curiosity",
         "emotion_intensity": 0.8,
         "viewer_feeling": "intense fascination and eager desire to discover the truth",
-        "visual_concept": "An ultra-sharp, luxurious macro shot of an authentic radiant Tiger's Eye gemstone and bead bracelet showing intense golden-brown silky chatoyancy (tiger eye shimmer) resting on sacred velvet or ancient Sanskrit parchment, glowing in warm volumetric golden light",
-        "visual_metaphor": "The golden chatoyant eye of the earth grounding scattered energy",
+        "visual_concept": "An extreme macro close-up of an authentic natural Nepali 5-mukhi Rudraksha bead resting on wet dark slate stone, delicate water droplets highlighting organic deep mukhi grooves under warm golden temple light",
+        "visual_metaphor": "The natural tactile sacred geometry of the divine seed",
         "camera_angle": "Dramatic medium close-up, eye-level engagement",
-        "continuity_notes": "Preceded by [Opening scene of narrative], leads toward [पहला मुख्य संकेत, जब आपकी कुंडली में Sun]. Maintain Cinematic photorealism tone.",
-        "image_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic, radiant polished Tiger's Eye gemstone and bracelet showing vivid golden chatoyancy, resting prominently on aged Sanskrit parchment, reflecting warm amber volumetric light rays, an opulent astrological sanctuary with soft candlelight and ancient Vedic manuscripts, lighting: intimate directional beam of light illuminating a hidden focal detail, soft surrounding bokeh, Dramatic medium close-up, eye-level engagement, compelling macro / medium close-up, partial occlusion creating intrigue, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
-        "narration": "क्या आपका Tiger Eye स्टोन आपकी कुंडली की एनर्जी के साथ क्लैश कर रहा है?",
-        "subject": "An authentic, radiant polished Tiger's Eye gemstone and bracelet showing vivid golden chatoyancy",
-        "action": "resting prominently on aged Sanskrit parchment, reflecting warm amber volumetric light rays"
+        "continuity_notes": "Preceded by [Opening scene of narrative], leads toward [पहला मुख्य संकेत, जब आपकी कुंडली में Gur]. Maintain Cinematic photorealism tone.",
+        "image_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours, resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight, a quiet temple altar sanctuary with soft burning brass diyas and warm golden shadows, lighting: intimate directional beam of light illuminating a hidden focal detail, soft surrounding bokeh, Dramatic medium close-up, eye-level engagement, compelling macro / medium close-up, partial occlusion creating intrigue, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
+        "narration": "क्या आपका 5-Mukhi Rudraksha आपकी कुंडली की energy से clash कर रहा है?",
+        "subject": "An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours",
+        "action": "resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight"
       }
     },
     {
       "scene_num": 2,
-      "spoken_line": "पहला मुख्य संकेत, जब आपकी कुंडली में Sun और Rahu का ग्रहण संघर्ष आपके nervous system और mental peace को हिला देता है।",
-      "on_screen_text": "SUN RAHU CONFLICT",
-      "badge": "AURA SHIELD",
-      "visual_description": "cinematic photorealistic 9:16 vertical luxury photograph of An illuminated Vedic Kundli chart featuring the glowing golden glyph of Sun and dark celestial shadow of Rahu, pulsing with contrasting solar radiance and deep indigo eclipse aura across the chart grid, a mystical Vedic observatory desk surrounded by brass astrological instruments and ancient charts, lighting: soft diffused morning window light, tranquil harmonic radiance, no harsh shadows, Expansive wide atmospheric shot, vast environmental scale, balanced harmonious symmetrical framing, tranquil still waters, ample clean space, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
+      "spoken_line": "पहला मुख्य संकेत, जब आपकी कुंडली में Guru Jupiter कमजोर स्थिति में होता है, तो यह higher wisdom और focus को disrupt करता है।",
+      "on_screen_text": "JUPITER ENERGY CLASH",
+      "badge": "GURU PLACEMENT",
+      "visual_description": "cinematic photorealistic 9:16 vertical luxury photograph of A peaceful meditating individual seated in poised stillness, breathing steadily as a soft, translucent harmonic field of warm golden light pulses gently around their physical form, a tranquil minimalist meditation space with subtle dawn light filtering through sheer curtains, lighting: unsettled flickering amber task light against cold restless shadows, Expansive wide atmospheric shot, vast environmental scale, tighter framing, restless negative space, asymmetrical tension, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors, overhead top-down flat lay perspective, dramatic low-key candlelight",
       "estimated_seconds": 6.5,
       "visual_plan": {
         "scene_id": 2,
         "scene_idx": 1,
-        "exact_narration": "पहला मुख्य संकेत, जब आपकी कुंडली में Sun और Rahu का ग्रहण संघर्ष आपके nervous system और mental peace को हिला देता है।",
-        "core_meaning": "The intense cosmic tension between solar confidence and Rahu's shadowy eclipse in the birth chart",
-        "main_subject": "An illuminated Vedic Kundli chart featuring the glowing golden glyph of Sun and dark celestial shadow of Rahu",
-        "subject_action": "pulsing with contrasting solar radiance and deep indigo eclipse aura across the chart grid",
-        "environment": "a mystical Vedic observatory desk surrounded by brass astrological instruments and ancient charts",
+        "exact_narration": "पहला मुख्य संकेत, जब आपकी कुंडली में Guru Jupiter कमजोर स्थिति में होता है, तो यह higher wisdom और focus को disrupt करता है।",
+        "core_meaning": "Examining the overall geometry and planetary alignments in an authentic Vedic Kundli birth chart",
+        "main_subject": "An authentic complete North Indian diamond-grid Kundli birth chart",
+        "subject_action": "delicately illuminated by warm oil lamps revealing all twelve Sanskrit houses and planetary degrees",
+        "environment": "an ancient stone observatory library at dusk with brass armillary sphere and astrological texts",
         "time_of_day": "morning golden hour",
-        "mood": "Peace",
-        "composition": "Expansive wide atmospheric shot, vast environmental scale, balanced harmonious symmetrical framing, tranquil still waters, ample clean space",
+        "mood": "Anxiety",
+        "composition": "overhead top-down flat lay perspective",
         "camera_framing": "Expansive wide atmospheric shot, vast environmental scale",
-        "lighting": "soft diffused morning window light, tranquil harmonic radiance, no harsh shadows",
-        "color_palette": "soft sage green, serene sky cyan, warm alabaster, gentle lotus pink",
-        "visual_style": "Ethereal spiritual realism",
+        "lighting": "dramatic low-key directional candlelight",
+        "color_palette": "stormy gray, uneasy pale ochre, deep bruised indigo",
+        "visual_style": "Cinematic photorealism",
         "required_visual_elements": [
-          "An illuminated Vedic Kundli chart featuring the glowing golden glyph of Sun and dark celestial shadow of Rahu"
+          "An authentic complete North Indian diamond-grid Kundli birth chart"
         ],
         "forbidden_visual_elements": [
           "text overlays",
@@ -102,40 +106,35 @@
           "wireframes",
           "distorted anatomy",
           "generic cartoon temple",
-          "gemstone",
-          "rudraksha bead",
-          "temple",
-          "horoscope chart",
-          "fire",
-          "taco",
-          "insect",
-          "rings",
-          "beads",
-          "ancient authentic Vedic astrological Kundli birth chart",
-          "traditional diamond-grid Kundli chart on aged parchment",
-          "handwritten Sanskrit planetary symbols"
+          "modern computer screen",
+          "unrelated gemstones",
+          "modern gadgets",
+          "person meditating in deep peaceful mindfulness",
+          "meditator seated in padmasana",
+          "soft morning sun rays",
+          "calm serene posture"
         ],
-        "continuity_requirements": "Preceded by [क्या आपका Tiger Eye स्टोन आपकी कुंडली की], leads toward [दूसरा गहरा भेद, जब 12th House की सक्रियत]. Maintain Ethereal spiritual realism tone.",
+        "continuity_requirements": "Preceded by [क्या आपका 5-Mukhi Rudraksha आपकी कुंडली ], leads toward [दूसरा गहरा भेद, जब 12th House की सक्रियत]. Maintain Cinematic photorealism tone.",
         "aspect_ratio": "9:16",
-        "generation_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of An illuminated Vedic Kundli chart featuring the glowing golden glyph of Sun and dark celestial shadow of Rahu, pulsing with contrasting solar radiance and deep indigo eclipse aura across the chart grid, a mystical Vedic observatory desk surrounded by brass astrological instruments and ancient charts, lighting: soft diffused morning window light, tranquil harmonic radiance, no harsh shadows, Expansive wide atmospheric shot, vast environmental scale, balanced harmonious symmetrical framing, tranquil still waters, ample clean space, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
+        "generation_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic complete North Indian diamond-grid Kundli birth chart, delicately illuminated by warm oil lamps revealing all twelve Sanskrit houses and planetary degrees, an ancient stone observatory library at dusk with brass armillary sphere and astrological texts, lighting: unsettled flickering amber task light against cold restless shadows, Expansive wide atmospheric shot, vast environmental scale, tighter framing, restless negative space, asymmetrical tension, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
         "validation_criteria": [
           "an"
         ],
-        "entity_key": "nervous_system",
+        "entity_key": "kundli_chart",
         "estimated_duration": 6.5,
         "is_valid": true,
         "validation_errors": [],
-        "emotion": "Peace",
-        "emotion_intensity": 0.8,
-        "viewer_feeling": "deep stillness, unburdened serenity, and restorative calm",
-        "visual_concept": "A glowing sacred Vedic Kundli birth chart inscribed with radiant golden lines on dark midnight parchment, with the Sun (Surya) blazing in golden fire and shadowy Rahu casting an intense cosmic eclipse shadow inside the chart house",
-        "visual_metaphor": "The solar life-force eclipsed by cosmic illusion inside the birth chart",
+        "emotion": "Anxiety",
+        "emotion_intensity": 0.82,
+        "viewer_feeling": "visceral unease and breathless anticipation",
+        "visual_concept": "A complete North Indian diamond Vedic Kundli birth chart drawn in gold leaf on dark celestial parchment, glowing with sacred geometry",
+        "visual_metaphor": "Tracing the cosmic web of destiny across the twelve astrological houses",
         "camera_angle": "Expansive wide atmospheric shot, vast environmental scale",
-        "continuity_notes": "Preceded by [क्या आपका Tiger Eye स्टोन आपकी कुंडली की], leads toward [दूसरा गहरा भेद, जब 12th House की सक्रियत]. Maintain Ethereal spiritual realism tone.",
-        "image_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of An illuminated Vedic Kundli chart featuring the glowing golden glyph of Sun and dark celestial shadow of Rahu, pulsing with contrasting solar radiance and deep indigo eclipse aura across the chart grid, a mystical Vedic observatory desk surrounded by brass astrological instruments and ancient charts, lighting: soft diffused morning window light, tranquil harmonic radiance, no harsh shadows, Expansive wide atmospheric shot, vast environmental scale, balanced harmonious symmetrical framing, tranquil still waters, ample clean space, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
-        "narration": "पहला मुख्य संकेत, जब आपकी कुंडली में Sun और Rahu का ग्रहण संघर्ष आपके nervous system और mental peace को हिला देता है।",
-        "subject": "An illuminated Vedic Kundli chart featuring the glowing golden glyph of Sun and dark celestial shadow of Rahu",
-        "action": "pulsing with contrasting solar radiance and deep indigo eclipse aura across the chart grid"
+        "continuity_notes": "Preceded by [क्या आपका 5-Mukhi Rudraksha आपकी कुंडली ], leads toward [दूसरा गहरा भेद, जब 12th House की सक्रियत]. Maintain Cinematic photorealism tone.",
+        "image_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic complete North Indian diamond-grid Kundli birth chart, delicately illuminated by warm oil lamps revealing all twelve Sanskrit houses and planetary degrees, an ancient stone observatory library at dusk with brass armillary sphere and astrological texts, lighting: unsettled flickering amber task light against cold restless shadows, Expansive wide atmospheric shot, vast environmental scale, tighter framing, restless negative space, asymmetrical tension, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
+        "narration": "पहला मुख्य संकेत, जब आपकी कुंडली में Guru Jupiter कमजोर स्थिति में होता है, तो यह higher wisdom और focus को disrupt करता है।",
+        "subject": "An authentic complete North Indian diamond-grid Kundli birth chart",
+        "action": "delicately illuminated by warm oil lamps revealing all twelve Sanskrit houses and planetary degrees"
       }
     },
     {
@@ -175,11 +174,12 @@
           "floating planets in space",
           "generic zodiac wheel",
           "generic cartoon temple",
-          "ancient authentic Vedic astrological Kundli birth chart",
-          "traditional diamond-grid Kundli chart on aged parchment",
-          "handwritten Sanskrit planetary symbols"
+          "person meditating in deep peaceful mindfulness",
+          "meditator seated in padmasana",
+          "soft morning sun rays",
+          "calm serene posture"
         ],
-        "continuity_requirements": "Preceded by [पहला मुख्य संकेत, जब आपकी कुंडली में Sun], leads toward [तीसरा कारण, जब Mars की fierce energy गलत]. Maintain Cinematic photorealism tone.",
+        "continuity_requirements": "Preceded by [पहला मुख्य संकेत, जब आपकी कुंडली में Gur], leads toward [तीसरा कारण, जब Mars की fierce energy गलत]. Maintain Cinematic photorealism tone.",
         "aspect_ratio": "9:16",
         "generation_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of A sacred North Indian diamond Kundli birth chart with the 12th house distinctly illuminated in gold, radiating ethereal streams of glowing golden light particles outward into dark celestial indigo space, a tranquil astrological sanctum bathed in warm amber diya light and mystical starlight, lighting: focused beam of warm crystalline light cutting directly through shadow onto subject's eyes, Medium dynamic storytelling angle, layered diagonal depth, dramatic medium close-up, clear depth of field, moment of insight captured in eyes, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
         "validation_criteria": [
@@ -195,7 +195,7 @@
         "visual_concept": "An authentic glowing Vedic Kundli birth chart highlighting the 12th house (Vyaya Bhava) in radiant golden light, with streams of ethereal golden energy gracefully flowing outward into the cosmos, illustrating energy release",
         "visual_metaphor": "The 12th house portal where internal energy flows outward into the cosmos",
         "camera_angle": "Medium dynamic storytelling angle, layered diagonal depth",
-        "continuity_notes": "Preceded by [पहला मुख्य संकेत, जब आपकी कुंडली में Sun], leads toward [तीसरा कारण, जब Mars की fierce energy गलत]. Maintain Cinematic photorealism tone.",
+        "continuity_notes": "Preceded by [पहला मुख्य संकेत, जब आपकी कुंडली में Gur], leads toward [तीसरा कारण, जब Mars की fierce energy गलत]. Maintain Cinematic photorealism tone.",
         "image_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of A sacred North Indian diamond Kundli birth chart with the 12th house distinctly illuminated in gold, radiating ethereal streams of glowing golden light particles outward into dark celestial indigo space, a tranquil astrological sanctum bathed in warm amber diya light and mystical starlight, lighting: focused beam of warm crystalline light cutting directly through shadow onto subject's eyes, Medium dynamic storytelling angle, layered diagonal depth, dramatic medium close-up, clear depth of field, moment of insight captured in eyes, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
         "narration": "दूसरा गहरा भेद, जब 12th House की सक्रियता आपकी vital energy को drain करके focus पूरी तरह खत्म कर देती है।",
         "subject": "A sacred North Indian diamond Kundli birth chart with the 12th house distinctly illuminated in gold",
@@ -241,9 +241,10 @@
           "green terrain",
           "saturn rings",
           "rudraksha",
-          "ancient authentic Vedic astrological Kundli birth chart",
-          "traditional diamond-grid Kundli chart on aged parchment",
-          "handwritten Sanskrit planetary symbols"
+          "person meditating in deep peaceful mindfulness",
+          "meditator seated in padmasana",
+          "soft morning sun rays",
+          "calm serene posture"
         ],
         "continuity_requirements": "Preceded by [दूसरा गहरा भेद, जब 12th House की सक्रियत], leads toward [चौथा नियम, जब Shani ki dristi आपके chart]. Maintain Cinematic photorealism tone.",
         "aspect_ratio": "9:16",
@@ -271,7 +272,7 @@
     {
       "scene_num": 5,
       "spoken_line": "चौथा नियम, जब Shani ki dristi आपके chart पर पड़ती है, तो यह unexpected delays और heavy karmic pressure लाती है।",
-      "on_screen_text": "SHANI KARMIC IMPACT",
+      "on_screen_text": "SHANI KARMIC DELAYS",
       "badge": "INSTANT CALM",
       "visual_description": "cinematic photorealistic 9:16 vertical luxury photograph of The majestic planet Saturn with razor-sharp detailed rings and luminous golden-indigo aura, projecting three distinct radiant cosmic rays of light piercing through deep space toward distant stars, the deep majestic cosmos with rich indigo and violet nebulae and celestial starlight, lighting: focused beam of warm crystalline light cutting directly through shadow onto subject's eyes, Low-angle dynamic hero perspective, upward diagonal movement, dramatic medium close-up, clear depth of field, moment of insight captured in eyes, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
       "estimated_seconds": 6.5,
@@ -307,9 +308,10 @@
           "gemstone jewelry",
           "earth landscapes",
           "rudraksha",
-          "ancient authentic Vedic astrological Kundli birth chart",
-          "traditional diamond-grid Kundli chart on aged parchment",
-          "handwritten Sanskrit planetary symbols"
+          "person meditating in deep peaceful mindfulness",
+          "meditator seated in padmasana",
+          "soft morning sun rays",
+          "calm serene posture"
         ],
         "continuity_requirements": "Preceded by [तीसरा कारण, जब Mars की fierce energy गलत], leads toward [पांचवां नियम: बिना complete birth chart ]. Maintain Cinematic photorealism tone.",
         "aspect_ratio": "9:16",
@@ -336,19 +338,19 @@
     },
     {
       "scene_num": 6,
-      "spoken_line": "पांचवां नियम: बिना complete birth chart analysis के कोई भी gemstone कभी न पहनें, यह adverse impact दे सकता है।",
+      "spoken_line": "पांचवां नियम: बिना complete birth chart analysis के कोई भी 5-Mukhi Rudraksha या Amethyst Crystal कभी न पहनें, यह adverse impact दे सकता है।",
       "on_screen_text": "AVOID BLIND REMEDIES",
       "badge": "SPIRITUAL WARNING",
-      "visual_description": "cinematic photorealistic 9:16 vertical luxury photograph of A collection of flawless, faceted natural gemstones glowing with vivid jewel tones, catching warm golden candlelight and casting prismatic color refractions across aged parchment, an ancient Vedic sanctuary study with rich teakwood textures and antique brass instruments, lighting: dual-tone lighting split across the frame: cold shadow behind, radiant golden dawn ahead, Cinematic wide threshold angle, dramatic light transition, threshold framing, subject stepping across doorway, archway, or dividing light line, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
+      "visual_description": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours, resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight, a quiet temple altar sanctuary with soft burning brass diyas and warm golden shadows, lighting: dual-tone lighting split across the frame: cold shadow behind, radiant golden dawn ahead, Cinematic wide threshold angle, dramatic light transition, threshold framing, subject stepping across doorway, archway, or dividing light line, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
       "estimated_seconds": 6.5,
       "visual_plan": {
         "scene_id": 6,
         "scene_idx": 5,
-        "exact_narration": "पांचवां नियम: बिना complete birth chart analysis के कोई भी gemstone कभी न पहनें, यह adverse impact दे सकता है।",
-        "core_meaning": "The critical importance of exact chart alignment before wearing powerful gemstones",
-        "main_subject": "A collection of flawless, faceted natural gemstones glowing with vivid jewel tones",
-        "subject_action": "catching warm golden candlelight and casting prismatic color refractions across aged parchment",
-        "environment": "an ancient Vedic sanctuary study with rich teakwood textures and antique brass instruments",
+        "exact_narration": "पांचवां नियम: बिना complete birth chart analysis के कोई भी 5-Mukhi Rudraksha या Amethyst Crystal कभी न पहनें, यह adverse impact दे सकता है।",
+        "core_meaning": "The sacred energetic properties and organic structure of authentic Rudraksha beads",
+        "main_subject": "An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours",
+        "subject_action": "resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight",
+        "environment": "a quiet temple altar sanctuary with soft burning brass diyas and warm golden shadows",
         "time_of_day": "morning golden hour",
         "mood": "Transformation",
         "composition": "Cinematic wide threshold angle, dramatic light transition, threshold framing, subject stepping across doorway, archway, or dividing light line",
@@ -357,7 +359,7 @@
         "color_palette": "gradient transition from stormy indigo to triumphant golden dawn",
         "visual_style": "Cinematic photorealism",
         "required_visual_elements": [
-          "A collection of flawless, faceted natural gemstones glowing with vivid jewel tones"
+          "An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours"
         ],
         "forbidden_visual_elements": [
           "text overlays",
@@ -375,15 +377,16 @@
           "taco",
           "insect",
           "rudraksha",
-          "ancient authentic Vedic astrological Kundli birth chart",
-          "traditional diamond-grid Kundli chart on aged parchment",
-          "handwritten Sanskrit planetary symbols"
+          "person meditating in deep peaceful mindfulness",
+          "meditator seated in padmasana",
+          "soft morning sun rays",
+          "calm serene posture"
         ],
         "continuity_requirements": "Preceded by [चौथा नियम, जब Shani ki dristi आपके chart], leads toward [यह reel तुरंत save करें। अपनी कुंडली की ]. Maintain Cinematic photorealism tone.",
         "aspect_ratio": "9:16",
-        "generation_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of A collection of flawless, faceted natural gemstones glowing with vivid jewel tones, catching warm golden candlelight and casting prismatic color refractions across aged parchment, an ancient Vedic sanctuary study with rich teakwood textures and antique brass instruments, lighting: dual-tone lighting split across the frame: cold shadow behind, radiant golden dawn ahead, Cinematic wide threshold angle, dramatic light transition, threshold framing, subject stepping across doorway, archway, or dividing light line, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
+        "generation_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours, resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight, a quiet temple altar sanctuary with soft burning brass diyas and warm golden shadows, lighting: dual-tone lighting split across the frame: cold shadow behind, radiant golden dawn ahead, Cinematic wide threshold angle, dramatic light transition, threshold framing, subject stepping across doorway, archway, or dividing light line, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
         "validation_criteria": [
-          "a"
+          "an"
         ],
         "entity_key": "astrology_consultation",
         "estimated_duration": 6.5,
@@ -392,14 +395,14 @@
         "emotion": "Transformation",
         "emotion_intensity": 0.88,
         "viewer_feeling": "profound renewal, crossing over to a higher life chapter",
-        "visual_concept": "A breathtaking, luxurious macro shot of authentic royal gemstones (deep blue Neelam sapphire, glowing red ruby, sparkling green emerald, and golden topaz) radiating pure internal light atop ancient Sanskrit palm leaves",
-        "visual_metaphor": "The pure crystalline energy of sacred gemstones awaiting rightful alignment",
+        "visual_concept": "An extreme macro close-up of an authentic natural Nepali 5-mukhi Rudraksha bead resting on wet dark slate stone, delicate water droplets highlighting organic deep mukhi grooves under warm golden temple light",
+        "visual_metaphor": "The natural tactile sacred geometry of the divine seed",
         "camera_angle": "Cinematic wide threshold angle, dramatic light transition",
         "continuity_notes": "Preceded by [चौथा नियम, जब Shani ki dristi आपके chart], leads toward [यह reel तुरंत save करें। अपनी कुंडली की ]. Maintain Cinematic photorealism tone.",
-        "image_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of A collection of flawless, faceted natural gemstones glowing with vivid jewel tones, catching warm golden candlelight and casting prismatic color refractions across aged parchment, an ancient Vedic sanctuary study with rich teakwood textures and antique brass instruments, lighting: dual-tone lighting split across the frame: cold shadow behind, radiant golden dawn ahead, Cinematic wide threshold angle, dramatic light transition, threshold framing, subject stepping across doorway, archway, or dividing light line, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
-        "narration": "पांचवां नियम: बिना complete birth chart analysis के कोई भी gemstone कभी न पहनें, यह adverse impact दे सकता है।",
-        "subject": "A collection of flawless, faceted natural gemstones glowing with vivid jewel tones",
-        "action": "catching warm golden candlelight and casting prismatic color refractions across aged parchment"
+        "image_prompt": "cinematic photorealistic 9:16 vertical luxury photograph of An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours, resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight, a quiet temple altar sanctuary with soft burning brass diyas and warm golden shadows, lighting: dual-tone lighting split across the frame: cold shadow behind, radiant golden dawn ahead, Cinematic wide threshold angle, dramatic light transition, threshold framing, subject stepping across doorway, archway, or dividing light line, warm 35mm film grain, 8k resolution, authentic organic textures, no text overlays, no watermarks, no cgi cartoons, no flat solid colors",
+        "narration": "पांचवां नियम: बिना complete birth chart analysis के कोई भी 5-Mukhi Rudraksha या Amethyst Crystal कभी न पहनें, यह adverse impact दे सकता है।",
+        "subject": "An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours",
+        "action": "resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight"
       }
     },
     {
@@ -442,9 +445,10 @@
           "taco",
           "insect",
           "rudraksha",
-          "ancient authentic Vedic astrological Kundli birth chart",
-          "traditional diamond-grid Kundli chart on aged parchment",
-          "handwritten Sanskrit planetary symbols"
+          "person meditating in deep peaceful mindfulness",
+          "meditator seated in padmasana",
+          "soft morning sun rays",
+          "calm serene posture"
         ],
         "continuity_requirements": "Preceded by [पांचवां नियम: बिना complete birth chart ], leads toward [Narrative resolution]. Maintain Cinematic photorealism tone.",
         "aspect_ratio": "9:16",
@@ -470,7 +474,7 @@
       }
     }
   ],
-  "caption_hook": "Tiger Eye & Kundli Energy Blueprint: Why your gemstones might clash with your birth chart ⚠️",
+  "caption_hook": "5-Mukhi Rudraksha & Amethyst: Why Jupiter and Saturn in your Kundli decide your mental peace and foc ⚠️",
   "hashtags": [
     "#VedicAstrology",
     "#GemstoneEnergy",

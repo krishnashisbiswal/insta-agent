@@ -130,11 +130,27 @@ Return ONLY valid JSON in this exact structure:
     except Exception as exc:
         logger.warning(f"Gemini caption generation error ({exc}). Generating high-retention English fallback caption...")
         clean_first = topic if (topic and not any('\u0900' <= c <= '\u097f' for c in topic)) else "Why your gemstones might be clashing with your birth chart ⚠️"
+        t_low = (topic or "").lower()
+        if any(k in t_low for k in ["rudraksha", "रुद्राक्ष", "mukhi"]):
+            target_entity = "a 5-Mukhi Rudraksha"
+        elif any(k in t_low for k in ["amethyst", "जामुनिया"]):
+            target_entity = "an Amethyst crystal"
+        elif any(k in t_low for k in ["pyrite", "पायराइट"]):
+            target_entity = "a Pyrite crystal"
+        elif any(k in t_low for k in ["citrine", "सिट्रीन"]):
+            target_entity = "a Citrine stone"
+        elif any(k in t_low for k in ["tourmaline", "टूमलाइन"]):
+            target_entity = "a Black Tourmaline stone"
+        elif any(k in t_low for k in ["neelam", "sapphire"]):
+            target_entity = "a Blue Sapphire gemstone"
+        else:
+            target_entity = "a sacred gemstone or crystal"
+
         data = {
             "visible_first_line": f"{clean_first[:100]} ⚠️",
             "caption_body": (
                 "According to Vedic Astrology, wearing unverified gemstones or adopting generic remedies without analyzing your complete birth chart can cause severe energetic conflict.\n\n"
-                "A client recently came to our consultation struggling with scattered energy even after wearing a Tiger's Eye. When we analyzed their Kundli, we discovered their 12th house and Mars placement were actively clashing with the stone's frequency.\n\n"
+                f"A client recently came to our consultation struggling with scattered energy and mental restlessness even after wearing {target_entity}. When we analyzed their Kundli, we discovered their planetary placements and dasha were actively clashing with the stone's vibrational frequency.\n\n"
                 "Generic online remedies or following viral internet tips often leads to sudden setbacks, career delays, and intense internal friction. Always verify your exact house placements, planetary aspects, and current dasha.\n\n"
                 "⚠️ Warning: Never perform blind remedies or wear unverified stones without comprehensive chart analysis."
             ),
