@@ -952,58 +952,58 @@ def _generate_fallback_reel_data(
     scenes = [
         {
             "scene_num": 1,
-            "spoken_line": selected_hook.get("spoken") or "टाइगर आई पहनने के बाद भी आपका मन शांत क्यों नहीं हो रहा?",
-            "on_screen_text": selected_hook.get("on_screen") or "TIGER EYE NOT WORKING",
+            "spoken_line": "क्या आपका Tiger Eye स्टोन आपकी कुंडली की एनर्जी के साथ क्लैश कर रहा है?",
+            "on_screen_text": "TIGER EYE NOT WORKING",
             "badge": "SACRED ENERGY SECRET",
-            "visual_description": "Macro shot of a radiant Tiger's Eye gemstone and bead bracelet",
-            "estimated_seconds": 3.5,
+            "visual_description": "Extreme macro close-up photograph of a radiant golden-brown Tiger's Eye gemstone and bracelet showing vivid silky chatoyancy resting on dark antique Sanskrit parchment",
+            "estimated_seconds": 3.8,
         },
         {
             "scene_num": 2,
-            "spoken_line": "पहला मुख्य संकेत, जब आपकी कुंडली का सूर्य और राहु का संबंध आपकी स्टेबिलिटी को हिला देता है।",
+            "spoken_line": "पहला मुख्य संकेत, जब आपकी कुंडली में Sun और Rahu का ग्रहण संघर्ष आपके nervous system और mental peace को हिला देता है।",
             "on_screen_text": "SUN RAHU CONFLICT",
             "badge": "AURA SHIELD",
-            "visual_description": "Vedic Kundli chart with glowing Sun and dark eclipse shadow of Rahu",
+            "visual_description": "Authentic ancient Vedic Kundli birth chart parchment showing Sun and Rahu planetary positions",
             "estimated_seconds": 4.5,
         },
         {
             "scene_num": 3,
-            "spoken_line": "दूसरा गहरा भेद, कि कैसे बारहवें भाव की सक्रियता आपकी ऊर्जा को हर वक्त बिखरा कर रखती है।",
+            "spoken_line": "दूसरा गहरा भेद, जब 12th House की सक्रियता आपकी vital energy को drain करके focus पूरी तरह खत्म कर देती है।",
             "on_screen_text": "12TH HOUSE DRAIN",
             "badge": "SECRET FREQUENCY",
-            "visual_description": "North Indian diamond Kundli chart with 12th house illuminated in gold",
+            "visual_description": "Vedic astrology diamond Kundli chart with 12th house quadrant highlighted on ancient parchment",
             "estimated_seconds": 4.5,
         },
         {
             "scene_num": 4,
-            "spoken_line": "तीसरी भूल, जब मंगल की ऊर्जा का गलत भाव में होना आपके फोकस को पूरी तरह खत्म कर देता है।",
+            "spoken_line": "तीसरा कारण, जब Mars की fierce energy गलत भाव में होती है, तो यह aggression और internal stress पैदा करती है।",
             "on_screen_text": "MARS MISALIGNMENT",
             "badge": "BIO-ENERGY CODE",
-            "visual_description": "Fiery red planet Mars glowing in deep space with crimson flares",
+            "visual_description": "Fiery red planet Mars in deep space showing atmospheric dust and cratered surface",
             "estimated_seconds": 4.5,
         },
         {
             "scene_num": 5,
-            "spoken_line": "चौथा रहस्य, कुंडली के उन भावों को देखें जहाँ शनि की दृष्टि आपके धैर्य और शांति को चुनौती दे रही है।",
+            "spoken_line": "चौथा नियम, जब Shani ki dristi आपके chart पर पड़ती है, तो यह unexpected delays और heavy karmic pressure लाती है।",
             "on_screen_text": "SHANI KARMIC IMPACT",
             "badge": "INSTANT CALM",
-            "visual_description": "Planet Saturn with majestic rings casting three aspect rays",
+            "visual_description": "Planet Saturn with majestic cosmic rings in deep starry space",
             "estimated_seconds": 4.5,
         },
         {
             "scene_num": 6,
-            "spoken_line": "पांचवां नियम: बिना संपूर्ण कुंडली जांचे कोई रत्न कभी न अपनाएं, यह आपकी एनर्जी को और ज्यादा अनियंत्रित कर सकता है।",
+            "spoken_line": "पांचवां नियम: बिना complete birth chart analysis के कोई भी gemstone कभी न पहनें, यह adverse impact दे सकता है।",
             "on_screen_text": "AVOID BLIND REMEDIES",
             "badge": "SPIRITUAL WARNING",
-            "visual_description": "Collection of flawless natural gemstones glowing with vivid jewel tones",
+            "visual_description": "Flawless faceted natural emerald and blue sapphire gemstones glowing on dark velvet",
             "estimated_seconds": 4.5,
         },
         {
             "scene_num": 7,
-            "spoken_line": "यह रील तुरंत सेव करें। अपनी कुंडली में इसकी स्थिति नीचे कमेंट करें और व्यक्तिगत विश्लेषण के लिए हमें तुरंत डीएम करें।",
+            "spoken_line": "यह reel तुरंत save करें। अपनी कुंडली की planetary placement comment करें और personal consultation के लिए हमें तुरंत DM करें।",
             "on_screen_text": "SAVE REEL • DM US",
             "badge": "CHECK PLACEMENT & DM US",
-            "visual_description": "Welcoming hands holding natural gemstones and rolled Kundli inviting DM",
+            "visual_description": "Ancient sacred stone temple sanctum with glowing golden brass oil lamps and Shiva lingam",
             "estimated_seconds": 4.0,
         },
     ]
@@ -1015,7 +1015,7 @@ def _generate_fallback_reel_data(
         "language": language,
         "visual_theme": "modern_dynamic",
         "scenes": scenes,
-        "caption": "Why your gemstones might be clashing with your birth chart",
+        "caption": "Why your gemstones might clash with your birth chart ⚠️ Always verify your planetary positions before wearing sacred stones.",
         "hashtags": ["#VedicAstrology", "#GemstoneEnergy", "#KundliAnalysis", "#Jyotish", "#NeoDivineStore"],
         "call_to_action": "DM us for personal consultation",
     }
@@ -1245,33 +1245,37 @@ NICHE STRATEGY ({profile.name.upper()}):
 VIRAL RETENTION STRUCTURE (7 SCENES PERFECTLY SYNCED 1-TO-5):
 TOPIC: {topic}
 STRICT NEGATIVE CONSTRAINT - ZERO REMEDIES & ZERO MANTRAS.
+STRICT MANDATE - ANCHOR EVERY SCENE TO CONCRETE ASTROLOGICAL / GEMSTONE ENTITIES:
+- Every point MUST reference a tangible Jyotish entity (e.g. Tiger's Eye, Sun & Rahu in Kundli, 12th House, Mars energy, Saturn's aspect / Shani ki dristi).
+- Spoken lines MUST be in natural conversational Hinglish using Devanagari script for flawless voiceover pronunciation.
+- On-Screen cards MUST be strictly 100% English (ALL CAPS, 2-4 punchy words, ZERO Hindi text, ZERO number prefixes like '1.' or '2.').
 
 1. SCENE 1 (0-3s) - THE HOOK:
-   - Spoken: Winning hook above (calling out the core struggle or curiosity).
-   - On-Screen: Winning on-screen text in ALL CAPS (3-5 words).
-   - Badge: "URGENT WARNING"
-2. SCENE 2 (3-7s) - POINT 1:
-   - Spoken: "पहला मुख्य संकेत / कारकत्व..." (Specific tangible impact).
-   - On-Screen: "1. [SPECIFIC TOPIC TITLE]"
-   - Badge: "POINT 1 OF 5"
-3. SCENE 3 (7-11s) - POINT 2:
-   - Spoken: "दूसरा प्रभाव / गहरा भेद..." (Specific tangible impact).
-   - On-Screen: "2. [SPECIFIC TOPIC TITLE]"
-   - Badge: "POINT 2 OF 5"
-4. SCENE 4 (11-15s) - POINT 3:
-   - Spoken: "तीसरी भूल / लक्षण..." (Specific tangible impact).
-   - On-Screen: "3. [SPECIFIC TOPIC TITLE]"
-   - Badge: "POINT 3 OF 5"
-5. SCENE 5 (15-19s) - POINT 4:
-   - Spoken: "चौथा रहस्य: कुंडली भाव..." (Checking house placements).
-   - On-Screen: "4. CHECK KUNDLI HOUSES"
-   - Badge: "POINT 4 OF 5"
+   - Spoken: Winning hook above (calling out whether the gemstone is clashing with birth chart energy).
+   - On-Screen: Winning on-screen text in ALL CAPS English (e.g. "TIGER EYE NOT WORKING", "GEMSTONE CLASHING").
+   - Badge: "SACRED ENERGY SECRET"
+2. SCENE 2 (3-7s) - POINT 1 (PLANETARY CONFLICT):
+   - Spoken: "पहला मुख्य संकेत, जब आपकी कुंडली में Sun और Rahu का टकराव आपके nervous system और mental peace को हिला देता है।"
+   - On-Screen: "SUN RAHU CONFLICT"
+   - Badge: "AURA SHIELD"
+3. SCENE 3 (7-11s) - POINT 2 (HOUSE ENERGY DRAIN):
+   - Spoken: "दूसरा गहरा भेद, जब 12th House की सक्रियता आपकी vital energy को drain करके focus पूरी तरह खत्म कर देती है।"
+   - On-Screen: "12TH HOUSE DRAIN"
+   - Badge: "SECRET FREQUENCY"
+4. SCENE 4 (11-15s) - POINT 3 (FIERCE PLANET MISALIGNMENT):
+   - Spoken: "तीसरा कारण, जब Mars की fierce energy गलत भाव में होती है, तो यह aggression और internal stress पैदा करती है।"
+   - On-Screen: "MARS FIERCE ENERGY"
+   - Badge: "BIO-ENERGY CODE"
+5. SCENE 5 (15-19s) - POINT 4 (KARMIC ASPECT / SHANI DRISTI):
+   - Spoken: "चौथा रहस्य, जब Shani ki dristi आपके chart पर पड़ती है, तो यह unexpected delays और heavy karmic pressure लाती है।"
+   - On-Screen: "SHANI KARMIC IMPACT"
+   - Badge: "INSTANT CALM"
 6. SCENE 6 (19-24s) - POINT 5 (DANGER OF BLIND REMEDIES):
-   - Spoken: "पांचवां नियम: बिना संपूर्ण कुंडली जांचे कोई उपाय या रत्न कभी न अपनाएं, यह भारी नुकसान दे सकता है।"
-   - On-Screen: "5. AVOID BLIND REMEDIES"
-   - Badge: "POINT 5 OF 5"
+   - Spoken: "पांचवां नियम: बिना complete birth chart analysis के कोई भी gemstone कभी न पहनें, यह adverse impact दे सकता है।"
+   - On-Screen: "AVOID BLIND REMEDIES"
+   - Badge: "SPIRITUAL WARNING"
 7. SCENE 7 (24-28s) - 4-LAYER VIRAL CALL TO ACTION:
-   - Spoken: "यह वीडियो सेव कर लें। नीचे कमेंट में अपनी ग्रह स्थिति बताएं और व्यक्तिगत कुंडली परामर्श के लिए हमें तुरंत डीएम करें।"
+   - Spoken: "यह reel तुरंत save करें। अपनी कुंडली की planetary placement comment करें और personal consultation के लिए हमें तुरंत DM करें।"
    - On-Screen: "SAVE REEL • DM US"
    - Badge: "CHECK PLACEMENT & DM US"
 """

@@ -963,18 +963,38 @@ Return ONLY a valid JSON object with the following fields:
         metaphor: str
     ) -> str:
         """
-        Builds the 14-point detailed, non-generic prompt adhering to vertical 9:16 format.
+        Builds high-impact, punchy vertical 9:16 prompt adhering to literal script context.
+        Guarantees objects, charts, and planets NEVER receive human postures or facial tokens.
         """
-        # High-impact, punchy vertical 9:16 prompt with upfront quality and lighting tokens
-        prompt = (
-            f"vertical 9:16 cinematic masterpiece, 8k, hyper-detailed, award-winning photography. "
-            f"{subject}, {action}. {posture}. "
-            f"Atmospheric environment: {environment}. "
-            f"Mood & lighting: {lighting}, {emotion}. "
-            f"Color grading: {color_palette}. "
-            f"Shot on 35mm masterwork lens, rich volumetric lighting, sharp focus, stunning tactile textures. "
-            f"no text overlays, no watermarks, no logos, no cgi cartoons, no flat solid colors"
-        )
+        full_text = f"{subject} {action} {environment}".lower()
+        is_object_or_celestial = any(w in full_text for w in [
+            "chart", "kundli", "planet", "saturn", "mars", "sun", "rahu", "ketu", "jupiter",
+            "gemstone", "crystal", "bracelet", "bead", "yantra", "parchment", "macro", "tiger",
+            "stone", "sapphire", "ruby", "emerald", "altar", "lamp", "sanctum", "hands"
+        ])
+
+        if is_object_or_celestial:
+            prompt = (
+                f"vertical 9:16 cinematic masterpiece, 8k, hyper-detailed, award-winning photography. "
+                f"{subject}, {action}. "
+                f"Atmospheric environment: {environment}. "
+                f"Mood & lighting: luxurious warm volumetric amber lighting, radiant golden glow, sharp focus, 35mm lens. "
+                f"Color grading: {color_palette}. "
+                f"Stunning tactile textures, ultra-photorealistic, high contrast. "
+                f"no human faces, no anime characters, no text overlays, no watermarks, no logos, no cgi cartoons, no flat solid colors"
+            )
+        else:
+            clean_posture = re.sub(r"\b(?:fidgeting|clenched|tightened|defensive|slumped|vigilant)\b", "composed", posture or "", flags=re.I).strip()
+            posture_str = f"{clean_posture}. " if clean_posture else ""
+            prompt = (
+                f"vertical 9:16 cinematic masterpiece, 8k, hyper-detailed, award-winning photography. "
+                f"{subject}, {action}. {posture_str}"
+                f"Atmospheric environment: {environment}. "
+                f"Mood & lighting: {lighting}. "
+                f"Color grading: {color_palette}. "
+                f"Shot on 35mm masterwork lens, rich volumetric lighting, sharp focus, stunning tactile textures. "
+                f"no text overlays, no watermarks, no logos, no cgi cartoons, no flat solid colors"
+            )
         return prompt
 
     @classmethod

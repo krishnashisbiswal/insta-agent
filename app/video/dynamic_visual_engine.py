@@ -1332,108 +1332,93 @@ class DynamicVisualEngine:
 
         # (A) Call to Action / DM Consultation / Temple Sanctum (Scene 7)
         if is_last_scene:
-            if is_crystal_or_rudraksha:
-                cta_pool = [
-                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
-                ]
-            else:
-                cta_pool = [
-                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                    CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-                ]
+            cta_pool = [
+                CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+                CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+                CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+            ]
             rot_idx = int(hashlib.md5(f"{topic}_cta".encode()).hexdigest(), 16) % len(cta_pool)
             candidates.extend(cta_pool[rot_idx:] + cta_pool[:rot_idx])
 
         # (B) Caution against Blind Remedies / Warning / Fire Altar (Scene 6)
         elif is_caution_scene:
-            if is_crystal_or_rudraksha:
-                caution_pool = [
-                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_black_tourmaline.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
-                ]
-            else:
-                caution_pool = [
-                    CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
-                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
-                ]
+            caution_pool = [
+                CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg",
+                CINEMATIC_BROLL_DIR / "gemstone_ruby.jpg",
+                CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg",
+                CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
+                CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+            ]
             rot_idx = int(hashlib.md5(f"{topic}_caution".encode()).hexdigest(), 16) % len(caution_pool)
             candidates.extend(caution_pool[rot_idx:] + caution_pool[:rot_idx])
 
         # (C) Scenes 0-5: Rich Content-Matched Semantic Resolver
         else:
-            if is_hook_scene and curated_master_plate:
+            # 0. Tiger's Eye Gemstone (Strict 1:1 match for tiger eye scenes & hook)
+            if any(k in scene_txt for k in ["tiger", "tigers eye", "टाइगर"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg")
+            elif is_hook_scene and curated_master_plate:
                 candidates.append(curated_master_plate)
 
-            # 1. Kundli / Birth Chart / Astrological Houses
-            if any(k in scene_txt for k in ["kundli", "कुंडली", "birth chart", "भाव", "लग्न", "house", "केंद्र", "त्रिकोण", "जन्मपत्रिका"]):
-                try:
-                    from app.video.kundli_chart_generator import KundliChartGenerator
-                    house_num, planet_name = KundliChartGenerator.extract_house_and_planet(scene_txt)
-                    dynamic_chart = KundliChartGenerator.generate_dynamic_chart(
-                        highlight_house=house_num,
-                        planet_name=planet_name,
-                        title=f"KUNDLI: {house_num}TH HOUSE" if house_num else None,
-                    )
-                    if dynamic_chart and dynamic_chart.exists():
-                        candidates.append(dynamic_chart)
-                except Exception as e:
-                    logger.debug(f"Dynamic chart generation fallback notice: {e}")
-                candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
-                candidates.append(CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg")
-
-            # 2. Subtle Energy / Bio-Electromagnetism / Sacred Geometry / Yantra
-            if any(k in scene_txt for k in ["yantra", "यंत्र", "frequency", "vibration", "resonance", "तरंग", "रेजोनेंस", "bio-electric", "चक्र", "ऊर्जा", "आभामंडल", "aura", "shield"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg")
-
-            # 3. Astrological Consultation / Client Case Study / Ancient Manuscripts
-            if any(k in scene_txt for k in ["क्लाइंट", "परामर्श सत्र", "consultation", "case study", "सत्र", "परामर्श", "शोध", "research", "शास्त्र", "ग्रंथ"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg")
-
-            # 4. Planetary Forces & Cosmic Alignments
-            if any(k in scene_txt for k in ["shani", "saturn", "शनि"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "planet_saturn.jpg")
-            if any(k in scene_txt for k in ["chandra", "moon", "चंद्रमा", "चन्द्र", "मन", "अनिद्रा", "रात", "rohini", "रोहिणी"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "planet_moon.jpg")
-            if any(k in scene_txt for k in ["surya", "sun", "सूर्य", "aditya"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "planet_sun.jpg")
-            if any(k in scene_txt for k in ["guru", "brihaspati", "jupiter", "गुरु", "बृहस्पति"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "planet_jupiter.jpg")
+            # 1. Specific Planets & Cosmic Alignments (Highest Priority: match exact celestial entity)
             if any(k in scene_txt for k in ["mangal", "mars", "मंगल"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_mars.jpg")
+            if any(k in scene_txt for k in ["shani", "saturn", "शनि", "drishti", "दृष्टि"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_saturn.jpg")
+            if (any(k in scene_txt for k in ["rahu", "राहु"]) and any(k in scene_txt for k in ["surya", "sun", "सूर्य"])) or "sun rahu" in scene_txt:
+                candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_sun.jpg")
+            if any(k in scene_txt for k in ["12th", "बारहवें", "बारहवां", "twelfth", "vyaya", "व्यय"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
+            if any(k in scene_txt for k in ["guru", "brihaspati", "jupiter", "गुरु", "बृहस्पति"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_jupiter.jpg")
+            if any(k in scene_txt for k in ["chandra", "moon", "चंद्रमा", "चन्द्र"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_moon.jpg")
             if any(k in scene_txt for k in ["shukra", "venus", "शुक्र"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_venus.jpg")
             if any(k in scene_txt for k in ["budh", "mercury", "बुध"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_mercury.jpg")
-            if any(k in scene_txt for k in ["rahu", "राहु"]):
+            if any(k in scene_txt for k in ["rahu", "राहु"]) and not any(k in scene_txt for k in ["surya", "sun", "सूर्य"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_rahu.jpg")
             if any(k in scene_txt for k in ["ketu", "केतु"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_ketu.jpg")
 
-            # 5. Meditation, Solitude, Detachment & Serenity
-            if any(k in scene_txt for k in ["meditat", "silhouette", "एकांत", "ध्यान", "peace", "detachment", "वैराग्य"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg")
-                candidates.append(CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg")
-                candidates.append(CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg")
+            # 2. Specific Gemstones & Crystals (Direct physical match)
+            if any(k in scene_txt for k in ["tiger", "tigers eye", "टाइगर"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg")
+            if any(k in scene_txt for k in ["neelam", "blue sapphire", "नीलम"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg")
+            if any(k in scene_txt for k in ["panna", "emerald", "पन्ना"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg")
+            if any(k in scene_txt for k in ["manik", "ruby", "माणिक"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "gemstone_ruby.jpg")
+            if any(k in scene_txt for k in ["pukhraj", "yellow sapphire", "पुखराज"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "gemstone_yellow_sapphire.jpg")
+            if any(k in scene_txt for k in ["pyrite", "पायराइट"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "crystal_pyrite_cluster.jpg")
+            if any(k in scene_txt for k in ["amethyst", "कटेला", "जामुनिया"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "crystal_amethyst_cluster.jpg")
 
-            # 6. Brass Lamps, Diyas, Sacred Texts & Books
+            # 3. Authentic Vedic Kundli / Birth Chart / Sanskrit Parchment
+            if any(k in scene_txt for k in ["kundli", "कुंडली", "birth chart", "भाव", "लग्न", "house", "केंद्र", "त्रिकोण", "जन्मपत्रिका", "12th", "बारहवें"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg")
+
+            # 4. Subtle Energy / Sacred Geometry / Yantra
+            if any(k in scene_txt for k in ["yantra", "यंत्र", "frequency", "vibration", "resonance", "तरंग", "bio-electric", "चक्र", "ऊर्जा", "aura", "shield"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg")
+
+            # 5. Astrological Consultation / Sacred Lamps / Sanctum
             if any(k in scene_txt for k in ["lamp", "diya", "दीपक", "दीप", "oil lamp"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg")
                 candidates.append(CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg")
-                candidates.append(CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg")
 
             # 7. Ancient Palmleaf Manuscript, Ancient Scriptures & Caution
             if any(k in scene_txt for k in ["palmleaf", "manuscript", "पांडुलिपि", "शास्त्र", "ग्रंथ"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg")
                 candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg")
 
             # 8. Constellations, Celestial Charts & Cosmic Maps
             if any(k in scene_txt for k in ["constellation", "star map", "cosmic map"]):
@@ -1505,7 +1490,7 @@ class DynamicVisualEngine:
                 candidates.extend([
                     CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
                     CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-                    CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
+                    CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
                     CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
                     CINEMATIC_BROLL_DIR / "planet_moon.jpg",
                     CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",

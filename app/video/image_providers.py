@@ -138,20 +138,23 @@ class BaseImageProvider(abc.ABC):
                 return raw_bytes
             except ProviderRateLimitError as rle:
                 last_error = rle
-                suggested_wait = getattr(rle, "retry_after", None)
-                backoff = float(suggested_wait) + 2.0 if suggested_wait and suggested_wait > 0 else (5.0 * attempt)
-                logger.warning(f"[{self.name}] Rate limit encountered: {rle}. Waiting {backoff:.1f}s before retry (attempt {attempt}/{self.max_retries})...")
-                time.sleep(backoff)
+                if attempt < self.max_retries:
+                    suggested_wait = getattr(rle, "retry_after", None)
+                    backoff = float(suggested_wait) + 2.0 if suggested_wait and suggested_wait > 0 else (5.0 * attempt)
+                    logger.warning(f"[{self.name}] Rate limit encountered: {rle}. Waiting {backoff:.1f}s before retry (attempt {attempt}/{self.max_retries})...")
+                    time.sleep(backoff)
             except ProviderTimeoutError as te:
                 last_error = te
                 logger.warning(f"[{self.name}] Timeout on attempt {attempt}: {te}")
-                time.sleep(1.0 * attempt)
+                if attempt < self.max_retries:
+                    time.sleep(1.0 * attempt)
             except ProviderConfigError:
                 raise
             except Exception as exc:
                 last_error = exc
                 logger.warning(f"[{self.name}] Generation attempt {attempt} failed: {exc}")
-                time.sleep(1.0 * attempt)
+                if attempt < self.max_retries:
+                    time.sleep(1.0 * attempt)
 
         raise ImageProviderError(
             f"Provider '{self.name}' failed to generate image after {self.max_retries} attempts. Last error: {last_error}"
@@ -167,7 +170,7 @@ class PollinationsImageProvider(BaseImageProvider):
 
     name = "pollinations"
 
-    def __init__(self, model: Optional[str] = None, timeout: int = 30, max_retries: int = 3, **kwargs: Any):
+    def __init__(self, model: Optional[str] = None, timeout: int = 12, max_retries: int = 1, **kwargs: Any):
         super().__init__(model=model, timeout=timeout, max_retries=max_retries, **kwargs)
 
     def validate_config(self) -> None:
@@ -401,48 +404,48 @@ class MockImageProvider(BaseImageProvider):
         seed: Optional[int] = None,
         **kwargs: Any,
     ) -> bytes:
-        gen_seed = seed if seed is not None else int(hashlib.md5(prompt.encode()).hexdigest()[:8], 16)
-        rng = random.Random(gen_seed)
+        from PIL import ImageOps
+        p_lower = prompt.lower()
+        from config.settings import BASE_DIR
+        cinematic_dir = BASE_DIR / "assets" / "cinematic_broll"
 
-        # Clean, dark cinematic vertical atmospheric background (never garish color blocks)
-        r_base = rng.randint(15, 30)
-        g_base = rng.randint(18, 35)
-        b_base = rng.randint(25, 45)
+        # Match strictly to authentic curated photography based on script prompt
+        target_plate = None
+        if any(k in p_lower for k in ["tiger", "tigers eye", "टाइगर"]):
+            target_plate = cinematic_dir / "crystal_tigers_eye.jpg"
+        elif any(k in p_lower for k in ["mars", "mangal", "मंगल"]):
+            target_plate = cinematic_dir / "planet_mars.jpg"
+        elif any(k in p_lower for k in ["saturn", "shani", "शनि", "drishti", "aspect"]):
+            target_plate = cinematic_dir / "planet_saturn.jpg"
+        elif any(k in p_lower for k in ["12th house", "12th", "बारहवें"]):
+            target_plate = cinematic_dir / "vedic_astrology_parchment_chart.jpg"
+        elif any(k in p_lower for k in ["kundli", "chart", "sun", "rahu", "सूर्य", "राहु"]):
+            target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
+        elif any(k in p_lower for k in ["emerald", "पन्ना"]):
+            target_plate = cinematic_dir / "gemstone_emerald.jpg"
+        elif any(k in p_lower for k in ["gemstone", "sapphire", "ruby", "रत्न"]):
+            target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
+        elif any(k in p_lower for k in ["dm", "consultation", "temple", "hand", "मंदिर"]):
+            target_plate = cinematic_dir / "temple_sanctum_golden_diyas.jpg"
+        else:
+            target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
 
-        img = Image.new("RGB", (width, height), (r_base, g_base, b_base))
+        if target_plate and target_plate.exists():
+            with Image.open(target_plate) as raw_img:
+                fitted = ImageOps.fit(raw_img.convert("RGB"), (width, height), Image.Resampling.LANCZOS)
+                buf = io.BytesIO()
+                fitted.save(buf, format="JPEG", quality=95)
+                return buf.getvalue()
+
+        # Luxurious dark amber/gold atmospheric fallback (strictly NO geometric lines, circles, or mock text)
+        img = Image.new("RGB", (width, height), (16, 12, 22))
         draw = ImageDraw.Draw(img)
-
-        # Subtle dark vertical gradient
-        for y in range(0, height, 8):
+        for y in range(0, height, 4):
             factor = y / height
-            r = int(r_base + factor * 20)
-            g = int(g_base + factor * 25)
-            b = int(b_base + factor * 35)
-            draw.rectangle([0, y, width, y + 8], fill=(r, g, b))
-
-        # Draw decorative geometric elements to ensure distinct texture, variance, and visual identity
-        margin = 60
-        gold_color = (255, 215, 0)
-        draw.rectangle([margin, margin, width - margin, height - margin], outline=gold_color, width=6)
-
-        # Draw diagonal accent lines
-        num_stripes = rng.randint(4, 12)
-        for i in range(num_stripes):
-            y_pos = int((height / (num_stripes + 1)) * (i + 1))
-            shade = rng.randint(40, 220)
-            draw.line([(margin + 10, y_pos), (width - margin - 10, y_pos + rng.randint(-50, 50))], fill=(shade, shade, 255), width=3)
-
-        # Draw circles
-        for _ in range(rng.randint(3, 8)):
-            cx = rng.randint(margin + 50, width - margin - 50)
-            cy = rng.randint(margin + 100, height - margin - 100)
-            rad = rng.randint(25, 90)
-            draw.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], outline=(rng.randint(180, 255), rng.randint(180, 255), 100), width=3)
-
-        # Embed text identifying the scene prompt
-        draw.text((margin + 30, margin + 50), "MOCK AI SCENE ASSET", fill=(255, 255, 255))
-        draw.text((margin + 30, margin + 90), f"Seed: {gen_seed}", fill=(200, 200, 200))
-        draw.text((margin + 30, margin + 130), prompt[:50], fill=(220, 220, 220))
+            r = int(16 + factor * 25)
+            g = int(12 + factor * 18)
+            b = int(22 + factor * 10)
+            draw.rectangle([0, y, width, y + 4], fill=(r, g, b))
 
         buf = io.BytesIO()
         img.save(buf, format="JPEG", quality=95)
@@ -451,6 +454,7 @@ class MockImageProvider(BaseImageProvider):
 
 _PROVIDER_REGISTRY: Dict[str, Type[BaseImageProvider]] = {
     "pollinations": PollinationsImageProvider,
+    "curated": MockImageProvider,
     "gemini": GeminiImageProvider,
     "imagen": GeminiImageProvider,
     "huggingface": HuggingFaceImageProvider,
@@ -476,7 +480,9 @@ def get_image_provider(
         or os.getenv("MOCK_IMAGE_GEN", "").lower() in ("true", "1")
     )
 
-    p_name = (provider_name or os.getenv("IMAGE_PROVIDER", "pollinations")).strip().lower()
+    from config.settings import IMAGE_PROVIDER, IMAGE_TIMEOUT, IMAGE_MAX_RETRIES, IMAGE_MODEL
+
+    p_name = (provider_name or os.getenv("IMAGE_PROVIDER") or IMAGE_PROVIDER).strip().lower()
     if is_testing and not provider_name:
         p_name = "mock"
 
@@ -485,10 +491,8 @@ def get_image_provider(
         available = ", ".join(sorted(_PROVIDER_REGISTRY.keys()))
         raise ProviderConfigError(f"Unknown image provider '{p_name}'. Available providers: {available}")
 
-    from config.settings import IMAGE_TIMEOUT, IMAGE_MAX_RETRIES, IMAGE_MODEL
-
     t_out = timeout if timeout is not None else IMAGE_TIMEOUT
     retries = max_retries if max_retries is not None else IMAGE_MAX_RETRIES
-    m_name = model if model is not None else (None if p_name == "mock" else IMAGE_MODEL)
+    m_name = model if model is not None else (None if p_name in ("mock", "curated") else IMAGE_MODEL)
 
     return cls(model=m_name, timeout=t_out, max_retries=retries, **kwargs)

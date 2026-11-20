@@ -47,6 +47,7 @@ def run_autonomous_reel_cycle(
     language: Optional[str] = None,
     theme_name: Optional[str] = None,
     force_dry_run: bool = False,
+    topic_override: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Execute a completely autonomous, hands-free Reel cycle from the roots:
@@ -79,9 +80,14 @@ def run_autonomous_reel_cycle(
 
     # 1. TOPIC SELECTION (Rotates sub-niches, enforces cooldown, zero duplicates)
     cm = ContentManager()
-    topic_data = cm.pop_next_topic(niche=target_niche, language=target_lang)
-    topic = topic_data.get("topic", "Astrology Secrets")
-    target_duration = int(topic_data.get("target_seconds", 30))
+    if topic_override:
+        topic = topic_override
+        target_duration = 30
+        topic_data = {"topic": topic, "category": "Vedic Astrological Gemstone Truths"}
+    else:
+        topic_data = cm.pop_next_topic(niche=target_niche, language=target_lang)
+        topic = topic_data.get("topic", "Astrology Secrets")
+        target_duration = int(topic_data.get("target_seconds", 30))
 
     print(f"\n[AUTONOMOUS STEP 1/6] Selected Fresh Topic: \"{topic}\"")
     if topic_data.get("category"):

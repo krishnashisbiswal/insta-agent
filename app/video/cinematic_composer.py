@@ -318,35 +318,18 @@ def create_cinematic_blend_layers(width: int = VIDEO_WIDTH, height: int = VIDEO_
 # =====================================================================
 def split_scene_into_beats(spoken_line: str, fallback_title: str) -> List[str]:
     """
-    Produce 1 or 2 complete, punchy, high-retention on-screen beats.
-    Guarantees every beat is a complete grammatical phrase (2-4 words).
-    Never produces broken fragments like 'BOOK YOUR COMPLETE'.
+    Produce 1 punchy, high-retention on-screen beat in 100% English.
+    Guarantees zero Devanagari Hindi text appears on screen.
     """
     clean_title = sanitize_ascii_text(fallback_title).upper().strip()
-    clean_spoken = sanitize_ascii_text(spoken_line).upper().strip()
-
+    # Strictly strip all Devanagari characters
+    clean_title = re.sub(r"[\u0900-\u097F]+", "", clean_title).strip()
+    clean_title = re.sub(r"[^\x20-\x7E]", "", clean_title).strip()
     title_words = clean_title.split()
     if not title_words:
-        title_words = ["VEDIC", "WISDOM"]
+        title_words = ["CRITICAL", "VEDIC", "INSIGHT"]
 
-    # Beat 1: The core punchy scene hook
     beat1 = " ".join(title_words[:4])
-
-    # Beat 2: Actionable consequence or key phrase from spoken dialogue
-    beat2 = None
-    if clean_spoken:
-        # Split spoken line into natural clauses by punctuation or connectors
-        clauses = re.split(r"[,;:\.\!\?]+|\b(?:because|without|before|after|if|when|while|to)\b", clean_spoken, flags=re.IGNORECASE)
-        for c in clauses:
-            c_words = [w for w in c.strip().split() if w not in title_words]
-            if 2 <= len(c_words) <= 4:
-                candidate = " ".join(c_words)
-                if candidate != beat1:
-                    beat2 = candidate
-                    break
-
-    if beat2:
-        return [beat1, beat2]
     return [beat1]
 
 
@@ -412,6 +395,9 @@ def render_kinetic_caption_layer(
     if scene_number == 1:
         raw_hook = text.strip() if text else "WHY WEARING NEELAM DESTROYS PEACE"
         hook_text = sanitize_ascii_text(raw_hook).upper()
+        # Strictly strip any Devanagari Unicode
+        hook_text = re.sub(r"[\u0900-\u097F]+", "", hook_text).strip()
+        hook_text = re.sub(r"[^\x20-\x7E]", "", hook_text).strip()
         words = hook_text.split()
         if not words:
             words = ["KEY", "ASTROLOGICAL", "WARNING"]
@@ -452,13 +438,22 @@ def render_kinetic_caption_layer(
     else:
         # 3. SCENES 2-7: SLEEK MICRO-BADGE (Above) + FLOATING KINETIC SUBTITLE (Below)
         clean_badge = sanitize_ascii_text(badge_text).upper().strip()
+        # Strictly purge any Devanagari characters
+        clean_badge = re.sub(r"[\u0900-\u097F]+", "", clean_badge).strip()
+        clean_badge = re.sub(r"[^\x20-\x7E]", "", clean_badge).strip()
         # Strictly purge any "1 OF 5", "2 OF 5", "1 OF 3" or numbered prefix from badge
         clean_badge = re.sub(r"\b(?:BENEFIT|GUIDE|MISTAKE|POINT|SIGN|ISSUE|RULE|INSIGHT|TRUTH|PLACEMENT|LESSON)?\s*\d+\s*(?:OF|/)\s*\d+\b", "", clean_badge, flags=re.I).strip()
         clean_badge = re.sub(r"^[1-9]\s*[\.\)]\s*", "", clean_badge).strip()
 
         sub_text = sanitize_ascii_text(text).upper().strip()
+        # Strictly purge any Devanagari characters
+        sub_text = re.sub(r"[\u0900-\u097F]+", "", sub_text).strip()
+        sub_text = re.sub(r"[^\x20-\x7E]", "", sub_text).strip()
         # Strictly purge any "1. ", "2. ", "3. " numbering from subtitles
         sub_text = re.sub(r"^[1-9]\s*[\.\)]\s*", "", sub_text).strip()
+
+        if not sub_text:
+            sub_text = "ESSENTIAL VEDIC PLACEMENT"
 
         # Prevent duplicate badge/subtitle overlap
         norm_badge = clean_badge.strip()

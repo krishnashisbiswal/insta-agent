@@ -183,10 +183,17 @@ class VideoQualityControl:
             from moviepy import VideoFileClip
             with VideoFileClip(str(v_path)) as clip:
                 num_samples = max(3, expected_scenes or 5)
-                sample_times = [
-                    round((duration / (num_samples + 1)) * (i + 1), 2)
-                    for i in range(num_samples)
-                ]
+                # Accurately sample early hook (0-3s) through each point and closing CTA
+                if num_samples >= 7:
+                    sample_times = [
+                        round(duration * pct, 2)
+                        for pct in [0.03, 0.14, 0.29, 0.44, 0.59, 0.74, 0.91][:num_samples]
+                    ]
+                else:
+                    sample_times = [
+                        round((duration / num_samples) * (i + 0.5), 2)
+                        for i in range(num_samples)
+                    ]
 
                 dark_count = 0
                 for t in sample_times:

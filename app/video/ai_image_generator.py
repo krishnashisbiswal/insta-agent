@@ -145,7 +145,8 @@ class AIImageGenerator:
 
         # 4. Execute generation loop with retries and alternate seeds
         last_error: Optional[Exception] = None
-        total_attempts = cls.MAX_RETRIES
+        fallback_allowed = allow_static_fallback if allow_static_fallback is not None else ALLOW_STATIC_FALLBACK
+        total_attempts = 1 if fallback_allowed else cls.MAX_RETRIES
 
         for attempt in range(1, total_attempts + 1):
             seed = random.randint(100000, 99999999) + (scene_idx * 1000) + (attempt * 100)
