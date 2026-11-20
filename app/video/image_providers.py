@@ -417,23 +417,48 @@ class MockImageProvider(BaseImageProvider):
         # 2. Tiger Eye Macro (Scene 1)
         elif any(k in p_lower for k in ["tiger", "tigers eye", "टाइगर"]):
             target_plate = cinematic_dir / "fresh_tiger_eye_macro.jpg"
-        # 3. Rahu & Sun Eclipse Conflict (Scene 2)
+        # 3. Rahu & Sun Eclipse Conflict in Kundli (Scene 2)
         elif any(k in p_lower for k in ["rahu", "sun rahu", "grahan", "eclipse", "सूर्य और राहु"]):
-            target_plate = cinematic_dir / "planet_rahu.jpg"
-        # 4. Mars Planetary Energy (Scene 4)
+            from app.video.kundli_chart_generator import KundliChartGenerator
+            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
+                scene_dict={"spoken_line": "Sun and Rahu conflict in kundli"},
+                topic="Sun Rahu Conflict",
+                scene_idx=1,
+            )
+        # 4. Mars Planetary Energy in Kundli (Scene 4)
         elif any(k in p_lower for k in ["mars", "mangal", "मंगल"]):
-            target_plate = cinematic_dir / "fresh_planet_mars_hubble.jpg"
-        # 5. Saturn / Shani Drishti (Scene 5)
+            from app.video.kundli_chart_generator import KundliChartGenerator
+            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
+                scene_dict={"spoken_line": "Mars fierce energy in kundli"},
+                topic="Mars Misalignment",
+                scene_idx=3,
+            )
+        # 5. Saturn / Shani Drishti with Aspect Arrows in Kundli (Scene 5)
         elif any(k in p_lower for k in ["saturn", "shani", "शनि", "drishti", "aspect"]):
-            target_plate = cinematic_dir / "3_shani_saturn.jpg"
+            from app.video.kundli_chart_generator import KundliChartGenerator
+            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
+                scene_dict={"spoken_line": "Shani saturn drishti in 7th house"},
+                topic="Shani Karmic Impact",
+                scene_idx=4,
+            )
         # 6. Caution against Blind Remedies / Gemstone Warning (Scene 6)
         elif any(k in p_lower for k in ["emerald", "sapphire", "neelam", "gemstone", "रत्न", "remedies"]):
             target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
-        # 7. 12th House / Kundli Chart (Scene 3)
+        # 7. 12th House / Kundli Energy Drain (Scene 3)
         elif any(k in p_lower for k in ["12th house", "12th", "बारहवें", "kundli", "chart", "parchment"]):
-            target_plate = cinematic_dir / "2_kundli_chart.jpg"
+            from app.video.kundli_chart_generator import KundliChartGenerator
+            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
+                scene_dict={"spoken_line": "12th house energy drain in kundli"},
+                topic="12th House Drain",
+                scene_idx=2,
+            )
         else:
-            target_plate = cinematic_dir / "2_kundli_chart.jpg"
+            from app.video.kundli_chart_generator import KundliChartGenerator
+            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
+                scene_dict={"spoken_line": "Vedic Kundli chart placement"},
+                topic="Vedic Chart",
+                scene_idx=2,
+            )
 
         if target_plate and target_plate.exists():
             with Image.open(target_plate) as raw_img:
