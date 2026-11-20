@@ -527,7 +527,7 @@ def resolve_entity_context(topic: str) -> Optional[Dict[str, Any]]:
             "name_hi_alt": "रुद्राक्ष",
             "gemstone": "Authentic Nepali Rudraksha",
             "gemstone_hi": "नेपाली रुद्राक्ष",
-            "significations": "भगवान शिव की कृपा, तंत्रिका तंत्र की शांति, रक्तचाप संतुलन और सकारात्मक आभामंडल",
+            "significations": "भगवान शिव की कृपा, नर्वस सिस्टम की शांति, ब्लड प्रेशर संतुलन और पॉजिटिव एनर्जी",
         },
         "rudraksh": {
             "type": "rudraksha",
@@ -536,7 +536,7 @@ def resolve_entity_context(topic: str) -> Optional[Dict[str, Any]]:
             "name_hi_alt": "रुद्राक्ष",
             "gemstone": "Authentic Nepali Rudraksha",
             "gemstone_hi": "नेपाली रुद्राक्ष",
-            "significations": "भगवान शिव की कृपा, तंत्रिका तंत्र की शांति, रक्तचाप संतुलन और सकारात्मक आभामंडल",
+            "significations": "भगवान शिव की कृपा, नर्वस सिस्टम की शांति, ब्लड प्रेशर संतुलन और पॉजिटिव एनर्जी",
         },
         "gauri shankar": {
             "type": "rudraksha",
@@ -554,7 +554,7 @@ def resolve_entity_context(topic: str) -> Optional[Dict[str, Any]]:
             "name_hi_alt": "पंचमुखी रुद्राक्ष",
             "gemstone": "Authentic Nepali 5 Mukhi Rudraksha",
             "gemstone_hi": "पंचमुखी रुद्राक्ष",
-            "significations": "भगवान कालाग्नि रुद्र की कृपा, रक्तचाप संतुलन, मानसिक शांति और तंत्रिका तंत्र स्थिरता",
+            "significations": "भगवान कालाग्नि रुद्र की कृपा, ब्लड प्रेशर संतुलन, मानसिक शांति और नर्वस सिस्टम स्थिरता",
         },
         "panchmukhi": {
             "type": "rudraksha",
@@ -563,7 +563,7 @@ def resolve_entity_context(topic: str) -> Optional[Dict[str, Any]]:
             "name_hi_alt": "पंचमुखी रुद्राक्ष",
             "gemstone": "Authentic Nepali 5 Mukhi Rudraksha",
             "gemstone_hi": "पंचमुखी रुद्राक्ष",
-            "significations": "भगवान कालाग्नि रुद्र की कृपा, रक्तचाप संतुलन, मानसिक शांति और तंत्रिका तंत्र स्थिरता",
+            "significations": "भगवान कालाग्नि रुद्र की कृपा, ब्लड प्रेशर संतुलन, मानसिक शांति और नर्वस सिस्टम स्थिरता",
         },
         "7 mukhi": {
             "type": "rudraksha",
@@ -626,7 +626,7 @@ def resolve_entity_context(topic: str) -> Optional[Dict[str, Any]]:
             "name_hi_alt": "पंचमुखी रुद्राक्ष",
             "gemstone": "Authentic Nepali 5 Mukhi Rudraksha",
             "gemstone_hi": "पंचमुखी रुद्राक्ष",
-            "significations": "भगवान कालाग्नि रुद्र की कृपा, रक्तचाप संतुलन, मानसिक शांति और तंत्रिका तंत्र स्थिरता",
+            "significations": "भगवान कालाग्नि रुद्र की कृपा, ब्लड प्रेशर संतुलन, मानसिक शांति और नर्वस सिस्टम स्थिरता",
         },
         "7 mukhi rudraksha": {
             "type": "rudraksha",
@@ -982,8 +982,16 @@ INSTAGRAM ALGORITHM SEO & EXPLORER SEARCH INDEXING:
 CRITICAL LANGUAGE & PRONUNCIATION MANDATE (NATURAL CONVERSATIONAL HINGLISH IN DEVANAGARI):
 - ALL SCENES "spoken_line": Write in NATURAL, MODERN CONVERSATIONAL HINGLISH using Devanagari script for flawless Indian neural voice pronunciation (Sarvam AI).
   * Use everyday relatable words that modern people actually speak on social media:
-    Use "करियर" (not "आजीविका" or "कर्मेश"), "स्ट्रेस / टेंशन" (not "मानसिक संताप"), "ग्रोथ / सक्सेस" (not "पदोन्नति"), "क्लाइंट" (not "जातक"), "एनर्जी" (not "ऊर्जा पुंज"), "रिजल्ट" (not "प्रतिफल"), "मेहनत" (not "अथक परिश्रम").
-  * STRICT BAN ON PURE / ARCHAIC FORMAL HINDI: Stiff textbook Sanskritized Hindi feels completely odd and unnatural to modern viewers. Keep it natural, conversational, and relatable Hinglish!
+    Use "नर्वस सिस्टम" (STRICT BAN on "तंत्रिका तंत्र"!),
+    Use "करियर" (not "आजीविका" or "कर्मेश"),
+    Use "स्ट्रेस / टेंशन" (not "मानसिक संताप / तनाव"),
+    Use "ग्रोथ / सक्सेस" (not "पदोन्नति"),
+    Use "क्लाइंट / लोग" (not "जातक"),
+    Use "एनर्जी / पॉजिटिव वाइब्स" (not "ऊर्जा पुंज" or "सकारात्मक आभामंडल"),
+    Use "रिजल्ट" (not "प्रतिफल"),
+    Use "मेहनत" (not "अथक परिश्रम"),
+    Use "फोकस / माइंड" (not "चित्त की एकाग्रता").
+  * STRICT BAN ON DEEP / ARCHAIC SANSKRITIZED HINDI: Hard textbook Hindi alienates social media audiences. Keep it 100% natural, everyday conversational Hinglish!
 - ALL SCENES "on_screen_text": Write in clean, bold ALL CAPS plain ASCII ENGLISH (2-4 words, e.g. "CAREER BREAKTHROUGH", "CALMS NERVOUS SYSTEM", "SHIELDS NEGATIVE ENERGY").
   * STRICT BAN: DO NOT prefix with "1.", "2.", "3." or "1 OF 5". Keep on-screen text punchy, curious, and immediate!
 - ALL SCENES "badge": High-curiosity interactive badge pill (e.g. "WEALTH MAGNET", "SECRET FREQUENCY", "AURA SHIELD", "INSTANT CALM", "BIO-ENERGY CODE", "DEEP FOCUS").

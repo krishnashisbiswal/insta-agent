@@ -332,20 +332,26 @@ class SceneVisualIntelligence:
         on_screen = scene_dict.get("on_screen_text", "").strip()
         vis_desc = scene_dict.get("visual_description", "").strip()
 
-        # Exact narration text is the primary source of truth
+        # Exact narration text is the primary source of truth (exclude old visual descriptions from matching)
         narration = spoken or on_screen or vis_desc or topic
+        script_text = f"{spoken} {on_screen}".strip().lower()
         text_lower = f"{spoken} {on_screen} {vis_desc}".lower()
 
-        # Step 1: Attempt LLM-based Scene Script Understanding via Gemini
-        ai_data = cls._analyze_scene_with_ai(
-            narration=narration,
-            on_screen=on_screen,
-            scene_idx=scene_idx,
-            total_scenes=total_scenes,
-            topic=topic,
-            prev_narration=prev_scene.get("spoken_line", "") if prev_scene else "",
-            next_narration=next_scene.get("spoken_line", "") if next_scene else "",
-        )
+        # Step 1: Direct literal script matching takes precedence for core Vedic & astrological subjects
+        direct_match = cls._get_direct_literal_match(script_text, scene_idx, total_scenes)
+
+        ai_data = None
+        if not direct_match:
+            # Step 2: Attempt LLM-based Scene Script Understanding via Gemini
+            ai_data = cls._analyze_scene_with_ai(
+                narration=narration,
+                on_screen=on_screen,
+                scene_idx=scene_idx,
+                total_scenes=total_scenes,
+                topic=topic,
+                prev_narration=prev_scene.get("spoken_line", "") if prev_scene else "",
+                next_narration=next_scene.get("spoken_line", "") if next_scene else "",
+            )
 
         if ai_data:
             raw_emotion = str(ai_data.get("emotion", "Hope"))
@@ -509,12 +515,14 @@ CREATIVE DIRECTION MANDATE (HIGH-END AESTHETIC):
 3. STRICT BAN ON LOW-EFFORT / MUNDANE MODERN CLICHÉS:
    - NEVER generate: mundane domestic scenes (dining tables, kitchen, modern bedrooms, alarm clocks, casual hoodies, people slouching on phones, grey concrete).
    - NEVER generate: cheap flat clip-art, generic floating cartoon planets, or synthetic plastic 3D wireframes.
-4. MEANING-DRIVEN SACRED VISUAL TRANSLATIONS:
-   - For Planetary Influences (Saturn / Shani, Rahu, Jupiter, etc.): Majestic ancient stone monuments standing against dramatic skies, golden light breaking through storms, wise contemplative Vedic sage studying sacred palm leaves, or celestial rays in dusk.
-   - For Career Growth / Wealth / Breakthrough: Triumphant seeker standing atop an ancient temple sanctuary at sunrise, golden light washing over stone pillars, visual metaphor of permanent success.
-   - For Karmic Struggle / Delay / Realization: Deeply focused craftsman shaping a sacred stone, or an intense portrait of a seeker with piercing focused gaze in moody cinematic lighting.
-   - For Gemstones / Remedies / Warnings: Extreme macro shot of an authentic radiant gemstone (Neelam, Ruby, Emerald, Pyrite) glowing with inner divine fire, resting on sacred Sanskrit scriptures or silk, crystal clear refraction.
-   - For Chart / House Analysis / CTA: Sacred golden Kundli diagram inscribed on ancient aged parchment, brass astrolabe, warm candlelit sanctuary.
+4. EXACT SCRIPT-DRIVEN LITERAL VISUAL TRANSLATIONS:
+   - Tiger's Eye: If the scene mentions Tiger's Eye -> Depict a stunning, luxurious macro shot of an authentic radiant Tiger's Eye gemstone and bead bracelet showing vivid golden chatoyancy on sacred velvet or ancient Sanskrit parchment!
+   - Sun & Rahu: If the scene mentions Sun and Rahu / Rahu in Kundali -> Depict a glowing sacred Vedic Kundli birth chart with Sun and Rahu highlighted in contrasting golden fire and dark cosmic eclipse shadow!
+   - 12th House Energy: If the scene mentions 12th house / energy drain -> Depict an authentic Vedic Kundli birth chart with the 12th house distinctly illuminated in gold and ethereal energy streams dissipating outward!
+   - Mars (Mangal): If the scene mentions Mars / Mangal -> Depict the majestic fiery red planet Mars glowing in deep cosmic space with powerful crimson energy flares!
+   - Saturn (Shani) & Drishti: If the scene mentions Saturn / Shani / Drishti -> Depict the magnificent planet Saturn with its detailed crystalline ice rings casting 3 distinct cosmic aspect rays across the cosmos!
+   - Gemstones Caution: If the scene mentions Gemstones / remedies -> Depict flawless, radiant natural gemstones (Neelam, Ruby, Emerald) glowing with vibrant internal fire on sacred scriptures!
+   - Call to Action / DM: If the scene is CTA / DM / consultation -> Depict warm, dignified hands holding radiant gemstones and a rolled parchment Kundli in inviting golden light inviting the viewer to DM!
 
 Return ONLY a valid JSON object with the following fields:
 {{
@@ -612,6 +620,96 @@ Return ONLY a valid JSON object with the following fields:
         return "Realization", 0.75
 
     @classmethod
+    def _get_direct_literal_match(
+        cls,
+        text_lower: str,
+        scene_idx: int,
+        total_scenes: int
+    ) -> Optional[Tuple[str, str, str, str, str, str]]:
+        """
+        Direct 1-to-1 literal script mapping for core Vedic astrology & gemstone subjects.
+        Returns: (core_meaning, visual_concept, visual_metaphor, subject, action, environment)
+        """
+        # 1. Tiger's Eye gemstone
+        if any(w in text_lower for w in ["tiger's eye", "tiger eye", "टाइगर आई", "टाइगर"]):
+            return (
+                "The grounding yet intense energetic frequency of genuine Tiger's Eye",
+                "An ultra-sharp, luxurious macro shot of an authentic radiant Tiger's Eye gemstone and bead bracelet showing intense golden-brown silky chatoyancy (tiger eye shimmer) resting on sacred velvet or ancient Sanskrit parchment, glowing in warm volumetric golden light",
+                "The golden chatoyant eye of the earth grounding scattered energy",
+                "An authentic, radiant polished Tiger's Eye gemstone and bracelet showing vivid golden chatoyancy",
+                "resting prominently on aged Sanskrit parchment, reflecting warm amber volumetric light rays",
+                "an opulent astrological sanctuary with soft candlelight and ancient Vedic manuscripts"
+            )
+
+        # 2. Sun & Rahu in Kundali
+        if (any(w in text_lower for w in ["rahu", "राहु"]) and any(w in text_lower for w in ["sun", "सूर्य", "surya"])) or "sun rahu" in text_lower or "सूर्य और राहु" in text_lower or "सूर्य-राहु" in text_lower:
+            return (
+                "The intense cosmic tension between solar confidence and Rahu's shadowy eclipse in the birth chart",
+                "A glowing sacred Vedic Kundli birth chart inscribed with radiant golden lines on dark midnight parchment, with the Sun (Surya) blazing in golden fire and shadowy Rahu casting an intense cosmic eclipse shadow inside the chart house",
+                "The solar life-force eclipsed by cosmic illusion inside the birth chart",
+                "An illuminated Vedic Kundli chart featuring the glowing golden glyph of Sun and dark celestial shadow of Rahu",
+                "pulsing with contrasting solar radiance and deep indigo eclipse aura across the chart grid",
+                "a mystical Vedic observatory desk surrounded by brass astrological instruments and ancient charts"
+            )
+
+        # 3. 12th House Energy Drain
+        if any(w in text_lower for w in ["12th house", "twelfth house", "बारहवें भाव", "बारहवां भाव", "12 भाव", "12वां"]):
+            return (
+                "The 12th house representing subconscious energy dissipation, sleep disruption, and spiritual release",
+                "An authentic glowing Vedic Kundli birth chart highlighting the 12th house (Vyaya Bhava) in radiant golden light, with streams of ethereal golden energy gracefully flowing outward into the cosmos, illustrating energy release",
+                "The 12th house portal where internal energy flows outward into the cosmos",
+                "A sacred North Indian diamond Kundli birth chart with the 12th house distinctly illuminated in gold",
+                "radiating ethereal streams of glowing golden light particles outward into dark celestial indigo space",
+                "a tranquil astrological sanctum bathed in warm amber diya light and mystical starlight"
+            )
+
+        # 4. Mars (Mangal) Planet & Fiery Energy
+        if any(w in text_lower for w in ["mars", "mangal", "मंगल", "मंगलेश"]):
+            return (
+                "The intense, decisive fire and warrior focus governed by planet Mars",
+                "The majestic, glowing red planet Mars floating in deep cosmic space surrounded by fiery crimson and amber celestial nebulae, casting powerful heroic energy rays across the stars",
+                "The unyielding crimson fire of Mars driving determination and focus",
+                "The magnificent red planet Mars rendered in breathtaking 8k detail with glowing crimson aura",
+                "radiating powerful dramatic beams of warm red and golden light through cosmic stellar dust",
+                "deep cosmic space with dramatic swirling interstellar clouds and distant twinkling constellations"
+            )
+
+        # 5. Saturn (Shani Dev) Drishti & Karmic Aspects
+        if any(w in text_lower for w in ["shani ki drishti", "drishti", "दृष्टि", "saturn aspect", "saturn's aspect", "shani", "शनि", "saturn"]):
+            return (
+                "The formidable, all-seeing gaze and karmic discipline of Saturn across the chart",
+                "The awe-inspiring planet Saturn with its majestic, crystalline ice rings glowing in deep cosmic space, casting three powerful focused volumetric beams of golden-indigo light representing planetary drishti across the cosmos",
+                "Saturn's piercing gaze testing patience and establishing unshakeable karma",
+                "The majestic planet Saturn with razor-sharp detailed rings and luminous golden-indigo aura",
+                "projecting three distinct radiant cosmic rays of light piercing through deep space toward distant stars",
+                "the deep majestic cosmos with rich indigo and violet nebulae and celestial starlight"
+            )
+
+        # 6. Gemstones Warning & Authenticity
+        if any(w in text_lower for w in ["gemstone", "gemstones", "रत्न", "ratna", "stones", "stone", "remedy", "उपाय", "blind remedies"]):
+            return (
+                "The critical importance of exact chart alignment before wearing powerful gemstones",
+                "A breathtaking, luxurious macro shot of authentic royal gemstones (deep blue Neelam sapphire, glowing red ruby, sparkling green emerald, and golden topaz) radiating pure internal light atop ancient Sanskrit palm leaves",
+                "The pure crystalline energy of sacred gemstones awaiting rightful alignment",
+                "A collection of flawless, faceted natural gemstones glowing with vivid jewel tones",
+                "catching warm golden candlelight and casting prismatic color refractions across aged parchment",
+                "an ancient Vedic sanctuary study with rich teakwood textures and antique brass instruments"
+            )
+
+        # 7. Call to Action / DM Consultation / Save Reel
+        if scene_idx == total_scenes - 1 or any(w in text_lower for w in ["dm", "डीएम", "comment", "कमेंट", "save", "सेव", "consultation", "परामर्श"]):
+            return (
+                "Inviting the viewer to discover their personal chart placements through private consultation",
+                "A captivating, warm cinematic close-up of open hands gently cradling authentic glowing gemstones and an ancient rolled Vedic birth chart, bathed in welcoming, radiant golden light that draws the viewer in",
+                "The inviting gateway to personal astrological guidance and energetic harmony",
+                "Dignified, welcoming hands presenting radiant natural gemstones and a rolled parchment Kundli",
+                "held gracefully in warm inviting golden light with soft inviting bokeh in the background",
+                "a serene, luxurious Vedic consultation study bathed in warm amber glow and quiet elegance"
+            )
+
+        return None
+
+    @classmethod
     def _derive_visual_metaphor(
         cls,
         narration: str,
@@ -626,6 +724,14 @@ Return ONLY a valid JSON object with the following fields:
         Translates abstract concepts into concrete storytelling visual metaphors.
         Returns: (core_meaning, visual_concept, visual_metaphor, subject, action, environment)
         """
+        script_text = (f"{narration}").lower()
+        direct_match = cls._get_direct_literal_match(script_text, scene_idx, total_scenes)
+        if direct_match:
+            return direct_match
+
+        # =========================================================================
+        # 2. STORYTELLING & EMOTIONAL METAPHORS
+        # =========================================================================
         # Specific Script A: Unreciprocated effort / Exhaustion
         if any(w in text_lower for w in ["never give anything back", "giving everything", "giving too much", "all you have", "pour"]):
             return (

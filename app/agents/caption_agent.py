@@ -73,19 +73,12 @@ def optimize_caption(
     cta_spoken = scenes[-1].get("spoken_line", "") if scenes else ""
     warning_spoken = scenes[5].get("spoken_line", "") if len(scenes) >= 6 else ""
 
-    lang_lower = (language or "").lower()
-    is_english = lang_lower in ["english", "en"]
-
-    if not is_english:
-        # Default for Indian Instagram audience: Natural, conversational Roman script Hinglish!
-        language_instruction = (
-            "MANDATORY LANGUAGE: WRITE IN MODERN, NATURAL HINGLISH IN ROMAN SCRIPT (e.g. "
-            "'12 saal ke astrology experience mein humne dekha hai ki Kundli ke ye 5 secret placements aapki life badal sakte hain...').\n"
-            "STRICT BAN: DO NOT WRITE IN DEVANAGARI HINDI SCRIPT FOR THE CAPTION! Instagram users in India expect and prefer clean, modern Roman script Hinglish for captions.\n"
-            "Combine conversational Roman Hindi with English keywords (Career, Wealth, Growth, Success, Energy, Kundli Analysis, Consultation, Save, Comment, DM)."
-        )
-    else:
-        language_instruction = "MANDATORY LANGUAGE: Write in elegant, fluent English directly elaborating the video's exact spoken points."
+    # The user strictly demands 100% clean, professional English captions (zero Hindi)
+    language_instruction = (
+        "MANDATORY LANGUAGE: WRITE THE ENTIRE CAPTION IN 100% FLUENT, ENGAGING, HIGH-RETENTION ENGLISH.\n"
+        "STRICT BAN ON ALL HINDI: DO NOT use any Hindi words, Roman Hindi sentences, or Devanagari script anywhere in the caption!\n"
+        "Write pure, high-authority, captivating English that elaborates on the video's exact spoken points."
+    )
 
     prompt = f"""
 You are the master Instagram copywriter for an authentic Vedic Astrology & Gemstone Energy channel (@neodivinestore.in).
@@ -135,37 +128,23 @@ Return ONLY valid JSON in this exact structure:
     try:
         data = generate_json(prompt)
     except Exception as exc:
-        logger.warning(f"Gemini caption generation error ({exc}). Generating high-retention fallback caption...")
-        lang_lower = (language or "").lower()
-        if "english" in lang_lower or lang_lower == "en":
-            data = {
-                "visible_first_line": f"{(topic or script_hook)[:100]} ⚠️",
-                "caption_body": (
-                    "According to Vedic Astrology, adopting remedies or wearing unverified stones without analyzing your complete birth chart can cause severe energetic conflict.\n\n"
-                    "Generic online tips or blindly following generalized advice often leads to unexpected setbacks and blockages. Always verify the exact house placement, planetary aspects, and current dasha in your personal Kundli.\n\n"
-                    "⚠️ Warning: Never perform blind remedies without individualized chart consultation."
-                ),
-                "cta": "Save this reel and comment your planetary placement below. Send us a Direct Message (DM) to book your personalized consultation! 🙏✨",
-                "hashtags": ["#VedicAstrology", "#KundliAnalysis", "#Kundali", "#Jyotish", "#NeoDivineStore"],
-            }
-        else:
-            # Roman script Hinglish for modern Indian social media audience
-            clean_first = topic if (topic and not any('\u0900' <= c <= '\u097f' for c in topic)) else "Kundli ka ye secret planetary alignment aapki life badal sakta hai"
-            data = {
-                "visible_first_line": f"{clean_first[:100]} ⚠️",
-                "caption_body": (
-                    "Vedic Astrology ke according, bina complete Janam Kundli aur Dasha analysis ke koi bhi gemstone ya remedy apnaana heavy energy conflict create kar sakta hai.\n\n"
-                    "Galat kadam uthane se sudden financial loss, career mein unexpected delay aur high stress aane lagta hai. Social media ke generic totke ya bina calculation ke remedies se bachein. Apni personal Kundli ki graha sthiti check karke hi right decision lein.\n\n"
-                    "⚠️ Warning: Bina authentic Kundli analysis ke koi bhi blind remedy ulta asar kar sakti hai."
-                ),
-                "cta": "Ye reel future ke liye SAVE kar lijiye aur apni Kundli ka planet placement neeche COMMENT karke batayein. Personalized deep consultation ke liye humein direct DM karein! 🙏✨",
-                "hashtags": ["#VedicAstrology", "#KundliAnalysis", "#Kundali", "#Jyotish", "#NeoDivineStore"],
-            }
+        logger.warning(f"Gemini caption generation error ({exc}). Generating high-retention English fallback caption...")
+        clean_first = topic if (topic and not any('\u0900' <= c <= '\u097f' for c in topic)) else "Why your gemstones might be clashing with your birth chart ⚠️"
+        data = {
+            "visible_first_line": f"{clean_first[:100]} ⚠️",
+            "caption_body": (
+                "According to Vedic Astrology, wearing unverified gemstones or adopting generic remedies without analyzing your complete birth chart can cause severe energetic conflict.\n\n"
+                "A client recently came to our consultation struggling with scattered energy even after wearing a Tiger's Eye. When we analyzed their Kundli, we discovered their 12th house and Mars placement were actively clashing with the stone's frequency.\n\n"
+                "Generic online remedies or following viral internet tips often leads to sudden setbacks, career delays, and intense internal friction. Always verify your exact house placements, planetary aspects, and current dasha.\n\n"
+                "⚠️ Warning: Never perform blind remedies or wear unverified stones without comprehensive chart analysis."
+            ),
+            "cta": "Save this reel for future reference and share with someone who needs this guidance. Comment your planetary placement below to check your alignment, and DM us for a personal Kundli consultation! 🙏✨",
+            "hashtags": ["#VedicAstrology", "#GemstoneEnergy", "#KundliAnalysis", "#Jyotish", "#NeoDivineStore"],
+        }
 
     full = data.get("full_caption", "")
     if not full:
-        # Default first line to Roman Hinglish if script_hook is Devanagari
-        default_hook = topic if (topic and not any('\u0900' <= c <= '\u097f' for c in topic)) else "Kundli ka ye planetary secret aapki life badal sakta hai 🔮"
+        default_hook = topic if (topic and not any('\u0900' <= c <= '\u097f' for c in topic)) else "Why your gemstones might be clashing with your birth chart 🔮"
         first = data.get("visible_first_line") or default_hook
         body = data.get("caption_body", "")
         cta = data.get("cta", "")

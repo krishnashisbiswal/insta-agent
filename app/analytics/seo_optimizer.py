@@ -144,24 +144,22 @@ def enforce_perfect_100_seo(
     3. Guarantees 4-layer viral engagement box (Save + Share + Comment + DM).
     4. Guarantees Explore search keyword coverage.
     """
-    lang_lower = (language or "").lower()
-    is_pure_english = lang_lower in ["english", "en"]
     clean_lines = [line.strip() for line in caption_text.split("\n") if line.strip()]
 
-    # 1. First line hook optimization
-    default_roman_hook = topic if (topic and not any('\u0900' <= c <= '\u097f' for c in topic)) else "Kundli ka ye secret yog janiye! 🔮"
-    first_line = clean_lines[0] if clean_lines else default_roman_hook
+    # 1. First line hook optimization (100% English)
+    default_english_hook = topic if (topic and not any('\u0900' <= c <= '\u097f' for c in topic)) else "Why your planetary energy might be misaligned 🔮"
+    first_line = clean_lines[0] if clean_lines else default_english_hook
 
-    # If first_line contains Devanagari but audience expects Roman Hinglish / English, sanitize to Roman
-    if not is_pure_english and any('\u0900' <= c <= '\u097f' for c in first_line):
+    # If first_line contains Devanagari, convert to English hook
+    if any('\u0900' <= c <= '\u097f' for c in first_line):
         if topic and not any('\u0900' <= c <= '\u097f' for c in topic):
             first_line = topic[:112].rsplit(" ", 1)[0] + "... 🔮"
         else:
-            first_line = "Kundli ka ye planetary alignment aapki life badal sakta hai 🔮"
+            first_line = "Why your planetary energy might be misaligned 🔮"
 
     # Sanitize first-person rookie mistakes to client case studies
-    first_line = re.sub(r"\b(?:मैंने|मुझे)\s+(?:अपनी\s+)?कुंडली\s+बिना\s+(?:देखे|दिखाए|जांचे)\b", "क्लाइंट ने बिना कुंडली जांचे", first_line)
-    first_line = re.sub(r"\bमेरा\s+नुकसान\b", "क्लाइंट का नुकसान", first_line)
+    first_line = re.sub(r"\b(?:मैंने|मुझे)\s+(?:अपनी\s+)?कुंडली\s+बिना\s+(?:देखे|दिखाए|जांचे)\b", "A client without Kundli analysis", first_line)
+    first_line = re.sub(r"\bमेरा\s+नुकसान\b", "Client setback", first_line)
     if len(first_line) > 120:
         first_line = first_line[:112].rsplit(" ", 1)[0] + "... 🔮"
     elif len(first_line) < 15:
@@ -181,26 +179,20 @@ def enforce_perfect_100_seo(
         if any(kw in line_s.lower() for kw in [
             "रील तुरंत सेव करें", "save this reel", "सेव (save) करें", "कमेंट (comment) करें",
             "comment your", "डीएम (dm) करें", "dm us", "personal kundli analysis",
-            "व्यक्तिगत विश्लेषण के लिए हमें तुरंत डीएम", "save karein", "share karein", "comment karein"
+            "व्यक्तिगत विश्लेषण के लिए हमें तुरंत डीएम", "save karein", "share karein", "comment karein",
+            "save this reel for future reference"
         ]):
             continue
         filtered_body.append(line_s)
     body_text = "\n\n".join(filtered_body)
-    body_text = re.sub(r"\b(?:मैंने|मुझे)\s+(?:अपनी\s+)?कुंडली\s+बिना\s+(?:देखे|दिखाए|जांचे)\b", "क्लाइंट ने बिना कुंडली जांचे", body_text)
-    body_text = re.sub(r"\bमेरा\s+नुकसान\b", "क्लाइंट का नुकसान", body_text)
+    body_text = re.sub(r"\b(?:मैंने|मुझे)\s+(?:अपनी\s+)?कुंडली\s+बिना\s+(?:देखे|दिखाए|जांचे)\b", "A client without chart analysis", body_text)
+    body_text = re.sub(r"\bमेरा\s+नुकसान\b", "Client setback", body_text)
 
-    # 3. 4-Layer Viral Engagement CTA
-    if is_pure_english:
-        cta_block = (
-            "📌 Save this reel for future reference and share with someone who needs this cosmic guidance.\n"
-            "💬 Comment your planetary placement below to check your alignment and DM us for personal Kundli analysis!"
-        )
-    else:
-        # High-converting Roman script Hinglish CTA for modern social media
-        cta_block = (
-            "📌 Ye reel future ke liye abhi Save karein aur doston ke saath Share karein.\n"
-            "💬 Apni Kundli mein planetary placement janne ke liye neeche Comment karein aur personal analysis ke liye humein direct DM karein!"
-        )
+    # 3. 4-Layer Viral Engagement CTA (100% English)
+    cta_block = (
+        "📌 Save this reel for future reference and share with someone who needs this guidance.\n"
+        "💬 Comment your planetary placement below to check your alignment and DM us for personal Kundli analysis!"
+    )
 
     # 4. Hashtags strictly clamped to 4-5 targeted tags
     default_tags = ["#VedicAstrology", "#KundliAnalysis", "#Gemstones", "#JyotishRemedies", "#NeoDivineStore"]
