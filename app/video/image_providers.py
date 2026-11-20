@@ -413,20 +413,18 @@ class MockImageProvider(BaseImageProvider):
         target_plate = None
         if any(k in p_lower for k in ["tiger", "tigers eye", "टाइगर"]):
             target_plate = cinematic_dir / "crystal_tigers_eye.jpg"
+        elif any(k in p_lower for k in ["rahu", "sun rahu", "grahan", "eclipse", "सूर्य और राहु"]):
+            target_plate = cinematic_dir / "planet_rahu.jpg"
         elif any(k in p_lower for k in ["mars", "mangal", "मंगल"]):
             target_plate = cinematic_dir / "planet_mars.jpg"
         elif any(k in p_lower for k in ["saturn", "shani", "शनि", "drishti", "aspect"]):
             target_plate = cinematic_dir / "planet_saturn.jpg"
-        elif any(k in p_lower for k in ["12th house", "12th", "बारहवें"]):
-            target_plate = cinematic_dir / "vedic_astrology_parchment_chart.jpg"
-        elif any(k in p_lower for k in ["kundli", "chart", "sun", "rahu", "सूर्य", "राहु"]):
-            target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
-        elif any(k in p_lower for k in ["emerald", "पन्ना"]):
+        elif any(k in p_lower for k in ["emerald", "पन्ना", "gemstone", "sapphire", "रत्न", "remedies"]):
             target_plate = cinematic_dir / "gemstone_emerald.jpg"
-        elif any(k in p_lower for k in ["gemstone", "sapphire", "ruby", "रत्न"]):
-            target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
         elif any(k in p_lower for k in ["dm", "consultation", "temple", "hand", "मंदिर"]):
             target_plate = cinematic_dir / "temple_sanctum_golden_diyas.jpg"
+        elif any(k in p_lower for k in ["12th house", "12th", "बारहवें", "kundli", "chart", "parchment"]):
+            target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
         else:
             target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
 

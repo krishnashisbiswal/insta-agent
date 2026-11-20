@@ -1362,15 +1362,17 @@ class DynamicVisualEngine:
                 candidates.append(curated_master_plate)
 
             # 1. Specific Planets & Cosmic Alignments (Highest Priority: match exact celestial entity)
+            if any(k in scene_txt for k in ["tiger", "tigers eye", "टाइगर"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg")
+            if (any(k in scene_txt for k in ["rahu", "राहु"]) and any(k in scene_txt for k in ["surya", "sun", "सूर्य"])) or "sun rahu" in scene_txt:
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_rahu.jpg")
             if any(k in scene_txt for k in ["mangal", "mars", "मंगल"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_mars.jpg")
             if any(k in scene_txt for k in ["shani", "saturn", "शनि", "drishti", "दृष्टि"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_saturn.jpg")
-            if (any(k in scene_txt for k in ["rahu", "राहु"]) and any(k in scene_txt for k in ["surya", "sun", "सूर्य"])) or "sun rahu" in scene_txt:
-                candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
-                candidates.append(CINEMATIC_BROLL_DIR / "planet_sun.jpg")
-            if any(k in scene_txt for k in ["12th", "बारहवें", "बारहवां", "twelfth", "vyaya", "व्यय"]):
-                candidates.append(CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg")
+            if any(k in scene_txt for k in ["emerald", "पन्ना", "gemstone", "sapphire", "नीलम", "रत्न"]):
+                candidates.append(CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg")
+            if any(k in scene_txt for k in ["12th", "बारहवें", "बारहवां", "twelfth", "vyaya", "व्यय", "kundli", "कुंडली"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
             if any(k in scene_txt for k in ["guru", "brihaspati", "jupiter", "गुरु", "बृहस्पति"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_jupiter.jpg")

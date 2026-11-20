@@ -1,8 +1,8 @@
 {
   "schema_version": "2.0.0",
   "created_at": "2026-11-15T09:55:14.062123Z",
-  "last_updated": "2026-11-20T18:34:27.737653+00:00",
-  "total_records": 1788,
+  "last_updated": "2026-11-20T18:47:23.367074+00:00",
+  "total_records": 1789,
   "records": {
     "legacy:1_gemstone_hook.jpg": {
       "source_identity": "1_gemstone_hook.jpg",
@@ -59114,7 +59114,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-20T18:34:27.646938+00:00"
+      "usage_timestamp": "2026-11-20T18:47:23.265671+00:00"
     },
     "58c620b9e3c60d92b00b51aa428dd816bb265ea81ef97b4122ac6a962bb23159": {
       "asset_id": "58c620b9e3c60d92b00b51aa428dd816bb265ea81ef97b4122ac6a962bb23159",
@@ -59458,7 +59458,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-20T18:34:21.250649+00:00"
+      "usage_timestamp": "2026-11-20T18:47:17.304846+00:00"
     },
     "286776cc14fcd990f45c03e6a9e6062c7c84a3525072474e3ada9f175ab90351": {
       "asset_id": "286776cc14fcd990f45c03e6a9e6062c7c84a3525072474e3ada9f175ab90351",
@@ -68832,7 +68832,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-20T18:34:18.255125+00:00"
+      "usage_timestamp": "2026-11-20T18:47:14.886981+00:00"
     },
     "5a4fc8484e99423ea239dfe40742a7c8d9e54d0c3ddd353a2f10b5d7adca5ce1": {
       "asset_id": "5a4fc8484e99423ea239dfe40742a7c8d9e54d0c3ddd353a2f10b5d7adca5ce1",
@@ -69176,7 +69176,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-20T18:34:25.999526+00:00"
+      "usage_timestamp": "2026-11-20T18:47:21.636437+00:00"
     },
     "1d2b72b686e42d59bb9c7ae8a17dcb32eb50ff35a23fe4879f29dbbc9646f23d": {
       "asset_id": "1d2b72b686e42d59bb9c7ae8a17dcb32eb50ff35a23fe4879f29dbbc9646f23d",
@@ -69520,7 +69520,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-20T18:34:23.016859+00:00"
+      "usage_timestamp": "2026-11-20T18:47:18.841840+00:00"
     },
     "c8a1225bcb46a17b4f3fd7b754c83fb73d6e192043649417e55adf17f063aab1": {
       "asset_id": "c8a1225bcb46a17b4f3fd7b754c83fb73d6e192043649417e55adf17f063aab1",
@@ -69606,7 +69606,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-20T18:34:24.461063+00:00"
+      "usage_timestamp": "2026-11-20T18:47:20.325280+00:00"
     },
     "482c179c3287e7784b82d72e030021edcffac73d8abfbca4bc37e887b813b991": {
       "asset_id": "482c179c3287e7784b82d72e030021edcffac73d8abfbca4bc37e887b813b991",
@@ -69693,6 +69693,92 @@
       "topic": "Tiger Eye & Kundli Energy Blueprint: Why your gemstones might clash with your birth chart",
       "scene_idx": 5,
       "usage_timestamp": "2026-11-20T18:33:52.436542+00:00"
+    },
+    "393c9d681e682fedac042d9654016dc6d0cb9c912ca7a4dd11af9f01db600c81": {
+      "asset_id": "393c9d681e682fedac042d9654016dc6d0cb9c912ca7a4dd11af9f01db600c81",
+      "sha256": "393c9d681e682fedac042d9654016dc6d0cb9c912ca7a4dd11af9f01db600c81",
+      "phash": "91996e66f1999a62",
+      "dhash": "d8d4f8dccce8f2d8",
+      "ahash": "00003e7f673c0000",
+      "color_embedding": [
+        0.0076,
+        0.0166,
+        0.027,
+        0.0195,
+        0.0338,
+        0.0225,
+        0.021,
+        0.0126,
+        0.0266,
+        0.0513,
+        0.0829,
+        0.0881,
+        0.0966,
+        0.0734,
+        0.0661,
+        0.0354,
+        0.0457,
+        0.0852,
+        0.1473,
+        0.2404,
+        0.3211,
+        0.265,
+        0.1474,
+        0.0898,
+        0.0949,
+        0.1759,
+        0.2126,
+        0.1572,
+        0.2866,
+        0.3042,
+        0.227,
+        0.1032,
+        0.1002,
+        0.2133,
+        0.232,
+        0.0619,
+        0.0865,
+        0.2109,
+        0.1938,
+        0.1117,
+        0.0509,
+        0.0608,
+        0.1052,
+        0.1564,
+        0.1599,
+        0.11,
+        0.0723,
+        0.054,
+        0.0177,
+        0.0324,
+        0.0526,
+        0.0566,
+        0.059,
+        0.0429,
+        0.0356,
+        0.0262,
+        0.0076,
+        0.0168,
+        0.0154,
+        0.0174,
+        0.0235,
+        0.017,
+        0.0098,
+        0.0062
+      ],
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "aspect_ratio": "9:16",
+      "bytes_size": 466929,
+      "source_identity": "tiger_eye___kundli_e_sc2_c6c49ff097.jpg",
+      "scene_description": "vertical 9:16 cinematic masterpiece, 8k, hyper-detailed, award-winning photography. An illuminated Vedic Kundli chart featuring the glowing golden glyph of Sun and dark celestial shadow of Rahu, pulsing with contrasting solar radiance and deep indigo eclipse aura across the chart grid. Atmospheric environment: a mystical Vedic observatory desk surrounded by brass astrological instruments and ancient charts. Mood & lighting: luxurious warm volumetric amber lighting, radiant golden glow, sharp focus, 35mm lens. Color grading: soft sage green, serene sky cyan, warm alabaster, gentle lotus pink. Stunning tactile textures, ultra-photorealistic, high contrast. no human faces, no anime characters, no text overlays, no watermarks, no logos, no cgi cartoons, no flat solid colors",
+      "script_id": "tiger_eye___kundli_e",
+      "reel_id": "tiger_eye___kundli_e",
+      "topic": "Tiger Eye & Kundli Energy Blueprint: Why your gemstones might clash with your birth chart",
+      "scene_idx": 1,
+      "usage_timestamp": "2026-11-20T18:47:15.651878+00:00"
     }
   }
 }
