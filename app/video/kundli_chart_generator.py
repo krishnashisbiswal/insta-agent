@@ -14,6 +14,7 @@ astrological Kundli birth charts with dynamic house highlighting and planet mark
 from __future__ import annotations
 
 import hashlib
+import cv2
 import logging
 import math
 import os
@@ -439,34 +440,48 @@ class KundliChartGenerator:
             target_house = extracted_h or 1
 
         width, height = 1080, 1920
-        box_size = 820
-        x0 = (width - box_size) // 2
-        x1 = x0 + box_size
-        center_y = 780
-        y0 = center_y - (box_size // 2)
-        y1 = y0 + box_size
-        x_mid = (x0 + x1) / 2.0
-        y_mid = (y0 + y1) / 2.0
 
-        p_tl = ((x0 + x_mid) / 2.0, (y0 + y_mid) / 2.0)
-        p_tr = ((x1 + x_mid) / 2.0, (y0 + y_mid) / 2.0)
-        p_bl = ((x0 + x_mid) / 2.0, (y1 + y_mid) / 2.0)
-        p_br = ((x1 + x_mid) / 2.0, (y1 + y_mid) / 2.0)
+        # 3D Perspective Projection Setup
+        src_quad = np.float32([[0, 0], [1000, 0], [1000, 1000], [0, 1000]])
+        dst_quad = np.float32([[210, 560], [870, 560], [970, 1260], [110, 1260]])
+        M = cv2.getPerspectiveTransform(src_quad, dst_quad)
 
-        polygons = {
-            1: [(x_mid, y0), p_tr, (x_mid, y_mid), p_tl],
-            2: [(x0, y0), (x_mid, y0), p_tl],
-            3: [(x0, y0), (x0, y_mid), p_tl],
-            4: [p_tl, (x0, y_mid), p_bl, (x_mid, y_mid)],
-            5: [(x0, y_mid), (x0, y1), p_bl],
-            6: [(x0, y1), (x_mid, y1), p_bl],
-            7: [(x_mid, y_mid), p_bl, (x_mid, y1), p_br],
-            8: [(x_mid, y1), (x1, y1), p_br],
-            9: [(x1, y1), (x1, y_mid), p_br],
-            10: [(x_mid, y_mid), p_br, (x1, y_mid), p_tr],
-            11: [(x1, y_mid), (x1, y0), p_tr],
-            12: [(x_mid, y0), (x1, y0), p_tr],
+        def project_pt(u: float, v: float, h: float = 0.0) -> Tuple[float, float, float]:
+            pt = np.array([[[u, v]]], dtype=np.float32)
+            proj = cv2.perspectiveTransform(pt, M)[0][0]
+            depth_scale = 0.74 + (v / 1000.0) * 0.36
+            sx = float(proj[0])
+            sy = float(proj[1]) - (h * depth_scale)
+            return sx, sy, float(depth_scale)
+
+        def project_poly(pts_uv: List[Tuple[float, float]], h: float = 0.0) -> List[Tuple[float, float]]:
+            return [project_pt(u, v, h)[:2] for u, v in pts_uv]
+
+        u_mid, v_mid = 500.0, 500.0
+        p_tl = (250.0, 250.0)
+        p_tr = (750.0, 250.0)
+        p_bl = (250.0, 750.0)
+        p_br = (750.0, 750.0)
+
+        uv_polygons: Dict[int, List[Tuple[float, float]]] = {
+            1: [(u_mid, 0.0), p_tr, (u_mid, v_mid), p_tl],
+            2: [(0.0, 0.0), (u_mid, 0.0), p_tl],
+            3: [(0.0, 0.0), (0.0, v_mid), p_tl],
+            4: [p_tl, (0.0, v_mid), p_bl, (u_mid, v_mid)],
+            5: [(0.0, v_mid), (0.0, 1000.0), p_bl],
+            6: [(0.0, 1000.0), (u_mid, 1000.0), p_bl],
+            7: [(u_mid, v_mid), p_bl, (u_mid, 1000.0), p_br],
+            8: [(u_mid, 1000.0), (1000.0, 1000.0), p_br],
+            9: [(1000.0, 1000.0), (1000.0, v_mid), p_br],
+            10: [(u_mid, v_mid), p_br, (1000.0, v_mid), p_tr],
+            11: [(1000.0, v_mid), (1000.0, 0.0), p_tr],
+            12: [(u_mid, 0.0), (1000.0, 0.0), p_tr],
         }
+
+        def get_uv_centroid(poly: List[Tuple[float, float]]) -> Tuple[float, float]:
+            xs = [p[0] for p in poly]
+            ys = [p[1] for p in poly]
+            return sum(xs) / len(xs), sum(ys) / len(ys)
 
         ROMAN_NUMS = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII", 9: "IX", 10: "X", 11: "XI", 12: "XII"}
 
@@ -479,11 +494,11 @@ class KundliChartGenerator:
             base_blur = base_raw.filter(ImageFilter.GaussianBlur(28))
             base_dark = ImageEnhance.Brightness(base_blur).enhance(0.48)
             base_graded = ImageEnhance.Contrast(base_dark).enhance(1.20)
-            
-            # Radial vignette to darken edges and focus on central Kundli
+
+            # Radial vignette to darken edges and focus on central 3D Kundli
             vignette = Image.new("L", (width, height), 0)
             vdraw = ImageDraw.Draw(vignette)
-            vdraw.ellipse([60, 150, width - 60, height - 250], fill=255)
+            vdraw.ellipse([60, 140, width - 60, height - 230], fill=255)
             vignette = vignette.filter(ImageFilter.GaussianBlur(140))
             v_arr = np.array(vignette, dtype=float) / 255.0
             bg_arr = np.array(base_graded, dtype=float)
@@ -492,201 +507,290 @@ class KundliChartGenerator:
         else:
             canvas = Image.new("RGBA", (width, height), (10, 8, 18, 255))
 
-        poly = polygons.get(target_house, polygons[1])
-        cx, cy = cls.get_centroid(poly)
+        # 2. 3D Pedestal Base Extrusion (Slab depth beneath Kundli)
+        pedestal = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        pdraw = ImageDraw.Draw(pedestal)
+        c_bl, c_br = (110, 1260), (970, 1260)
+        b_bl, b_br = (110, 1298), (970, 1298)
+        pdraw.polygon([c_bl, c_br, b_br, b_bl], fill=(22, 16, 12, 235))
+        pdraw.line([b_bl, b_br], fill=(160, 120, 40, 200), width=2)
+        pdraw.line([c_bl, b_bl], fill=(120, 90, 30, 160), width=2)
+        pdraw.line([c_br, b_br], fill=(120, 90, 30, 160), width=2)
 
-        # 2. Multi-tier Volumetric Golden Bloom with Screen Blending
+        # Soft drop shadow under the 3D altar
+        altar_shadow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        as_draw = ImageDraw.Draw(altar_shadow)
+        as_draw.polygon([(100, 1290), (980, 1290), (1010, 1335), (70, 1335)], fill=(5, 3, 2, 190))
+        altar_shadow = altar_shadow.filter(ImageFilter.GaussianBlur(16))
+        canvas = Image.alpha_composite(canvas, altar_shadow)
+        canvas = Image.alpha_composite(canvas, pedestal)
+
+        # 3. 3D House Chamber Volumetric Glow (Screen Blending)
+        target_poly_uv = uv_polygons.get(target_house, uv_polygons[1])
+        proj_poly = project_poly(target_poly_uv, h=0)
+        uc, vc = get_uv_centroid(target_poly_uv)
+        scx, scy, _ = project_pt(uc, vc, h=0)
+
         bloom = Image.new("RGB", (width, height), (0, 0, 0))
-        b_draw = ImageDraw.Draw(bloom)
-        b_draw.ellipse([cx - 260, cy - 260, cx + 260, cy + 260], fill=(120, 75, 10))
-        b_draw.polygon(poly, fill=(240, 160, 30))
-        b_draw.line(poly + [poly[0]], fill=(255, 230, 100), width=10)
-        bloom_blur = bloom.filter(ImageFilter.GaussianBlur(35))
+        bdraw = ImageDraw.Draw(bloom)
+        bdraw.ellipse([scx - 220, scy - 220, scx + 220, scy + 220], fill=(130, 80, 15))
+        bdraw.polygon(proj_poly, fill=(240, 165, 35))
+        bdraw.line(proj_poly + [proj_poly[0]], fill=(255, 230, 110), width=10)
+        bloom_blur = bloom.filter(ImageFilter.GaussianBlur(32))
 
-        sharp_line = Image.new("RGB", (width, height), (0, 0, 0))
-        s_draw = ImageDraw.Draw(sharp_line)
-        s_draw.polygon(poly, fill=(160, 100, 15))
-        s_draw.line(poly + [poly[0]], fill=(255, 225, 90), width=4)
-        sharp_blur = sharp_line.filter(ImageFilter.GaussianBlur(4))
+        sharp = Image.new("RGB", (width, height), (0, 0, 0))
+        sdraw = ImageDraw.Draw(sharp)
+        sdraw.polygon(proj_poly, fill=(170, 110, 20))
+        sdraw.line(proj_poly + [proj_poly[0]], fill=(255, 230, 90), width=4)
+        sharp_blur = sharp.filter(ImageFilter.GaussianBlur(4))
 
         bg_rgb = np.array(canvas.convert("RGB"), dtype=float)
         b_arr = (np.array(bloom_blur, dtype=float) + np.array(sharp_blur, dtype=float)) / 255.0
         screened = 1.0 - (1.0 - bg_rgb / 255.0) * (1.0 - np.clip(b_arr, 0.0, 0.95))
         canvas = Image.fromarray(np.clip(screened * 255.0, 0, 255).astype(np.uint8)).convert("RGBA")
 
-        # 3. Metallic Gold Lines with Soft Ambient Depth
-        gold_draw = ImageDraw.Draw(canvas)
-        def _draw_gold_line(p1, p2, w=3):
-            gold_draw.line([p1, p2], fill=(20, 12, 5, 120), width=w + 2)
-            gold_draw.line([p1, p2], fill=(225, 185, 60, 240), width=w)
+        # 4. 3D Vertical Volumetric Light Shaft from the Active Chamber
+        pillar = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        pildraw = ImageDraw.Draw(pillar)
+        poly_elev = project_poly(target_poly_uv, h=75)
+        for p0, p1 in zip(proj_poly, poly_elev):
+            pildraw.line([p0, p1], fill=(255, 215, 60, 60), width=2)
+        pildraw.polygon(poly_elev, fill=(255, 200, 40, 25))
+        pillar = pillar.filter(ImageFilter.GaussianBlur(8))
+        canvas = Image.alpha_composite(canvas, pillar)
 
-        _draw_gold_line((x0, y0), (x1, y0), 4)
-        _draw_gold_line((x1, y0), (x1, y1), 4)
-        _draw_gold_line((x1, y1), (x0, y1), 4)
-        _draw_gold_line((x0, y1), (x0, y0), 4)
-        _draw_gold_line((x0, y0), (x1, y1), 3)
-        _draw_gold_line((x1, y0), (x0, y1), 3)
-        _draw_gold_line((x_mid, y0), (x1, y_mid), 3)
-        _draw_gold_line((x1, y_mid), (x_mid, y1), 3)
-        _draw_gold_line((x_mid, y1), (x0, y_mid), 3)
-        _draw_gold_line((x0, y_mid), (x_mid, y0), 3)
+        # 5. 3D Engraved Gold Kundli Framework
+        draw = ImageDraw.Draw(canvas)
+        def _draw_3d_line(u1: float, v1: float, u2: float, v2: float, w: int = 3) -> None:
+            p1 = project_pt(u1, v1, h=0)[:2]
+            p2 = project_pt(u2, v2, h=0)[:2]
+            draw.line([p1, p2], fill=(15, 10, 5, 140), width=w + 2)
+            draw.line([p1, p2], fill=(230, 190, 65, 245), width=w)
 
-        # 4. Clean Roman Numerals
+        # Perimeter
+        _draw_3d_line(0, 0, 1000, 0, 4)
+        _draw_3d_line(1000, 0, 1000, 1000, 4)
+        _draw_3d_line(1000, 1000, 0, 1000, 4)
+        _draw_3d_line(0, 1000, 0, 0, 4)
+        # Inner diagonals & diamonds
+        _draw_3d_line(0, 0, 1000, 1000, 3)
+        _draw_3d_line(1000, 0, 0, 1000, 3)
+        _draw_3d_line(500, 0, 1000, 500, 3)
+        _draw_3d_line(1000, 500, 500, 1000, 3)
+        _draw_3d_line(500, 1000, 0, 500, 3)
+        _draw_3d_line(0, 500, 500, 0, 3)
+
+        # 6. Roman Numerals in 3D perspective
         try:
-            font_num = ImageFont.truetype("arial.ttf", 26)
+            font_num = ImageFont.truetype("arial.ttf", 24)
             font_badge = ImageFont.truetype("arial.ttf", 20)
         except Exception:
             font_num = ImageFont.load_default()
             font_badge = ImageFont.load_default()
 
-        for h_num, poly_pts in polygons.items():
-            hcx, hcy = cls.get_centroid(poly_pts)
-            dx = (hcx - x_mid) * 0.35
-            dy = (hcy - y_mid) * 0.35
-            rom = ROMAN_NUMS.get(h_num, str(h_num))
-            bbox = gold_draw.textbbox((0, 0), rom, font=font_num)
+        for h_num, poly_uv in uv_polygons.items():
+            h_uc, h_vc = get_uv_centroid(poly_uv)
+            du = (h_uc - 500.0) * 0.35
+            dv = (h_vc - 500.0) * 0.35
+            nx, ny, depth = project_pt(h_uc + du, h_vc + dv, h=0)
+            rom = ROMAN_NUMS[h_num]
+            bbox = draw.textbbox((0, 0), rom, font=font_num)
             tw = bbox[2] - bbox[0]
             th = bbox[3] - bbox[1]
             col = (255, 245, 180, 240) if h_num == target_house else (160, 135, 100, 150)
-            gold_draw.text((hcx + dx - tw / 2, hcy + dy - th / 2), rom, fill=col, font=font_num)
+            draw.text((nx - tw / 2, ny - th / 2), rom, fill=col, font=font_num)
 
-        def _make_sphere(src_p: Path, target_size: int, glow_c: Tuple[int, int, int]) -> Image.Image:
+        def _make_3d_sphere(src_p: Path, target_size: int, glow_c: Tuple[int, int, int] = (255, 200, 30)) -> Image.Image:
             src = Image.open(src_p).convert("RGB")
             w_s, h_s = src.size
             md = min(w_s, h_s)
             crop = src.crop(((w_s - md) // 2, (h_s - md) // 2, (w_s + md) // 2, (h_s + md) // 2))
             crop = crop.resize((target_size, target_size), Image.Resampling.LANCZOS)
-            mask = Image.new("L", (target_size * 2, target_size * 2), 0)
-            mdraw = ImageDraw.Draw(mask)
-            mdraw.ellipse([6, 6, target_size * 2 - 6, target_size * 2 - 6], fill=255)
-            mask = mask.resize((target_size, target_size), Image.Resampling.LANCZOS)
-            sph = Image.new("RGBA", (target_size, target_size), (0, 0, 0, 0))
-            sph.paste(crop, (0, 0), mask)
-            return sph
 
-        def _draw_light_beam(dr: ImageDraw.ImageDraw, start: Tuple[float, float], end: Tuple[float, float], color: Tuple[int, int, int] = (255, 220, 50)) -> None:
-            dr.line([start, end], fill=(*color, 240), width=4)
-            tip_size = 22
-            angle = math.atan2(end[1] - start[1], end[0] - start[0])
-            tip1 = (end[0] - tip_size * math.cos(angle - math.pi / 6), end[1] - tip_size * math.sin(angle - math.pi / 6))
-            tip2 = (end[0] - tip_size * math.cos(angle + math.pi / 6), end[1] - tip_size * math.sin(angle + math.pi / 6))
-            dr.polygon([end, tip1, tip2], fill=(*color, 255))
+            y, x = np.ogrid[:target_size, :target_size]
+            r = target_size / 2.0
+            dx = (x - r) / r
+            dy = (y - r) / r
+            dist2 = dx**2 + dy**2
+            mask = (dist2 <= 1.0).astype(float)
+            dz = np.sqrt(np.maximum(0.0, 1.0 - dist2))
 
-        def _draw_aspect_tag(dr: ImageDraw.ImageDraw, txt: str, pt: Tuple[float, float]) -> None:
-            bbox = dr.textbbox((0, 0), txt, font=font_badge)
-            tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-            px, py = int(pt[0] - tw // 2), int(pt[1] - th // 2)
-            dr.rounded_rectangle([px - 10, py - 4, px + tw + 10, py + th + 4], radius=6, fill=(15, 10, 22, 230), outline=(255, 215, 0, 200), width=1)
-            dr.text((px, py), txt, fill=(255, 235, 140), font=font_badge)
+            lx, ly, lz = -0.4, -0.5, 0.77
+            nl = math.sqrt(lx**2 + ly**2 + lz**2)
+            lx, ly, lz = lx / nl, ly / nl, lz / nl
+            diffuse = np.maximum(0.15, dx * lx + dy * ly + dz * lz)
+            spec = np.maximum(0.0, (dx * lx + dy * ly + dz * lz)) ** 8 * 0.4
+            fresnel = ((1.0 - dz) ** 2.5) * 0.55
 
-        cx1, cy1 = cls.get_centroid(polygons[1])
-        cx7, cy7 = cls.get_centroid(polygons[7])
-        cx9, cy9 = cls.get_centroid(polygons[9])
-        cx4, cy4 = cls.get_centroid(polygons[4])
-        cx12, cy12 = cls.get_centroid(polygons[12])
+            arr = np.array(crop, dtype=float)
+            shaded = arr * (diffuse[..., None] * 0.85 + 0.15) + spec[..., None] * 255.0
+            for c in range(3):
+                shaded[..., c] += fresnel * glow_c[c]
+            shaded = np.clip(shaded, 0, 255).astype(np.uint8)
 
-        # 5. Composite 3D Planet Celestial Features based on context
+            res = Image.fromarray(shaded).convert("RGBA")
+            alpha = (mask * 255).astype(np.uint8)
+            res.putalpha(Image.fromarray(alpha))
+            return res
+
+        # 7. Composite 3D Celestial Objects & Aspects
         if is_sun_rahu:
-            sun_p = broll_dir / "planet_sun.jpg"
-            rahu_p = broll_dir / "planet_rahu.jpg"
-            if sun_p.exists() and rahu_p.exists():
-                sun = _make_sphere(sun_p, 140, (255, 205, 30))
-                rahu = _make_sphere(rahu_p, 130, (190, 85, 230))
-                halo2 = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-                h2_draw = ImageDraw.Draw(halo2)
-                h2_draw.ellipse([cx1 - 130, cy1 - 80, cx1 + 10, cy1 + 60], fill=(255, 190, 30, 160))
-                h2_draw.ellipse([cx1 - 10, cy1 - 75, cx1 + 130, cy1 + 65], fill=(160, 80, 220, 140))
-                halo2 = halo2.filter(ImageFilter.GaussianBlur(24))
-                canvas = Image.alpha_composite(canvas, halo2)
-                sh2 = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-                sh2_draw = ImageDraw.Draw(sh2)
-                sh2_draw.ellipse([cx1 - 130, cy1 + 45, cx1 + 130, cy1 + 80], fill=(10, 5, 2, 140))
-                sh2 = sh2.filter(ImageFilter.GaussianBlur(16))
-                canvas = Image.alpha_composite(canvas, sh2)
-                canvas.paste(sun, (int(cx1 - 125), int(cy1 - 70)), sun)
-                canvas.paste(rahu, (int(cx1 - 5), int(cy1 - 65)), rahu)
+            h_elev = 115
+            sx_fl, sy_fl, _ = project_pt(500, 250, h=0)
+            sx_pl, sy_pl, scale_p = project_pt(500, 250, h=h_elev)
+
+            # 3D Contact Shadow on floor
+            sh = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            shdraw = ImageDraw.Draw(sh)
+            shdraw.ellipse([sx_fl - 120, sy_fl - 28, sx_fl + 120, sy_fl + 28], fill=(10, 5, 2, 160))
+            sh = sh.filter(ImageFilter.GaussianBlur(14))
+            canvas = Image.alpha_composite(canvas, sh)
+
+            sun_sz = int(145 * scale_p)
+            rahu_sz = int(135 * scale_p)
+            sun_sp = _make_3d_sphere(broll_dir / "planet_sun.jpg", sun_sz, (255, 215, 40))
+            rahu_sp = _make_3d_sphere(broll_dir / "planet_rahu.jpg", rahu_sz, (190, 80, 230))
+
+            halo = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            hdraw = ImageDraw.Draw(halo)
+            hdraw.ellipse([sx_pl - 120, sy_pl - 80, sx_pl + 10, sy_pl + 50], fill=(255, 190, 30, 160))
+            hdraw.ellipse([sx_pl - 10, sy_pl - 75, sx_pl + 120, sy_pl + 55], fill=(160, 80, 220, 140))
+            halo = halo.filter(ImageFilter.GaussianBlur(25))
+            canvas = Image.alpha_composite(canvas, halo)
+
+            canvas.paste(sun_sp, (int(sx_pl - 110), int(sy_pl - sun_sz // 2)), sun_sp)
+            canvas.paste(rahu_sp, (int(sx_pl + 5), int(sy_pl - rahu_sz // 2)), rahu_sp)
 
         elif is_12th:
+            uc12, vc12 = get_uv_centroid(uv_polygons[12])
+            sx_fl, sy_fl, _ = project_pt(uc12, vc12, h=0)
+
             vortex = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-            v_draw = ImageDraw.Draw(vortex)
-            for ang in range(-45, 85, 6):
-                rad = math.radians(ang)
-                for length, alpha, wid in [(320, 180, 5), (260, 220, 3), (180, 250, 2)]:
-                    ex = cx12 + math.cos(rad) * length
-                    ey = cy12 - math.sin(rad) * length
-                    v_draw.line([(cx12, cy12), (ex, ey)], fill=(255, 220, 60, alpha), width=wid)
-            for p_r, p_a, p_sz in [(90, 15, 6), (150, 35, 7), (210, -5, 5), (260, 50, 8), (130, -25, 4), (190, 20, 6), (290, 10, 5)]:
-                pr = math.radians(p_a)
-                px = cx12 + math.cos(pr) * p_r
-                py = cy12 - math.sin(pr) * p_r
-                v_draw.ellipse([px - p_sz, py - p_sz, px + p_sz, py + p_sz], fill=(255, 245, 140, 240))
-            v_blur = vortex.filter(ImageFilter.GaussianBlur(8))
+            vdraw = ImageDraw.Draw(vortex)
+
+            for h_step in range(10, 320, 12):
+                t = h_step / 320.0
+                r_spread = 30 + t * 240
+                for ang in range(-20, 80, 12):
+                    rad = math.radians(ang)
+                    u_p = uc12 + math.cos(rad) * r_spread * 0.8
+                    v_p = vc12 - math.sin(rad) * r_spread * 0.5
+                    sx_v, sy_v, _ = project_pt(u_p, v_p, h=h_step)
+                    vdraw.line([(sx_fl, sy_fl), (sx_v, sy_v)], fill=(255, 220, 70, int(220 * (1 - t * 0.6))), width=max(1, int(4 * (1 - t * 0.5))))
+
+            np.random.seed(42)
+            for _ in range(35):
+                h_rnd = np.random.uniform(20, 300)
+                t_rnd = h_rnd / 300.0
+                ang_rnd = math.radians(np.random.uniform(-30, 85))
+                dist_rnd = np.random.uniform(20, 40 + t_rnd * 220)
+                u_pt = uc12 + math.cos(ang_rnd) * dist_rnd * 0.8
+                v_pt = vc12 - math.sin(ang_rnd) * dist_rnd * 0.5
+                px, py, _ = project_pt(u_pt, v_pt, h=h_rnd)
+                p_sz = np.random.randint(4, 9)
+                vdraw.ellipse([px - p_sz, py - p_sz, px + p_sz, py + p_sz], fill=(255, 245, 150, 245))
+
+            v_blur = vortex.filter(ImageFilter.GaussianBlur(7))
             canvas = Image.alpha_composite(canvas, v_blur)
             canvas = Image.alpha_composite(canvas, vortex)
 
         elif is_mars:
+            h_elev = 110
+            sx_fl, sy_fl, _ = project_pt(500, 250, h=0)
+            sx_pl, sy_pl, scale_p = project_pt(500, 250, h=h_elev)
+
+            sh = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            shdraw = ImageDraw.Draw(sh)
+            shdraw.ellipse([sx_fl - 90, sy_fl - 24, sx_fl + 90, sy_fl + 24], fill=(10, 5, 2, 170))
+            sh = sh.filter(ImageFilter.GaussianBlur(16))
+            canvas = Image.alpha_composite(canvas, sh)
+
+            mars_sz = int(200 * scale_p)
             mars_p = broll_dir / "fresh_planet_mars_hubble.jpg"
             if not mars_p.exists():
                 mars_p = broll_dir / "planet_mars.jpg"
-            if mars_p.exists():
-                mars_sp = _make_sphere(mars_p, 200, (255, 75, 20))
-                sh4 = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-                sh4_draw = ImageDraw.Draw(sh4)
-                sh4_draw.ellipse([cx1 - 90, cy1 + 75, cx1 + 90, cy1 + 115], fill=(10, 5, 2, 160))
-                sh4 = sh4.filter(ImageFilter.GaussianBlur(18))
-                canvas = Image.alpha_composite(canvas, sh4)
-                halo4 = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-                h4_draw = ImageDraw.Draw(halo4)
-                h4_draw.ellipse([cx1 - 120, cy1 - 120, cx1 + 120, cy1 + 120], fill=(255, 75, 20, 150))
-                halo4 = halo4.filter(ImageFilter.GaussianBlur(25))
-                canvas = Image.alpha_composite(canvas, halo4)
-                canvas.paste(mars_sp, (int(cx1 - 100), int(cy1 - 100)), mars_sp)
+            mars_sp = _make_3d_sphere(mars_p, mars_sz, (255, 75, 20))
+
+            halo = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            hdraw = ImageDraw.Draw(halo)
+            hdraw.ellipse([sx_pl - mars_sz // 2 - 25, sy_pl - mars_sz // 2 - 25, sx_pl + mars_sz // 2 + 25, sy_pl + mars_sz // 2 + 25], fill=(255, 70, 20, 160))
+            halo = halo.filter(ImageFilter.GaussianBlur(24))
+            canvas = Image.alpha_composite(canvas, halo)
+
+            canvas.paste(mars_sp, (int(sx_pl - mars_sz // 2), int(sy_pl - mars_sz // 2)), mars_sp)
 
         elif is_saturn:
-            sat_seamless_p = PROJECT_ROOT / "output" / "saturn_seamless.png"
-            if not sat_seamless_p.exists():
-                sat_raw_p = broll_dir / "3_shani_saturn.jpg"
-                if sat_raw_p.exists():
-                    sat_raw = Image.open(sat_raw_p).convert("RGB")
-                    w_r, h_r = sat_raw.size
-                    crop_sat = sat_raw.crop((0, int(h_r * 0.22), w_r, int(h_r * 0.72)))
-                    arr_sat = np.array(crop_sat.convert("RGBA"))
-                    r_s, g_s, b_s, a_s = arr_sat.T
-                    lum = 0.299 * r_s + 0.587 * g_s + 0.114 * b_s
-                    alpha_s = np.clip((lum - 12) * (255.0 / 30.0), 0, 255).astype(np.uint8)
-                    arr_sat[..., 3] = alpha_s.T
-                    sat_clean = Image.fromarray(arr_sat)
-                    cw_s, ch_s = sat_clean.size
-                    ell_mask = Image.new("L", (cw_s, ch_s), 0)
-                    edraw = ImageDraw.Draw(ell_mask)
-                    edraw.ellipse([10, 10, cw_s - 10, ch_s - 10], fill=255)
-                    ell_mask = ell_mask.filter(ImageFilter.GaussianBlur(15))
-                    sat_clean.putalpha(Image.fromarray(np.minimum(np.array(sat_clean.split()[-1]), np.array(ell_mask))))
-                    sat_clean.save(sat_seamless_p)
+            uc7, vc7 = get_uv_centroid(uv_polygons[7])
+            sx_fl, sy_fl, _ = project_pt(uc7, vc7, h=0)
+            sx_sat, sy_sat, scale_sat = project_pt(uc7, vc7, h=105)
 
-            if sat_seamless_p.exists():
-                sat_trans = Image.open(sat_seamless_p)
-                sat_w, sat_h = 260, int(260 * sat_trans.height / sat_trans.width)
+            sh = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            shdraw = ImageDraw.Draw(sh)
+            shdraw.ellipse([sx_fl - 110, sy_fl - 28, sx_fl + 110, sy_fl + 28], fill=(10, 5, 2, 180))
+            sh = sh.filter(ImageFilter.GaussianBlur(18))
+            canvas = Image.alpha_composite(canvas, sh)
+
+            sat_p = Path("output/saturn_3d_feathered.png")
+            if not sat_p.exists():
+                sat_p = Path("output/saturn_seamless.png")
+            if sat_p.exists():
+                sat_trans = Image.open(sat_p)
+                sat_w = int(270 * scale_sat)
+                sat_h = int(sat_w * sat_trans.height / sat_trans.width)
                 sat_resized = sat_trans.resize((sat_w, sat_h), Image.Resampling.LANCZOS)
-                sh5 = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-                sh5_draw = ImageDraw.Draw(sh5)
-                sh5_draw.ellipse([cx7 - 120, cy7 + 55, cx7 + 120, cy7 + 95], fill=(10, 5, 2, 170))
-                sh5 = sh5.filter(ImageFilter.GaussianBlur(20))
-                canvas = Image.alpha_composite(canvas, sh5)
-                canvas.paste(sat_resized, (int(cx7 - sat_w // 2), int(cy7 - sat_h // 2)), sat_resized)
+                canvas.paste(sat_resized, (int(sx_sat - sat_w // 2), int(sy_sat - sat_h // 2)), sat_resized)
 
-                beam_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-                bdraw = ImageDraw.Draw(beam_layer)
-                _draw_light_beam(bdraw, (cx7 + 45, cy7 - 20), (cx9 - 25, cy9 + 25), color=(255, 220, 50))
-                _draw_light_beam(bdraw, (cx7, cy7 - 65), (cx1, cy1 + 75), color=(255, 220, 50))
-                _draw_light_beam(bdraw, (cx7 - 45, cy7 - 20), (cx4 + 25, cy4 + 25), color=(255, 220, 50))
-                _draw_aspect_tag(bdraw, "3RD DRISHTI", ((cx7 + cx9) // 2 + 40, (cy7 + cy9) // 2))
-                _draw_aspect_tag(bdraw, "7TH DRISHTI", (x_mid, (cy7 + cy1) // 2 - 10))
-                _draw_aspect_tag(bdraw, "10TH DRISHTI", ((cx7 + cx4) // 2 - 40, (cy7 + cy4) // 2))
+            # 3D PARABOLIC ASPECT ARCS: Saturn (H7) -> H9 (3rd), H1 (7th), H4 (10th)
+            aspects = [
+                ("3RD DRISHTI", uv_polygons[9], 160),
+                ("7TH DRISHTI", uv_polygons[1], 190),
+                ("10TH DRISHTI", uv_polygons[4], 160),
+            ]
 
-                beam_blur = beam_layer.filter(ImageFilter.GaussianBlur(6))
-                canvas = Image.alpha_composite(canvas, beam_blur)
-                canvas = Image.alpha_composite(canvas, beam_layer)
+            beam_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            bdraw = ImageDraw.Draw(beam_layer)
+
+            for tag, target_poly, apex_h in aspects:
+                u_t, v_t = get_uv_centroid(target_poly)
+                tx, ty, _ = project_pt(u_t, v_t, h=0)
+
+                # 3D Impact Mandala / Shockwave Ring on target house floor
+                bdraw.ellipse([tx - 40, ty - 14, tx + 40, ty + 14], fill=(255, 215, 60, 110), outline=(255, 245, 140, 230), width=2)
+                bdraw.ellipse([tx - 65, ty - 22, tx + 65, ty + 22], outline=(255, 215, 60, 140), width=1)
+
+                steps = 32
+                arc_pts = []
+                for s in range(steps):
+                    t = s / float(steps - 1)
+                    u_curr = uc7 + t * (u_t - uc7)
+                    v_curr = vc7 + t * (v_t - vc7)
+                    h_curr = (1.0 - t) * 105 + t * 0.0 + 4.0 * apex_h * t * (1.0 - t)
+                    ax, ay, _ = project_pt(u_curr, v_curr, h=h_curr)
+                    arc_pts.append((ax, ay))
+
+                for idx in range(len(arc_pts) - 1):
+                    p_a, p_b = arc_pts[idx], arc_pts[idx + 1]
+                    bdraw.line([p_a, p_b], fill=(255, 190, 30, 150), width=8)
+                    bdraw.line([p_a, p_b], fill=(255, 250, 180, 245), width=3)
+
+                p_penultimate = arc_pts[-2]
+                angle = math.atan2(ty - p_penultimate[1], tx - p_penultimate[0])
+                tip_sz = 22
+                tip1 = (tx - tip_sz * math.cos(angle - math.pi / 6), ty - tip_sz * math.sin(angle - math.pi / 6))
+                tip2 = (tx - tip_sz * math.cos(angle + math.pi / 6), ty - tip_sz * math.sin(angle + math.pi / 6))
+                bdraw.polygon([(tx, ty), tip1, tip2], fill=(255, 245, 180, 255))
+
+                mid_pt = arc_pts[len(arc_pts) // 2]
+                tag_x, tag_y = mid_pt[0] + (35 if u_t >= uc7 else -35), mid_pt[1] - 15
+                bbox = bdraw.textbbox((0, 0), tag, font=font_badge)
+                tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+                px, py = int(tag_x - tw // 2), int(tag_y - th // 2)
+                bdraw.rounded_rectangle([px - 10, py - 4, px + tw + 10, py + th + 4], radius=6, fill=(15, 10, 22, 230), outline=(255, 215, 0, 200), width=1)
+                bdraw.text((px, py), tag, fill=(255, 235, 140), font=font_badge)
+
+            beam_blur = beam_layer.filter(ImageFilter.GaussianBlur(7))
+            canvas = Image.alpha_composite(canvas, beam_blur)
+            canvas = Image.alpha_composite(canvas, beam_layer)
 
         # 7. Final output persistence
         if output_path is None:
