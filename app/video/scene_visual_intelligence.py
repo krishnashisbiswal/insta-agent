@@ -336,51 +336,116 @@ class SceneVisualIntelligence:
         narration = spoken or on_screen or vis_desc or topic
         text_lower = f"{spoken} {on_screen} {vis_desc}".lower()
 
-        # Step 1: Detect Emotion dynamically
-        emotion, intensity = cls._detect_emotion(narration, text_lower, scene_idx, total_scenes)
-        emotion_dir = EMOTION_VISUAL_MAP.get(emotion, EMOTION_VISUAL_MAP["Hope"])
-
-        # Step 2: Determine Core Meaning & Visual Metaphor
-        meaning, concept, metaphor, subject, action, env = cls._derive_visual_metaphor(
+        # Step 1: Attempt LLM-based Scene Script Understanding via Gemini
+        ai_data = cls._analyze_scene_with_ai(
             narration=narration,
-            text_lower=text_lower,
-            emotion=emotion,
+            on_screen=on_screen,
             scene_idx=scene_idx,
             total_scenes=total_scenes,
             topic=topic,
-            tracker=tracker
+            prev_narration=prev_scene.get("spoken_line", "") if prev_scene else "",
+            next_narration=next_scene.get("spoken_line", "") if next_scene else "",
         )
 
-        # Step 3: Determine Visual Style matching content
-        visual_style = cls._determine_visual_style(text_lower, emotion, topic)
+        if ai_data:
+            raw_emotion = str(ai_data.get("emotion", "Hope"))
+            emotion = "Hope"
+            for valid_e in VALID_EMOTIONS:
+                if valid_e.lower() in raw_emotion.lower():
+                    emotion = valid_e
+                    break
 
-        # Step 4: Camera angle & composition enforcing diversity progression
-        camera_angle = tracker.get_recommended_angle(scene_idx, total_scenes)
-        composition = f"{camera_angle}, {emotion_dir['composition']}"
+            try:
+                intensity = float(ai_data.get("emotion_intensity", 0.85))
+            except (ValueError, TypeError):
+                intensity = 0.85
 
-        lighting = emotion_dir["lighting"]
-        palette = emotion_dir["color_palette"]
-        viewer_feeling = emotion_dir["viewer_feeling"]
-        posture = emotion_dir["posture"]
+            emotion_dir = EMOTION_VISUAL_MAP.get(emotion, EMOTION_VISUAL_MAP["Hope"])
+            meaning = str(ai_data.get("core_meaning") or f"Communicating the emotional essence of: {emotion}")
+            concept = str(ai_data.get("visual_concept") or "")
+            metaphor = str(ai_data.get("visual_metaphor") or concept)
+            subject = str(ai_data.get("subject") or "expressive protagonist")
+            action = str(ai_data.get("action") or "interacting meaningfully with surroundings")
+            env = str(ai_data.get("environment") or "atmospheric cinematic setting")
+            camera_angle = str(ai_data.get("camera_angle") or tracker.get_recommended_angle(scene_idx, total_scenes))
+            composition = str(ai_data.get("composition") or f"{camera_angle}, {emotion_dir['composition']}")
+            lighting = str(ai_data.get("lighting") or emotion_dir["lighting"])
+            palette = str(ai_data.get("color_palette") or emotion_dir["color_palette"])
+            viewer_feeling = str(ai_data.get("viewer_feeling") or emotion_dir["viewer_feeling"])
+            visual_style = str(ai_data.get("visual_style") or cls._determine_visual_style(text_lower, emotion, topic))
+            posture = emotion_dir.get("posture", "poised with quiet strength and grounded confidence")
+            prompt = str(ai_data.get("image_prompt") or "")
+            if not prompt or len(prompt) < 30:
+                prompt = cls._build_detailed_prompt(
+                    subject=subject,
+                    action=action,
+                    posture=posture,
+                    environment=env,
+                    emotion=emotion,
+                    lighting=lighting,
+                    composition=composition,
+                    color_palette=palette,
+                    visual_style=visual_style,
+                    metaphor=metaphor
+                )
+            elif "9:16 vertical" not in prompt:
+                prompt = f"cinematic photorealistic 9:16 vertical portrait composition, {prompt}"
 
-        # Step 5: Continuity notes from preceding and following scenes
-        prev_sub = prev_scene.get("spoken_line", "")[:40] if prev_scene else "Opening scene of narrative"
-        next_sub = next_scene.get("spoken_line", "")[:40] if next_scene else "Narrative resolution"
-        continuity_notes = f"Preceded by [{prev_sub}], leads toward [{next_sub}]. Maintain {visual_style} tone."
+            prev_sub = prev_scene.get("spoken_line", "")[:40] if prev_scene else "Opening scene of narrative"
+            next_sub = next_scene.get("spoken_line", "")[:40] if next_scene else "Narrative resolution"
+            continuity_notes = f"Preceded by [{prev_sub}], leads toward [{next_sub}]. Maintain {visual_style} tone."
 
-        # Step 6: Construct full, detailed 14-point image generation prompt
-        prompt = cls._build_detailed_prompt(
-            subject=subject,
-            action=action,
-            posture=posture,
-            environment=env,
-            emotion=emotion,
-            lighting=lighting,
-            composition=composition,
-            color_palette=palette,
-            visual_style=visual_style,
-            metaphor=metaphor
-        )
+            logger.info(
+                f"[SceneVisualIntelligence] Scene {scene_idx + 1}/{total_scenes} AI-planned: "
+                f"Subject='{subject[:50]}' | Emotion={emotion} | Concept='{concept[:60]}'"
+            )
+        else:
+            # Fallback to local semantic rules
+            # Step 1: Detect Emotion dynamically
+            emotion, intensity = cls._detect_emotion(narration, text_lower, scene_idx, total_scenes)
+            emotion_dir = EMOTION_VISUAL_MAP.get(emotion, EMOTION_VISUAL_MAP["Hope"])
+
+            # Step 2: Determine Core Meaning & Visual Metaphor
+            meaning, concept, metaphor, subject, action, env = cls._derive_visual_metaphor(
+                narration=narration,
+                text_lower=text_lower,
+                emotion=emotion,
+                scene_idx=scene_idx,
+                total_scenes=total_scenes,
+                topic=topic,
+                tracker=tracker
+            )
+
+            # Step 3: Determine Visual Style matching content
+            visual_style = cls._determine_visual_style(text_lower, emotion, topic)
+
+            # Step 4: Camera angle & composition enforcing diversity progression
+            camera_angle = tracker.get_recommended_angle(scene_idx, total_scenes)
+            composition = f"{camera_angle}, {emotion_dir['composition']}"
+
+            lighting = emotion_dir["lighting"]
+            palette = emotion_dir["color_palette"]
+            viewer_feeling = emotion_dir["viewer_feeling"]
+            posture = emotion_dir["posture"]
+
+            # Step 5: Continuity notes from preceding and following scenes
+            prev_sub = prev_scene.get("spoken_line", "")[:40] if prev_scene else "Opening scene of narrative"
+            next_sub = next_scene.get("spoken_line", "")[:40] if next_scene else "Narrative resolution"
+            continuity_notes = f"Preceded by [{prev_sub}], leads toward [{next_sub}]. Maintain {visual_style} tone."
+
+            # Step 6: Construct full, detailed 14-point image generation prompt
+            prompt = cls._build_detailed_prompt(
+                subject=subject,
+                action=action,
+                posture=posture,
+                environment=env,
+                emotion=emotion,
+                lighting=lighting,
+                composition=composition,
+                color_palette=palette,
+                visual_style=visual_style,
+                metaphor=metaphor
+            )
 
         spec = SceneVisualSpecification(
             scene_id=scene_idx + 1,
@@ -406,6 +471,70 @@ class SceneVisualIntelligence:
 
         tracker.record_scene(spec)
         return spec
+
+    @classmethod
+    def _analyze_scene_with_ai(
+        cls,
+        narration: str,
+        on_screen: str,
+        scene_idx: int,
+        total_scenes: int,
+        topic: str = "",
+        prev_narration: str = "",
+        next_narration: str = "",
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Uses Gemini LLM to interpret scene script narration in context and generate
+        a 100% script-faithful, emotion-aware visual concept, subject, action, and detailed prompt.
+        """
+        try:
+            from app.agents.gemini_client import generate_text, parse_json_response
+
+            prompt = f"""You are an elite cinematic director for high-retention vertical 9:16 Instagram Reels.
+Analyze this exact scene script narration and create a script-driven visual specification.
+
+Reel Context:
+Topic: "{topic}"
+Scene {scene_idx + 1} of {total_scenes}:
+Spoken Narration: "{narration}"
+On-screen text: "{on_screen}"
+Previous scene context: "{prev_narration}"
+Next scene context: "{next_narration}"
+
+STRICT VISUAL DIRECTION RULES:
+1. SCRIPT CONTEXT IS THE ABSOLUTE SOURCE OF TRUTH: The visual must directly illustrate or evoke the exact situation, emotion, object, or action described in the spoken narration.
+2. If the scene describes waking up at 3 AM with insomnia/restlessness, depict a person awake in bed in a dark moody bedroom looking at the clock.
+3. If the scene describes an anxious client consulting for guidance, depict a cinematic, emotionally expressive person in a warm study.
+4. If the scene describes a specific sacred or physical object (e.g. authentic 5-mukhi Nepali Rudraksha bead, pure copper water vessel, raw golden pyrite), depict a photorealistic macro hero shot of that exact item.
+5. If the scene describes energy protection / aura / bio-energy, depict a peaceful person in soft meditation with a subtle, harmonic golden light boundary.
+6. NO UNRELATED HARDCODED VISUALS: Never show horoscope charts, kundli grids, zodiac wheels, floating planets, or meditating silhouettes UNLESS the spoken narration explicitly tells the audience to look at a horoscope chart or astronomy.
+
+Return ONLY a valid JSON object with the following fields:
+{{
+  "core_meaning": "Concise summary of what this scene communicates",
+  "emotion": "Dominant emotion from: Fear, Anxiety, Loneliness, Sadness, Confusion, Frustration, Betrayal, Hope, Curiosity, Mystery, Confidence, Peace, Relief, Empowerment, Awe, Devotion, Joy, Urgency, Realization, Transformation",
+  "emotion_intensity": 0.85,
+  "viewer_feeling": "What the viewer should feel",
+  "visual_concept": "Specific visual idea matching this narration",
+  "visual_metaphor": "Metaphor if appropriate, or literal visual",
+  "subject": "Primary subject of the scene",
+  "action": "What the subject is doing",
+  "environment": "Atmospheric physical setting",
+  "composition": "Cinematic framing (e.g. extreme macro close-up, dramatic medium shot)",
+  "lighting": "Lighting direction and quality matching the mood",
+  "color_palette": "3-4 cohesive color tones",
+  "camera_angle": "Camera perspective",
+  "visual_style": "Cinematic photorealism, Documentary realism, or Ethereal spiritual realism",
+  "image_prompt": "Complete vertical 9:16 prompt describing subject, action, lighting, environment, 35mm lens, photorealistic textures, no text overlays, no watermarks, no logos"
+}}"""
+
+            res = generate_text(prompt)
+            data = parse_json_response(res)
+            if data and isinstance(data, dict) and data.get("subject") and data.get("image_prompt"):
+                return data
+        except Exception as e:
+            logger.debug(f"[SceneVisualIntelligence] AI scene analysis fallback to semantic rules: {e}")
+        return None
 
     @classmethod
     def _detect_emotion(
@@ -578,10 +707,55 @@ class SceneVisualIntelligence:
                 "a scholarly dimly-lit astrological study with warm candlelight, brass instruments, and antique manuscripts"
             )
 
-        # Specific Astrological: Dynamic Kundli House analysis & chart mapping
+        # Specific Sacred Item: Rudraksha & sacred beads
+        if any(w in text_lower for w in ["rudraksha", "रुद्राक्ष", "mukhi", "पंचमुखी", "पांच मुखी", "5 mukhi"]):
+            return (
+                "The sacred energetic properties and organic structure of authentic Rudraksha beads",
+                "An extreme macro close-up of an authentic natural Nepali 5-mukhi Rudraksha bead resting on wet dark slate stone, delicate water droplets highlighting organic deep mukhi grooves under warm golden temple light",
+                "The natural tactile sacred geometry of the divine seed",
+                "An authentic natural Nepali 5-mukhi Rudraksha bead with deep organic mukhi contours",
+                "resting serenely on textured dark slate stone with delicate droplets of sacred water reflecting warm temple candlelight",
+                "a quiet temple altar sanctuary with soft burning brass diyas and warm golden shadows"
+            )
+
+        # Specific Energetic: Bio-Energy Field & Aura Protection
+        if any(w in text_lower for w in ["bio-energy", "bio energy", "बायो-एनर्जी", "aura", "ऊर्जा क्षेत्र", "energy shield", "shield", "नकारात्मक ऊर्जा"]):
+            return (
+                "Harmonizing and shielding the human bio-energy field from external disharmony",
+                "A serene individual centered in quiet mindfulness, surrounded by a subtle, luminous golden-cyan harmonic energy boundary that deflects faint dark chaotic dust",
+                "The impenetrable sanctuary of a balanced personal aura",
+                "A peaceful meditating individual seated in poised stillness",
+                "breathing steadily as a soft, translucent harmonic field of warm golden light pulses gently around their physical form",
+                "a tranquil minimalist meditation space with subtle dawn light filtering through sheer curtains"
+            )
+
+        # Specific Sleep: Nocturnal restlessness & 3 AM awakening
+        if any(w in text_lower for w in ["sleep", "नींद", "3 am", "3 बजे", "अनिद्रा", "insomnia", "रात को"]):
+            return (
+                "Breaking the cycle of 3 AM nocturnal anxiety and restoring deep restorative sleep",
+                "A person sitting up on the edge of a bed in a dark moody bedroom, looking thoughtfully toward a warm amber bedside lamp, tension visibly melting away into calm stillness",
+                "Finding calm stillness in the deep quiet hours of the night",
+                "A thoughtful person sitting on the edge of a bed in a peaceful dimly lit room",
+                "pausing with relaxed shoulders and serene expression, gazing softly at warm bedside light",
+                "a quiet contemporary bedroom bathed in cool midnight shadows and a gentle warm bedside lamp glow"
+            )
+
+        # Specific Consultation: Client seeking guidance
+        if any(w in text_lower for w in ["client", "क्लाइंट", "सत्र", "consultation", "परामर्श", "केस स्टडी", "session"]):
+            return (
+                "A meaningful one-on-one consultation examining life challenges and energetic remedies",
+                "An empathetic guide and an expressive client seated across an antique dark wooden consultation table in a warm study, engaged in thoughtful, supportive dialogue",
+                "The compassionate guidance illuminating personal confusion",
+                "Two individuals seated across an antique consultation desk in meaningful conversation",
+                "one person gesturing with supportive wisdom while the other listens with deep relieved realization",
+                "a scholarly study lined with warm wooden shelves, soft amber reading lamp, and tranquil atmosphere"
+            )
+
+        # Specific Astrological: Dynamic Kundli House analysis & chart mapping (Strict: only when explicitly discussing horoscope charts)
         from app.video.kundli_chart_generator import KundliChartGenerator, HOUSE_METADATA
         house_num, planet_name = KundliChartGenerator.extract_house_and_planet(text_lower)
-        if house_num and house_num in HOUSE_METADATA:
+        is_explicit_chart = any(k in text_lower for k in ["kundli", "कुंडली", "birth chart", "natal chart", "horoscope chart", "जन्मपत्रिका", "जन्म कुंडली"])
+        if is_explicit_chart and house_num and house_num in HOUSE_METADATA:
             meta = HOUSE_METADATA[house_num]
             planet_clause = f" with {planet_name} placement" if planet_name else ""
             return (
@@ -592,7 +766,7 @@ class SceneVisualIntelligence:
                 f"displaying intricate Sanskrit planetary glyphs and fine geometric house divisions with radiant golden aura on {meta['name_en']}",
                 "a quiet astrological scholar sanctuary bathed in warm candlelight with brass astrolabe and palm-leaf manuscripts"
             )
-        elif any(w in text_lower for w in ["kundli", "कुंडली", "birth chart", "जन्मपत्रिका", "horoscope chart", "house", "भाव"]):
+        elif is_explicit_chart:
             return (
                 "Examining the overall geometry and planetary alignments in an authentic Vedic Kundli birth chart",
                 "A complete North Indian diamond Vedic Kundli birth chart drawn in gold leaf on dark celestial parchment, glowing with sacred geometry",

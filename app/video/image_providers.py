@@ -138,7 +138,10 @@ class BaseImageProvider(abc.ABC):
                 return raw_bytes
             except ProviderRateLimitError as rle:
                 last_error = rle
-                backoff = 2.0 * (2 ** (attempt - 1)) + random.uniform(0.5, 1.5)
+                suggested_wait = getattr(rle, "retry_after", None)
+                backoff = float(suggested_wait) if suggested_wait and suggested_wait > 0 else (2.0 * (2 ** (attempt - 1)) + random.uniform(0.5, 1.5))
+                # Cap sleep at 15s to avoid freezing execution
+                backoff = min(backoff, 15.0)
                 logger.warning(f"[{self.name}] Rate limit encountered: {rle}. Sleeping {backoff:.1f}s before retry...")
                 time.sleep(backoff)
             except ProviderTimeoutError as te:
@@ -182,17 +185,17 @@ class PollinationsImageProvider(BaseImageProvider):
         **kwargs: Any,
     ) -> bytes:
         gen_seed = seed if seed is not None else random.randint(100000, 99999999)
-        encoded_prompt = urllib.parse.quote(prompt.strip())
-        model_name = self.model or ""
-        # Pollinations made 'flux' a paid tier (HTTP 402); default/turbo models are free
-        model_param = (
-            f"&model={model_name}"
-            if model_name and model_name.lower() not in ("flux", "default", "none")
-            else ""
-        )
+        # Clean and optimize prompt for Pollinations
+        clean_prompt = prompt.strip()
+        if "Negative constraints:" in clean_prompt:
+            clean_prompt = clean_prompt.split("Negative constraints:")[0].strip().rstrip(",.")
+        if len(clean_prompt) > 450:
+            clean_prompt = clean_prompt[:450].rsplit(" ", 1)[0]
+
+        encoded_prompt = urllib.parse.quote(clean_prompt)
         url = (
-            f"https://image.pollinations.ai/prompt/{encoded_prompt}"
-            f"?width={width}&height={height}&nologo=true&seed={gen_seed}{model_param}"
+            f"https://pollinations.ai/prompt/{encoded_prompt}"
+            f"?width={width}&height={height}&nologo=true&seed={gen_seed}"
         )
 
         req = urllib.request.Request(
@@ -212,8 +215,12 @@ class PollinationsImageProvider(BaseImageProvider):
                     raise ProviderResponseError(f"Pollinations HTTP error: status {status}")
                 return resp.read()
         except urllib.error.HTTPError as he:
-            if he.code == 429:
-                raise ProviderRateLimitError(f"Pollinations API rate limit reached (HTTP {he.code}).")
+            if he.code in (402, 429):
+                retry_header = he.headers.get("Retry-After", "")
+                wait_sec = int(retry_header) if retry_header.isdigit() else 8
+                rle = ProviderRateLimitError(f"Pollinations rate limit (HTTP {he.code}). Retry-After: {wait_sec}s")
+                rle.retry_after = wait_sec
+                raise rle
             raise ProviderResponseError(f"Pollinations HTTP error {he.code}: {he.reason}")
         except urllib.error.URLError as ue:
             if "timed out" in str(ue).lower():

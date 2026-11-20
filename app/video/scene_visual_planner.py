@@ -194,7 +194,7 @@ class SceneVisualPlanner:
             "name": "ancient authentic Vedic astrological Kundli birth chart",
             "keywords": [
                 "kundli", "कुंडली", "birth chart", "जन्मपत्रिका", "horoscope chart",
-                "astrology chart", "natal chart", "10th house", "5th house", "भाव", "दशम भाव", "पंचम भाव"
+                "astrology chart", "natal chart", "जन्म कुंडली"
             ],
             "objects": ["traditional diamond-grid Kundli chart on aged parchment", "handwritten Sanskrit planetary symbols"],
             "exclusions": ["modern computer screen", "unrelated gemstones", "food", "insects", "modern gadgets"],
@@ -495,8 +495,8 @@ class SceneVisualPlanner:
         vis_desc = scene_dict.get("visual_description", "").strip()
         est_duration = float(scene_dict.get("estimated_seconds", 4.0))
 
-        # Check concrete specific entity match for backward compatibility
-        scene_text = f"{spoken} {on_screen} {vis_desc}".strip()
+        # Check concrete specific entity match based strictly on narration & on-screen text
+        scene_text = f"{spoken} {on_screen}".strip()
         matched_scene = cls.detect_scene_entity(scene_text)
         matched_topic = cls.detect_scene_entity(topic)
 
@@ -537,20 +537,21 @@ class SceneVisualPlanner:
                 if obj not in forbidden:
                     forbidden.append(obj)
 
-        # Determine subject, action, environment from spec or matched entity
-        primary_subject = spec.subject
-        action = spec.action
-        environment = spec.environment
+        # Determine subject, action, environment from spec (SceneVisualIntelligence is authoritative)
+        primary_subject = spec.subject or (matched_scene[1]["name"] if matched_scene else "expressive protagonist")
+        action = spec.action or (matched_scene[1]["default_action"] if matched_scene else "interacting with environment")
+        environment = spec.environment or (matched_scene[1]["default_setting"] if matched_scene else "cinematic setting")
         req_objs = [primary_subject]
 
-        if matched_scene:
+        # Only enhance with specific entity objects if spec is generic
+        if not spec.subject and matched_scene:
             primary_subject = matched_scene[1]["name"]
             action = matched_scene[1]["default_action"]
             environment = matched_scene[1]["default_setting"]
             req_objs = copy.deepcopy(matched_scene[1].get("objects", [primary_subject]))
 
-            # Enhance kundli_chart with dynamic house and planet intelligence
-            if matched_scene[0] == "kundli_chart":
+            # Enhance kundli_chart with dynamic house and planet intelligence only if explicitly a chart
+            if matched_scene[0] == "kundli_chart" and any(k in scene_text.lower() for k in ["kundli", "कुंडली", "birth chart", "जन्मपत्रिका"]):
                 from app.video.kundli_chart_generator import KundliChartGenerator, HOUSE_METADATA
                 h_num, p_name = KundliChartGenerator.extract_house_and_planet(scene_text)
                 if h_num and h_num in HOUSE_METADATA:
