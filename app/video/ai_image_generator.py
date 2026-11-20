@@ -137,10 +137,11 @@ class AIImageGenerator:
 
         fallback_provider: Optional[BaseImageProvider] = None
         if not is_testing and IMAGE_FALLBACK_PROVIDER and IMAGE_FALLBACK_PROVIDER != active_provider_name:
-            try:
-                fallback_provider = get_image_provider(IMAGE_FALLBACK_PROVIDER)
-            except Exception as e:
-                logger.debug(f"Fallback provider init notice: {e}")
+            if IMAGE_FALLBACK_PROVIDER.lower() not in ("mock", "none", ""):
+                try:
+                    fallback_provider = get_image_provider(IMAGE_FALLBACK_PROVIDER)
+                except Exception as e:
+                    logger.debug(f"Fallback provider init notice: {e}")
 
         # 4. Execute generation loop with retries and alternate seeds
         last_error: Optional[Exception] = None

@@ -139,10 +139,8 @@ class BaseImageProvider(abc.ABC):
             except ProviderRateLimitError as rle:
                 last_error = rle
                 suggested_wait = getattr(rle, "retry_after", None)
-                backoff = float(suggested_wait) if suggested_wait and suggested_wait > 0 else (2.0 * (2 ** (attempt - 1)) + random.uniform(0.5, 1.5))
-                # Cap sleep at 15s to avoid freezing execution
-                backoff = min(backoff, 15.0)
-                logger.warning(f"[{self.name}] Rate limit encountered: {rle}. Sleeping {backoff:.1f}s before retry...")
+                backoff = float(suggested_wait) + 2.0 if suggested_wait and suggested_wait > 0 else (5.0 * attempt)
+                logger.warning(f"[{self.name}] Rate limit encountered: {rle}. Waiting {backoff:.1f}s before retry (attempt {attempt}/{self.max_retries})...")
                 time.sleep(backoff)
             except ProviderTimeoutError as te:
                 last_error = te
@@ -194,7 +192,7 @@ class PollinationsImageProvider(BaseImageProvider):
 
         encoded_prompt = urllib.parse.quote(clean_prompt)
         url = (
-            f"https://pollinations.ai/prompt/{encoded_prompt}"
+            f"https://image.pollinations.ai/prompt/{encoded_prompt}"
             f"?width={width}&height={height}&nologo=true&seed={gen_seed}"
         )
 
@@ -217,7 +215,7 @@ class PollinationsImageProvider(BaseImageProvider):
         except urllib.error.HTTPError as he:
             if he.code in (402, 429):
                 retry_header = he.headers.get("Retry-After", "")
-                wait_sec = int(retry_header) if retry_header.isdigit() else 8
+                wait_sec = int(retry_header) if retry_header.isdigit() else 35
                 rle = ProviderRateLimitError(f"Pollinations rate limit (HTTP {he.code}). Retry-After: {wait_sec}s")
                 rle.retry_after = wait_sec
                 raise rle
@@ -406,24 +404,21 @@ class MockImageProvider(BaseImageProvider):
         gen_seed = seed if seed is not None else int(hashlib.md5(prompt.encode()).hexdigest()[:8], 16)
         rng = random.Random(gen_seed)
 
-        r_base = rng.randint(20, 180)
-        g_base = rng.randint(20, 180)
-        b_base = rng.randint(30, 200)
+        # Clean, dark cinematic vertical atmospheric background (never garish color blocks)
+        r_base = rng.randint(15, 30)
+        g_base = rng.randint(18, 35)
+        b_base = rng.randint(25, 45)
 
         img = Image.new("RGB", (width, height), (r_base, g_base, b_base))
         draw = ImageDraw.Draw(img)
 
-        # Draw distinct pseudo-random spatial color blocks so spatial color embedding, dHash, and pHash are completely unique across seeds
-        for row in range(8):
-            for col in range(8):
-                bx0 = int((width / 8) * col)
-                by0 = int((height / 8) * row)
-                bx1 = int((width / 8) * (col + 1))
-                by1 = int((height / 8) * (row + 1))
-                cell_r = rng.randint(15, 240)
-                cell_g = rng.randint(15, 240)
-                cell_b = rng.randint(15, 240)
-                draw.rectangle([bx0, by0, bx1, by1], fill=(cell_r, cell_g, cell_b))
+        # Subtle dark vertical gradient
+        for y in range(0, height, 8):
+            factor = y / height
+            r = int(r_base + factor * 20)
+            g = int(g_base + factor * 25)
+            b = int(b_base + factor * 35)
+            draw.rectangle([0, y, width, y + 8], fill=(r, g, b))
 
         # Draw decorative geometric elements to ensure distinct texture, variance, and visual identity
         margin = 60
