@@ -73,14 +73,19 @@ def optimize_caption(
     cta_spoken = scenes[-1].get("spoken_line", "") if scenes else ""
     warning_spoken = scenes[5].get("spoken_line", "") if len(scenes) >= 6 else ""
 
-    is_hindi = language.lower() in ["hindi", "hi"]
+    lang_lower = (language or "").lower()
+    is_english = lang_lower in ["english", "en"]
 
-    language_instruction = (
-        "MANDATORY LANGUAGE: WRITE IN ENGAGING, AUTHENTIC HINDI (with clean English keywords in parentheses where helpful, e.g. 'मंगल (Mars)', 'लग्न भाव', 'कुंडली'). "
-        "DO NOT write a generic English essay when the video is in Hindi! Both audio and caption must feel unified."
-        if is_hindi
-        else "MANDATORY LANGUAGE: Write in elegant, fluent English directly elaborating the video's exact spoken points."
-    )
+    if not is_english:
+        # Default for Indian Instagram audience: Natural, conversational Roman script Hinglish!
+        language_instruction = (
+            "MANDATORY LANGUAGE: WRITE IN MODERN, NATURAL HINGLISH IN ROMAN SCRIPT (e.g. "
+            "'12 saal ke astrology experience mein humne dekha hai ki Kundli ke ye 5 secret placements aapki life badal sakte hain...').\n"
+            "STRICT BAN: DO NOT WRITE IN DEVANAGARI HINDI SCRIPT FOR THE CAPTION! Instagram users in India expect and prefer clean, modern Roman script Hinglish for captions.\n"
+            "Combine conversational Roman Hindi with English keywords (Career, Wealth, Growth, Success, Energy, Kundli Analysis, Consultation, Save, Comment, DM)."
+        )
+    else:
+        language_instruction = "MANDATORY LANGUAGE: Write in elegant, fluent English directly elaborating the video's exact spoken points."
 
     prompt = f"""
 You are the master Instagram copywriter for an authentic Vedic Astrology & Gemstone Energy channel (@neodivinestore.in).

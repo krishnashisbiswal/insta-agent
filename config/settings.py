@@ -78,7 +78,7 @@ GRAPH_API_BASE_URL = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
 # ---------------------------------------------------------------------------
 AUTO_POST_INTERVAL_HOURS = int(os.getenv("AUTO_POST_INTERVAL_HOURS", "12"))
 CONTENT_NICHE = os.getenv("CONTENT_NICHE", "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion").strip()
-CONTENT_LANGUAGE = os.getenv("CONTENT_LANGUAGE", "Hindi mixed with English").strip()
+CONTENT_LANGUAGE = os.getenv("CONTENT_LANGUAGE", "Hinglish").strip()
 CONTENT_THEME = os.getenv("CONTENT_THEME", "3d_space").strip()
 PUBLISHED_LOG_FILE = STORAGE_DIR / "published_history.json"
 CONTENT_QUEUE_FILE = STORAGE_DIR / "content_queue.json"

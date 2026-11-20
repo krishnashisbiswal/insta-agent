@@ -390,16 +390,16 @@ class DailyAlgorithmPublisher:
         smart_lang, smart_voice, script_mode = determine_smart_voice(topic=topic, voice_mode=voice_mode, gender=gender)
 
         if voice_engine in ["sarvam", "sarvam_ai"] and sarvam_key:
-            active_lang = "Hindi" if voice_mode in ["hindi", "hi", "smart"] else "English"
+            active_lang = "Hinglish" if voice_mode in ["hindi", "hi", "smart", "hinglish"] else "English"
             active_voice = voice or f"sarvam:{sarvam_speaker}"
-        elif voice_mode in ["hindi", "hi"]:
-            active_lang = "Hindi"
+        elif voice_mode in ["hindi", "hi", "hinglish"]:
+            active_lang = "Hinglish"
             active_voice = "hi-IN-MadhurNeural" if gender == "male" else "hi-IN-SwaraNeural"
         elif voice_mode in ["english", "en"]:
             active_lang = "English"
             active_voice = "en-IN-PrabhatNeural" if gender == "male" else "en-IN-NeerjaNeural"
         else:
-            active_lang = smart_lang
+            active_lang = "Hinglish" if "hindi" in smart_lang.lower() or "hinglish" in smart_lang.lower() else smart_lang
             active_voice = voice or smart_voice
 
         print(f" -> Voice Engine / Voice: {voice_engine.upper()} -> {active_lang} ({active_voice})")

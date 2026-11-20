@@ -66,7 +66,7 @@ def generate_hooks(
         for item in formulas[:12]
     ]
 
-    is_hindi = "hindi" in language.lower() or "hi" in language.lower()
+    is_hindi = "hindi" in language.lower() or "hi" in language.lower() or "hinglish" in language.lower()
 
     if is_hindi:
         example_json = """{
@@ -74,30 +74,33 @@ def generate_hooks(
     {
       "id": "crystal_benefits",
       "name": "Natural Crystal Benefits",
-      "spoken": "क्या आप जानते हैं कि कार्यस्थल पर पायराइट क्रिस्टल रखने से मानसिक एकाग्रता और सकारात्मक ऊर्जा कैसे बढ़ती है?",
+      "spoken": "क्या आप जानते हैं कि अपने वर्क डेस्क पर पायराइट रखने से आपका फोकस और मनी अट्रैक्शन कैसे बढ़ता है?",
       "on_screen": "PYRITE CRYSTAL BENEFITS",
       "why_it_works": "Inspiring and practical benefit discovery for focus and prosperity"
     },
     {
       "id": "rudraksha_science",
       "name": "Sacred Rudraksha Science",
-      "spoken": "प्राकृतिक पंचमुखी रुद्राक्ष आपके तंत्रिका तंत्र और मानसिक तनाव को शांत करने में कैसे मदद करता है?",
+      "spoken": "नेचुरल पंचमुखी रुद्राक्ष आपके नर्वस सिस्टम को शांत करके डीप स्लीप में कैसे मदद करता है?",
       "on_screen": "5 MUKHI RUDRAKSHA SCIENCE",
       "why_it_works": "Ancient Vedic spiritual science backed by calm bio-electromagnetic harmony"
     },
     {
       "id": "auric_protection",
       "name": "Empowering Energy Shield",
-      "spoken": "यदि आप निरंतर मानसिक थकान महसूस करते हैं, तो ब्लैक टूमलाइन और अमेथिस्ट आपके आभामंडल को कैसे शुद्ध करते हैं?",
+      "spoken": "अगर आप हर रोज़ मेंटल थकावट और नेगेटिव वाइब्स फील करते हैं, तो अपनी एनर्जी को कैसे प्रोटेक्ट करें?",
       "on_screen": "SHIELD YOUR ENERGY",
       "why_it_works": "High-value self-care and energetic protection wisdom"
     }
   ]
 }"""
         lang_rule = """
-LANGUAGE & PRONUNCIATION MANDATE (100% PURE DEVANAGARI HINDI FOR SPOKEN):
-- "spoken": MUST be written strictly in pure, natural, respectful HINDI in Devanagari script (हिंदी लिपि).
-  DO NOT write spoken lines in Roman English or Hinglish! Pure Devanagari guarantees native Indian neural voice models pronounce every Vedic Sanskrit term (शनि, राहु, केतु, नीलम, पन्ना, कुंडली, उपाय) with 100% human-grade studio perfection.
+LANGUAGE & PRONUNCIATION MANDATE (NATURAL CONVERSATIONAL HINGLISH IN DEVANAGARI):
+- "spoken": Write in NATURAL, MODERN CONVERSATIONAL HINGLISH using Devanagari script so neural Indian voice models (Sarvam) pronounce every word smoothly.
+  * Use everyday conversational words that modern people actually speak on social media reels:
+    "करियर", "लाइफ", "स्ट्रेस", "सक्सेस", "फोकस", "नेगेटिव एनर्जी", "क्लाइंट", "ग्रोथ", "ब्रेकथ्रू", "रिजल्ट्स", "इन्वेस्टमेंट", "डिसीजन".
+  * STRICT BAN ON ARCHAIC FORMAL HINDI: DO NOT use stiff, archaic literary textbook Hindi (avoid "अथक परिश्रम", "पदोन्नति", "अप्रत्याशित", "संचित धन", "व्यय", "जातक", "प्रतिफल")! That sounds outdated and weird on Reels.
+  * TONE: Modern, conversational, confident, and engaging.
 - "on_screen": MUST be written in clean, bold ALL CAPS plain ASCII ENGLISH (3 to 6 words).
 
 ASTROLOGER IDENTITY & DIVERSE CONSULTATION CASE STUDY MANDATE:
@@ -168,11 +171,21 @@ Return ONLY valid JSON in this exact structure:
 """
 
     data = generate_json(prompt)
-    hooks = data.get("hooks", [])
+    if isinstance(data, list):
+        raw_hooks = data
+    elif isinstance(data, dict):
+        raw_hooks = data.get("hooks", [])
+    else:
+        raw_hooks = []
 
-    if len(hooks) != 3:
-        if len(hooks) > 0:
-            return hooks
+    hooks = []
+    for h in raw_hooks:
+        if isinstance(h, list):
+            hooks.extend([item for item in h if isinstance(item, dict)])
+        elif isinstance(h, dict):
+            hooks.append(h)
+
+    if not hooks:
         raise ValueError("Gemini did not return valid hooks.")
 
     # Validate on_screen word count (trim if needed) and sanitize against remedies/mantras
@@ -216,6 +229,8 @@ def score_hooks(hooks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     ranked = []
     for item in hooks:
+        if not isinstance(item, dict):
+            continue
         text_to_score = item.get("spoken", "")
         is_devanagari = bool(re.search(r"[\u0900-\u097F]", text_to_score))
         if is_devanagari:
@@ -951,7 +966,7 @@ INSTAGRAM ALGORITHM SEO & EXPLORER SEARCH INDEXING:
 
     # Niche-specific instructions
     is_astrology = profile.niche_id in ("astrology_vedic", "astrology")
-    is_hindi = "hindi" in language.lower() or "hi" in language.lower()
+    is_hindi = "hindi" in language.lower() or "hi" in language.lower() or "hinglish" in language.lower()
 
     if is_hindi:
         # Dynamically determine point count from topic (defaults to 5 points for viral retention)
@@ -964,10 +979,12 @@ INSTAGRAM ALGORITHM SEO & EXPLORER SEARCH INDEXING:
         total_scenes_target = num_points + 2
 
         lang_rule_section = f"""
-CRITICAL LANGUAGE & PRONUNCIATION MANDATE (100% PURE DEVANAGARI HINDI FOR VOICE):
-- ALL SCENES "spoken_line": MUST be written strictly in 100% pure, natural, respectful HINDI in Devanagari script (हिंदी लिपि).
-  DO NOT write spoken lines in Roman English or Hinglish! Pure Devanagari guarantees native Indian neural voice models pronounce every Vedic term with 100% sacred, human-grade perfection.
-- ALL SCENES "on_screen_text": Write in clean, bold ALL CAPS plain ASCII ENGLISH (2-4 words, e.g. "PYRITE ON WORK DESK", "CALMS NERVOUS SYSTEM", "SHIELDS NEGATIVE EMF").
+CRITICAL LANGUAGE & PRONUNCIATION MANDATE (NATURAL CONVERSATIONAL HINGLISH IN DEVANAGARI):
+- ALL SCENES "spoken_line": Write in NATURAL, MODERN CONVERSATIONAL HINGLISH using Devanagari script for flawless Indian neural voice pronunciation (Sarvam AI).
+  * Use everyday relatable words that modern people actually speak on social media:
+    Use "करियर" (not "आजीविका" or "कर्मेश"), "स्ट्रेस / टेंशन" (not "मानसिक संताप"), "ग्रोथ / सक्सेस" (not "पदोन्नति"), "क्लाइंट" (not "जातक"), "एनर्जी" (not "ऊर्जा पुंज"), "रिजल्ट" (not "प्रतिफल"), "मेहनत" (not "अथक परिश्रम").
+  * STRICT BAN ON PURE / ARCHAIC FORMAL HINDI: Stiff textbook Sanskritized Hindi feels completely odd and unnatural to modern viewers. Keep it natural, conversational, and relatable Hinglish!
+- ALL SCENES "on_screen_text": Write in clean, bold ALL CAPS plain ASCII ENGLISH (2-4 words, e.g. "CAREER BREAKTHROUGH", "CALMS NERVOUS SYSTEM", "SHIELDS NEGATIVE ENERGY").
   * STRICT BAN: DO NOT prefix with "1.", "2.", "3." or "1 OF 5". Keep on-screen text punchy, curious, and immediate!
 - ALL SCENES "badge": High-curiosity interactive badge pill (e.g. "WEALTH MAGNET", "SECRET FREQUENCY", "AURA SHIELD", "INSTANT CALM", "BIO-ENERGY CODE", "DEEP FOCUS").
   * STRICT BAN: NEVER write "1 OF 5", "2 OF 5", "BENEFIT 1 OF 5", or "1 OF 3". The audience hates robotic "1 OF X" text!
