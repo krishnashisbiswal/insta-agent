@@ -14,7 +14,12 @@ astrological Kundli birth charts with dynamic house highlighting and planet mark
 from __future__ import annotations
 
 import hashlib
-import cv2
+try:
+    import cv2
+    HAS_CV2 = True
+except ImportError:
+    cv2 = None
+    HAS_CV2 = False
 import logging
 import math
 import os
@@ -499,14 +504,36 @@ class KundliChartGenerator:
         # Authentic 3D perspective geometry
         src_quad = np.float32([[0, 0], [1000, 0], [1000, 1000], [0, 1000]])
         dst_quad = np.float32([[210, 560], [870, 560], [970, 1260], [110, 1260]])
-        M = cv2.getPerspectiveTransform(src_quad, dst_quad)
+
+        if HAS_CV2 and cv2 is not None:
+            M = cv2.getPerspectiveTransform(src_quad, dst_quad)
+        else:
+            A, B = [], []
+            for i in range(4):
+                x, y = src_quad[i][0], src_quad[i][1]
+                u, v = dst_quad[i][0], dst_quad[i][1]
+                A.append([x, y, 1, 0, 0, 0, -u * x, -u * y])
+                A.append([0, 0, 0, x, y, 1, -v * x, -v * y])
+                B.append(u)
+                B.append(v)
+            h_vec = np.linalg.solve(np.array(A, dtype=np.float64), np.array(B, dtype=np.float64))
+            M = np.array([
+                [h_vec[0], h_vec[1], h_vec[2]],
+                [h_vec[3], h_vec[4], h_vec[5]],
+                [h_vec[6], h_vec[7], 1.0]
+            ], dtype=np.float32)
 
         def project_pt(u: float, v: float, h: float = 0.0) -> Tuple[float, float, float]:
-            pt = np.array([[[u, v]]], dtype=np.float32)
-            proj = cv2.perspectiveTransform(pt, M)[0][0]
+            if HAS_CV2 and cv2 is not None:
+                pt = np.array([[[u, v]]], dtype=np.float32)
+                proj = cv2.perspectiveTransform(pt, M)[0][0]
+                sx, sy = float(proj[0]), float(proj[1])
+            else:
+                res = M @ np.array([u, v, 1.0], dtype=np.float64)
+                w_val = res[2] if abs(res[2]) > 1e-8 else 1e-8
+                sx, sy = float(res[0] / w_val), float(res[1] / w_val)
             depth_scale = 0.74 + (v / 1000.0) * 0.36
-            sx = float(proj[0])
-            sy = float(proj[1]) - (h * depth_scale)
+            sy = sy - (h * depth_scale)
             return sx, sy, float(depth_scale)
 
         def project_poly(pts_uv: List[Tuple[float, float]], h: float = 0.0) -> List[Tuple[float, float]]:

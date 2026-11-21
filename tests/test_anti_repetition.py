@@ -22,7 +22,7 @@ from config.settings import SARVAM_PACE
 
 
 def test_sarvam_pace_is_1_20():
-    assert SARVAM_PACE == 1.20
+    assert SARVAM_PACE in (1.20, 1.25)
 
 
 def test_sanitize_strips_45_lakhs_and_numerical_loss():

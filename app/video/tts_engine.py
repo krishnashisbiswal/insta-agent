@@ -75,7 +75,7 @@ async def generate_speech_async(
     text: str,
     output_path: Path,
     voice: Optional[str] = None,
-    rate: str = "-5%",
+    rate: str = "+25%",
     pitch: str = "+0Hz",
 ) -> Tuple[Path, float, List[Dict[str, Any]]]:
     """
@@ -170,12 +170,13 @@ def generate_sarvam_speech(
         language_code = "hi-IN" if detected in ["hindi", "hinglish"] else "en-IN"
 
     # Map requested persona to valid Sarvam Bulbul:v4-flash speaker keys
-    requested_sp = (speaker or os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER) or "arjun").lower()
+    requested_sp = (speaker or os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER) or "astrologer").lower()
     speaker_map = {
         "arjun": "ratan_hi_latenight_warm" if language_code == "hi-IN" else "girish_en_documentary",
         "arjun_hindi": "ratan_hi_latenight_warm",
         "arjun_english": "girish_en_documentary",
         "astrologer": "ratan_hi_latenight_warm",
+        "warm_astrologer": "ratan_hi_latenight_warm",
         "calm": "ratan_hi_latenight_warm",
         "gentle": "ratan_hi_latenight_warm",
         "ratan": "ratan_hi_latenight_warm",
@@ -257,13 +258,13 @@ def generate_speech(
     text: str,
     output_filename: Optional[str] = None,
     voice: Optional[str] = None,
-    rate: str = "+0%",
+    rate: str = "+25%",
     pitch: str = "+0Hz",
 ) -> Dict[str, Any]:
     """
-    Unified voice synthesizer with calm, gentle Vedic astrologer delivery:
-    1. Sarvam AI Indic Neural Voice (Arjun / Ratan Warm speaker) at calm, unhurried pace (1.00x)
-    2. Seamless fallback to Microsoft Edge-TTS Expressive Neural voice pack (rate=+0%, pitch=+0Hz)
+    Unified voice synthesizer with calm, warm Vedic astrologer delivery at 1.25x pace:
+    1. Sarvam AI Indic Neural Voice (Ratan Warm Astrologer speaker) at calm pace (1.25x)
+    2. Seamless fallback to Microsoft Edge-TTS Expressive Neural voice pack (rate=+25%, pitch=+0Hz)
     """
     clean_text = clean_speech_text(text)
     if not clean_text or not clean_text.strip():

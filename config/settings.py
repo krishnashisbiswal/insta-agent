@@ -130,9 +130,9 @@ VOICE_ENGINE = os.getenv("VOICE_ENGINE", "sarvam").strip().lower()
 # Sarvam AI - Indian Native Expressive Voice Engine (Arjun speaker)
 # Sign up at dashboard.sarvam.ai for ₹100 free developer credits (zero monthly subscription)
 SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "").strip()
-SARVAM_SPEAKER = os.getenv("SARVAM_SPEAKER", "arjun").strip()
+SARVAM_SPEAKER = os.getenv("SARVAM_SPEAKER", "astrologer").strip()
 SARVAM_MODEL = os.getenv("SARVAM_MODEL", "bulbul:v4-flash").strip()
-SARVAM_PACE = float(os.getenv("SARVAM_PACE", "1.20"))
+SARVAM_PACE = float(os.getenv("SARVAM_PACE", "1.25"))
 
 # Brand watermark for Instagram reels
 BRAND_WATERMARK = os.getenv("BRAND_WATERMARK", "@neovibestore.in").strip()
