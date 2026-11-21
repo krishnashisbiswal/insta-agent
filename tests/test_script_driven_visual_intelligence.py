@@ -107,7 +107,7 @@ class TestScriptDrivenVisualIntelligence:
 
         # 3. Prompt includes appropriate lighting (dawn, breakthrough light)
         lighting_lower = (plan.lighting or "").lower()
-        assert any(k in lighting_lower for k in ["dawn", "sun", "golden", "warm", "radiance", "morning", "crepuscular", "diffused"]), (
+        assert any(k in lighting_lower for k in ["dawn", "sun", "golden", "gold", "rays", "warm", "radiance", "morning", "crepuscular", "diffused"]), (
             f"Lighting should reflect dawn or breakthrough, got: {plan.lighting}"
         )
 

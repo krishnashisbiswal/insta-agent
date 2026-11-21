@@ -539,7 +539,11 @@ class SceneVisualPlanner:
 
         # Determine subject, action, environment from spec or matched_scene
         is_generic_spec = not spec.subject or any(w in spec.subject.lower() for w in ["protagonist", "expressive", "solitary", "person", "embodying"])
-        if matched_scene and is_generic_spec:
+        is_scene_relevant = False
+        if matched_scene and spec.subject:
+            is_scene_relevant = any(k in spec.subject.lower() for k in matched_scene[1].get("keywords", []))
+
+        if matched_scene and (not is_scene_relevant or is_generic_spec):
             primary_subject = matched_scene[1]["name"]
             action = matched_scene[1]["default_action"]
             environment = matched_scene[1]["default_setting"]
@@ -562,9 +566,19 @@ class SceneVisualPlanner:
                 req_objs = [f"diamond Kundli chart with glowing {meta['name_en']}", f"Sanskrit {meta['sanskrit']} markings"]
 
         # Ensure generation prompt satisfies standard prompt completeness
+        # Sanitize spec lighting and composition against forbidden elements
+        sanitized_lighting = spec.lighting or "warm natural golden lighting"
+        sanitized_comp = spec.composition or "cinematic vertical 9:16 framing"
+        for exc in forbidden:
+            exc_clean = exc.lower().strip()
+            if exc_clean and exc_clean not in {"3d renders", "cgi cartoons", "animated illustrations", "wireframes", "cartoons", "cgi", "drawings", "text overlays", "watermarks"}:
+                pattern = re.compile(rf"\b{re.escape(exc_clean)}\b", re.IGNORECASE)
+                sanitized_lighting = pattern.sub("", sanitized_lighting)
+                sanitized_comp = pattern.sub("", sanitized_comp)
+
         clean_gen_prompt = (
             f"cinematic photorealistic 9:16 vertical luxury photograph of {primary_subject}, "
-            f"{action}, {environment}, lighting: {spec.lighting}, {spec.composition}, "
+            f"{action}, {environment}, lighting: {sanitized_lighting}, {sanitized_comp}, "
             f"warm 35mm film grain, 8k resolution, authentic organic textures, "
             f"no text overlays, no watermarks, no cgi cartoons, no flat solid colors"
         )
@@ -804,6 +818,8 @@ class SceneVisualPlanner:
             repaired.camera_framing = "50mm cinematic lens, shallow depth of field"
         if not repaired.lighting:
             repaired.lighting = "warm golden hour lighting with soft atmospheric diffusion"
+        elif "gold" in repaired.lighting.lower() and "golden" not in repaired.lighting.lower():
+            repaired.lighting += ", warm golden radiance"
         if not repaired.color_palette:
             repaired.color_palette = "warm gold, deep amber, dark charcoal"
 

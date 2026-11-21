@@ -164,6 +164,7 @@ class AIImageGenerator:
                     width=VIDEO_WIDTH,
                     height=VIDEO_HEIGHT,
                     seed=seed,
+                    scene_idx=scene_idx,
                 )
             except ImageProviderError as pe:
                 last_error = pe
@@ -175,6 +176,7 @@ class AIImageGenerator:
                             width=VIDEO_WIDTH,
                             height=VIDEO_HEIGHT,
                             seed=seed,
+                            scene_idx=scene_idx,
                         )
                     except Exception as fe:
                         last_error = fe

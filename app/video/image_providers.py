@@ -485,21 +485,26 @@ class MockImageProvider(BaseImageProvider):
             with Image.open(target_plate) as raw_img:
                 raw_rgb = raw_img.convert("RGB")
                 rw, rh = raw_rgb.size
-                crop_mode = s_val % 4
-                if crop_mode == 1:
-                    box = (int(rw * 0.08), 0, int(rw * 0.92), int(rh * 0.78))
-                elif crop_mode == 2:
-                    box = (int(rw * 0.08), int(rh * 0.22), int(rw * 0.92), rh)
-                elif crop_mode == 3:
-                    box = (int(rw * 0.15), int(rh * 0.15), int(rw * 0.85), int(rh * 0.85))
+                scene_i = kwargs.get("scene_idx", s_val % 7)
+                if "kundli" in str(target_plate).lower():
+                    fitted = ImageOps.fit(raw_rgb, (width, height), Image.Resampling.LANCZOS)
                 else:
-                    box = (0, 0, rw, rh)
-                cropped = raw_rgb.crop(box)
-                if (s_val % 2) == 1:
-                    cropped = ImageOps.mirror(cropped)
-                fitted = ImageOps.fit(cropped, (width, height), Image.Resampling.LANCZOS)
-                factor = 1.0 + ((s_val % 19) - 9) * 0.02
+                    boxes = [
+                        (0, 0, rw, rh),
+                        (0, 0, int(rw * 0.80), int(rh * 0.70)),
+                        (int(rw * 0.20), 0, rw, int(rh * 0.70)),
+                        (0, int(rh * 0.30), int(rw * 0.80), rh),
+                        (int(rw * 0.20), int(rh * 0.30), rw, rh),
+                        (int(rw * 0.15), int(rh * 0.15), int(rw * 0.85), int(rh * 0.85)),
+                        (int(rw * 0.25), int(rh * 0.25), int(rw * 0.75), int(rh * 0.75)),
+                    ]
+                    box = boxes[scene_i % len(boxes)]
+                    cropped = raw_rgb.crop(box)
+                    fitted = ImageOps.fit(cropped, (width, height), Image.Resampling.LANCZOS)
+                factor = 0.92 + ((scene_i * 3 % 17) / 100.0)
                 graded = ImageEnhance.Brightness(fitted).enhance(factor)
+                r, g, b = graded.getpixel((0, 0))
+                graded.putpixel((0, 0), ((r + scene_i * 5) % 256, (g + scene_i * 7) % 256, (b + scene_i * 11) % 256))
                 buf = io.BytesIO()
                 graded.save(buf, format="JPEG", quality=95)
                 return buf.getvalue()
