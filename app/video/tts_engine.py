@@ -266,6 +266,8 @@ def generate_speech(
     2. Seamless fallback to Microsoft Edge-TTS Expressive Neural voice pack (rate=+0%, pitch=+0Hz)
     """
     clean_text = clean_speech_text(text)
+    if not clean_text or not clean_text.strip():
+        clean_text = "कुंडली के नियमों को गहराई से समझें और सही मार्गदर्शन प्राप्त करें।"
     if not output_filename:
         safe_name = re.sub(r"[^\w\-]", "_", clean_text[:25].lower()).strip("_")
         output_filename = f"voice_{safe_name}.mp3"

@@ -89,3 +89,29 @@ def test_house_metadata_integrity():
         assert "sanskrit" in meta
         assert "significance" in meta
         assert h in DEVANAGARI_NUMERALS
+
+
+def test_generate_3d_kundli_planet_scene_all_archetypes(tmp_path: Path):
+    """Verify tilted 3D Kundli with top celestial planet renders across all archetypes."""
+    scenarios = [
+        ({"spoken_line": "शनि सप्तम भाव में दृष्टि डाल रहे हैं", "on_screen_text": "SHANI 7TH HOUSE"}, "Saturn Shani 7th", 7),
+        ({"spoken_line": "सूर्य और राहु का प्रथम भाव में ग्रहण योग", "on_screen_text": "SUN RAHU ECLIPSE"}, "Sun Rahu 1st", 1),
+        ({"spoken_line": "बारहवें भाव से ऊर्जा का व्यय हो रहा है", "on_screen_text": "12TH HOUSE DRAIN"}, "12th House Vyaya", 12),
+        ({"spoken_line": "मंगल प्रथम भाव में अग्नि ऊर्जा प्रदान करता है", "on_screen_text": "MARS 1ST HOUSE"}, "Mars 1st", 1),
+        ({"spoken_line": "गुरु बृहस्पति नवम भाव में भाग्य को जगाते हैं", "on_screen_text": "JUPITER 9TH HOUSE"}, "Jupiter Guru 9th", 9),
+        ({"spoken_line": "बुध तृतीय भाव में बुद्धि और व्यापार बढ़ाता है", "on_screen_text": "MERCURY 3RD HOUSE"}, "Mercury Budha 3rd", 3),
+    ]
+
+    for idx, (scene_dict, topic, expected_house) in enumerate(scenarios):
+        out_p = tmp_path / f"test_3d_planet_{idx}.jpg"
+        result_path = KundliChartGenerator.generate_3d_kundli_planet_scene(
+            scene_dict=scene_dict,
+            topic=topic,
+            scene_idx=idx,
+            output_path=out_p,
+        )
+        assert result_path.exists()
+        with Image.open(result_path) as img:
+            assert img.size == (1080, 1920)
+            assert img.mode == "RGB"
+

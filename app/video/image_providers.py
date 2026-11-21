@@ -483,9 +483,22 @@ class MockImageProvider(BaseImageProvider):
 
         if target_plate and target_plate.exists():
             with Image.open(target_plate) as raw_img:
-                fitted = ImageOps.fit(raw_img.convert("RGB"), (width, height), Image.Resampling.LANCZOS)
-                # Subtle micro-grading using seed so every generated image has a 100% unique cryptographic hash
-                factor = 1.0 + ((s_val % 19) - 9) * 0.003
+                raw_rgb = raw_img.convert("RGB")
+                rw, rh = raw_rgb.size
+                crop_mode = s_val % 4
+                if crop_mode == 1:
+                    box = (int(rw * 0.08), 0, int(rw * 0.92), int(rh * 0.78))
+                elif crop_mode == 2:
+                    box = (int(rw * 0.08), int(rh * 0.22), int(rw * 0.92), rh)
+                elif crop_mode == 3:
+                    box = (int(rw * 0.15), int(rh * 0.15), int(rw * 0.85), int(rh * 0.85))
+                else:
+                    box = (0, 0, rw, rh)
+                cropped = raw_rgb.crop(box)
+                if (s_val % 2) == 1:
+                    cropped = ImageOps.mirror(cropped)
+                fitted = ImageOps.fit(cropped, (width, height), Image.Resampling.LANCZOS)
+                factor = 1.0 + ((s_val % 19) - 9) * 0.02
                 graded = ImageEnhance.Brightness(fitted).enhance(factor)
                 buf = io.BytesIO()
                 graded.save(buf, format="JPEG", quality=95)

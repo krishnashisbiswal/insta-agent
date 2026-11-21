@@ -940,6 +940,10 @@ def sanitize_script_dialogue(scenes: List[Dict[str, Any]], topic: str = "") -> L
             line = re.sub(r"\b(यह|इस|उस)\s+ग्रह\b", "संबंधित ग्रह", line)
             line = re.sub(r"\bthis\s+planet\b", "this celestial placement", line, flags=re.I)
 
+        line = re.sub(r"\s{2,}", " ", line).strip()
+        if not line or len(line.strip()) < 5:
+            line = "कुंडली के नियमों को गहराई से समझें और सही मार्गदर्शन प्राप्त करें।"
+
         item["spoken_line"] = line
 
         # Enforce on-screen text word limit & sanitize

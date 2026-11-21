@@ -1335,11 +1335,17 @@ class DynamicVisualEngine:
 
         # (A) Call to Action / DM Consultation / Sacred Havan (Scene 7)
         if is_last_scene:
-            cta_pool = [
-                CINEMATIC_BROLL_DIR / "4_sacred_havan.jpg",
-                CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
-            ]
+            if is_crystal_or_rudraksha:
+                cta_pool = [
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                    curated_master_plate or (CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg"),
+                ]
+            else:
+                cta_pool = [
+                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
+                    curated_master_plate or (CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg"),
+                ]
             rot_idx = int(hashlib.md5(f"{topic}_cta".encode()).hexdigest(), 16) % len(cta_pool)
             candidates.extend(cta_pool[rot_idx:] + cta_pool[:rot_idx])
 
