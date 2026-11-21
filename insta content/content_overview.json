@@ -1,35 +1,35 @@
 {
-  "topic": "The 12th House Rahu-Rudraksha Sync: Why your subconscious never rests and how the 7 Mukhi frequency anchors your erratic energy.",
+  "topic": "5 hidden bio-energy frequencies of Rudraksha & Crystals that bypass Saturn’s 10th house career blocks.",
   "niche": "Vedic Astrology, Gemstone Energy, Psychic Karma & Spiritual Devotion",
   "voice": "sarvam:arjun",
   "production_style": "Cinematic Photorealistic B-Roll + Ken Burns Zoom + Lens Leak Blend + Kinetic Subtitles",
   "sound_design": "Sub-bass impact whoosh at 0s + 44.1kHz ambient mystical drone pad (-18 dB)",
-  "agent_evolution_level": 18.2,
+  "agent_evolution_level": 18.3,
   "hook": {
-    "id": "12th_house_rahu",
-    "name": "12th House Rahu Insight",
-    "spoken": "क्या आपका मन रात भर बिना वजह भागता है? ये 12th हाउस राहु का असर है।",
-    "on_screen": "12TH HOUSE RAHU SYNC",
-    "why_it_works": "Addresses a specific, relatable pain point of subconscious restlessness linked to a common astrological placement.",
+    "id": "saturn_career_block",
+    "name": "Insider Leak",
+    "spoken": "दसवें घर का शनि करियर में रुकावटें डाल रहा है? ये पांच फ्रीक्वेंसीज़ उसे अनलॉक कर देंगी।",
+    "on_screen": "UNLOCK SATURN CAREER BLOCKS",
+    "why_it_works": "Addresses a specific astrological pain point (10th house Saturn) with a direct, high-value solution.",
     "score": 85.0,
     "verdict": "STRONG",
     "flags": [],
     "checks": {
       "LENGTH": {
         "score": 80,
-        "detail": "4 words, 20 chars, ~1.5s spoken (want 5-12 words)"
+        "detail": "4 words, 27 chars, ~1.5s spoken (want 5-12 words)"
       },
       "SPECIFICITY": {
-        "score": 75,
-        "detail": "1 concrete marker(s): 12"
+        "score": 15.0,
+        "detail": "0 concrete marker(s) - no number, no name, nothing checkable"
       },
       "STAKES": {
         "score": 20.0,
         "detail": "0 tension marker(s) - nothing is at stake in this line"
       },
       "FRONTLOAD": {
-        "score": 100.0,
-        "detail": "payload at word 1"
+        "score": 30.0,
+        "detail": "no payload word anywhere in the line"
       },
       "ADDRESS": {
         "score": 35.0,
@@ -47,7 +47,7 @@
       },
       "caption_hook_visible": {
         "score": 100,
-        "detail": "98 chars (Target: <=125)"
+        "detail": "104 chars (Target: <=125)"
       },
       "visual_pacing_valid": {
         "score": 100,
@@ -63,9 +63,9 @@
       }
     }
   },
-  "duration_seconds": 68.95,
-  "generated_at": "2026-11-21 23:52:43",
-  "algorithm_phase": "Late Night Subconscious & Gemstone Truth",
+  "duration_seconds": 56.72,
+  "generated_at": "2026-11-22 00:10:39",
+  "algorithm_phase": "Algorithmic Indexing & Quiet Hours",
   "daily_post_enforced": true,
   "q_reward_score": 0.922,
   "publishing_outcome": "DRY_RUN"
