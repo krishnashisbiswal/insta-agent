@@ -411,6 +411,9 @@ class MockImageProvider(BaseImageProvider):
 
         s_val = int(seed or time.time_ns() % 100000)
 
+        # Check if actual scene_dict was provided via kwargs to avoid inventing arbitrary scene placements
+        actual_scene_dict = kwargs.get("scene_dict") or {"spoken_line": prompt}
+
         # Match strictly to authentic curated photography based on script prompt
         target_plate = None
         if any(k in p_lower for k in ["rudraksha", "रुद्राक्ष", "mukhi", "मुख"]):
@@ -431,52 +434,22 @@ class MockImageProvider(BaseImageProvider):
         elif any(k in p_lower for k in ["citrine", "सिट्रीन"]):
             primary = cinematic_dir / "crystal_citrine_quartz.jpg"
             target_plate = primary if primary.exists() else None
-        elif any(k in p_lower for k in ["jupiter", "guru", "बृहस्पति"]):
+        elif any(k in p_lower for k in [
+            "kundli", "chart", "birth chart", "bhav", "house", "drishti", "aspect",
+            "saturn", "shani", "शनि", "jupiter", "guru", "बृहस्पति",
+            "rahu", "ketu", "sun", "surya", "सूर्य", "mars", "mangal", "मंगल",
+            "venus", "shukra", "शुक्र", "mercury", "budh", "बुध", "moon", "chandra", "चंद्र"
+        ]):
             from app.video.kundli_chart_generator import KundliChartGenerator
             target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
-                scene_dict={"spoken_line": "Guru Jupiter in 9th house"},
-                topic="Jupiter Placement",
-                scene_idx=1,
-            )
-        elif any(k in p_lower for k in ["rahu", "sun rahu", "grahan", "eclipse", "सूर्य और राहु"]):
-            from app.video.kundli_chart_generator import KundliChartGenerator
-            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
-                scene_dict={"spoken_line": "Sun and Rahu conflict in 1st house"},
-                topic="Sun Rahu Conflict",
-                scene_idx=1,
-            )
-        elif any(k in p_lower for k in ["mars", "mangal", "मंगल"]):
-            from app.video.kundli_chart_generator import KundliChartGenerator
-            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
-                scene_dict={"spoken_line": "Mars fierce energy in 1st house"},
-                topic="Mars Misalignment",
-                scene_idx=3,
-            )
-        elif any(k in p_lower for k in ["saturn", "shani", "शनि", "drishti", "aspect"]):
-            from app.video.kundli_chart_generator import KundliChartGenerator
-            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
-                scene_dict={"spoken_line": "Shani saturn drishti in 7th house"},
-                topic="Shani Karmic Impact",
-                scene_idx=4,
-            )
-        elif any(k in p_lower for k in ["12th house", "12th", "बारहवें"]):
-            from app.video.kundli_chart_generator import KundliChartGenerator
-            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
-                scene_dict={"spoken_line": "12th house energy drain in 12th house"},
-                topic="12th House Drain",
-                scene_idx=2,
+                scene_dict=actual_scene_dict,
+                topic=str(actual_scene_dict.get("topic", "Astrology Insight")),
+                scene_idx=s_val % 7,
             )
         elif any(k in p_lower for k in ["emerald", "sapphire", "neelam", "gemstone", "रत्न", "remedies"]):
             target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
         elif any(k in p_lower for k in ["dm", "consultation", "welcoming hands", "hands presenting", "save reel", "havan", "fire altar", "temple", "यज्ञ", "अग्नि", "mandir"]):
             target_plate = cinematic_dir / "4_sacred_havan.jpg"
-        elif any(k in p_lower for k in ["kundli", "chart", "parchment", "birth chart"]):
-            from app.video.kundli_chart_generator import KundliChartGenerator
-            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
-                scene_dict={"spoken_line": "Vedic Kundli birth chart placement"},
-                topic="Vedic Chart",
-                scene_idx=s_val % 4,
-            )
         else:
             all_plates = sorted([p for p in cinematic_dir.glob("*.jpg") if p.is_file()])
             target_plate = all_plates[s_val % len(all_plates)] if all_plates else None

@@ -262,3 +262,118 @@ class TestTargetedAstrologyCorrections:
         )
         assert res_1.exists() and res_2.exists()
         assert out_1.read_bytes() != out_2.read_bytes()
+
+    def test_case_k_four_planet_conjunction(self, tmp_path: Path):
+        """Case K: 'Sun, Moon, Mars and Rahu are conjunct in the 10th house.' -> All 4 planets rendered without truncation."""
+        narration = "Sun, Moon, Mars and Rahu are conjunct in the 10th house."
+        plan = KundliChartGenerator.parse_astrology_scene(narration)
+
+        assert plan.intent == "CONJUNCTION"
+        assert plan.primary_house == 10
+        assert len(plan.planets) == 4
+        assert set(plan.planets) == {"sun", "moon", "mars", "rahu"}
+
+        # Visual rendering
+        out_p = tmp_path / "case_k.jpg"
+        res = KundliChartGenerator.generate_3d_kundli_planet_scene(
+            scene_dict={"spoken_line": narration},
+            topic="Quadruple Conjunction",
+            scene_idx=9,
+            output_path=out_p,
+        )
+        assert res.exists()
+        with Image.open(res) as img:
+            assert img.size == (1080, 1920)
+
+    def test_case_l_negated_conjunction(self, tmp_path: Path):
+        """Case L: 'There is no conjunction between Mars and Venus.' -> NOT parsed as conjunction."""
+        narration = "There is no conjunction between Mars and Venus."
+        plan = KundliChartGenerator.parse_astrology_scene(narration)
+
+        assert plan.intent == "MULTI_PLANET", f"Expected MULTI_PLANET, got {plan.intent}"
+        assert plan.relationship == "no_conjunction"
+        assert set(plan.planets) == {"mars", "venus"}
+        assert plan.primary_house is None
+
+        # Visual rendering
+        out_p = tmp_path / "case_l.jpg"
+        res = KundliChartGenerator.generate_3d_kundli_planet_scene(
+            scene_dict={"spoken_line": narration},
+            topic="Negated Alignment",
+            scene_idx=10,
+            output_path=out_p,
+        )
+        assert res.exists()
+        with Image.open(res) as img:
+            assert img.size == (1080, 1920)
+
+    def test_case_m_separate_planetary_placements(self, tmp_path: Path):
+        """Case M: 'Sun is in the 8th house and Rahu is in the 12th house.' -> Separate houses, NOT conjunction."""
+        narration = "Sun is in the 8th house and Rahu is in the 12th house."
+        plan = KundliChartGenerator.parse_astrology_scene(narration)
+
+        assert plan.intent == "MULTI_PLANET", f"Expected MULTI_PLANET, got {plan.intent}"
+        assert plan.relationship == "separate"
+        assert set(plan.planets) == {"sun", "rahu"}
+        assert plan.primary_house is None, "Must not combine two different houses into a single house!"
+
+    def test_case_n_discussed_together_not_conjunction(self, tmp_path: Path):
+        """Case N: 'Saturn and Venus are discussed together.' -> NOT automatically conjunction."""
+        narration = "Saturn and Venus are discussed together."
+        plan = KundliChartGenerator.parse_astrology_scene(narration)
+
+        assert plan.intent == "MULTI_PLANET"
+        assert plan.relationship in ["separate", "contrast"]
+        assert set(plan.planets) == {"venus", "saturn"}
+        assert plan.primary_house is None
+
+    def test_case_o_planet_and_house_discussed_without_placement(self, tmp_path: Path):
+        """Case O: 'Saturn and the 12th house are discussed.' -> Planet NOT placed in house 12 without placement grammar."""
+        narration = "Saturn and the 12th house are discussed."
+        plan = KundliChartGenerator.parse_astrology_scene(narration)
+
+        assert plan.intent == "PLANET_ONLY", f"Expected PLANET_ONLY, got {plan.intent}"
+        assert plan.primary_house is None, f"Expected no house placement, got {plan.primary_house}"
+        assert plan.planets == ["saturn"]
+
+    def test_case_p_conjunction_without_house_renders_celestial(self, tmp_path: Path):
+        """Case P: 'Sun and Rahu are conjunct.' -> Conjunction in celestial space, NO invented house 1."""
+        narration = "Sun and Rahu are conjunct."
+        plan = KundliChartGenerator.parse_astrology_scene(narration)
+
+        assert plan.intent == "CONJUNCTION"
+        assert plan.primary_house is None, "House must be None when unmentioned"
+        assert set(plan.planets) == {"sun", "rahu"}
+
+        # Visual rendering
+        out_p = tmp_path / "case_p.jpg"
+        res = KundliChartGenerator.generate_3d_kundli_planet_scene(
+            scene_dict={"spoken_line": narration},
+            topic="Celestial Alignment",
+            scene_idx=11,
+            output_path=out_p,
+        )
+        assert res.exists()
+        with Image.open(res) as img:
+            assert img.size == (1080, 1920)
+
+    def test_case_q_hindi_conjunction_and_aspect(self, tmp_path: Path):
+        """Case Q: Hindi narration testing explicit placement, conjunction, and drishti."""
+        # 1. Hindi conjunction in 10th house
+        plan_hi_conj = KundliChartGenerator.parse_astrology_scene("सूर्य और शनि की युति 10वें भाव में है।")
+        assert plan_hi_conj.intent == "CONJUNCTION"
+        assert plan_hi_conj.primary_house == 10
+        assert set(plan_hi_conj.planets) == {"sun", "saturn"}
+
+        # 2. Hindi aspect on 7th house
+        plan_hi_asp = KundliChartGenerator.parse_astrology_scene("शनि की दृष्टि 7वें भाव पर पड़ रही है।")
+        assert plan_hi_asp.intent == "ASPECT"
+        assert plan_hi_asp.target_house == 7
+        assert plan_hi_asp.primary_house is None
+        assert plan_hi_asp.planets == ["saturn"]
+
+        # 3. Hindi negation of conjunction
+        plan_hi_neg = KundliChartGenerator.parse_astrology_scene("मंगल और शुक्र की कोई युति नहीं है।")
+        assert plan_hi_neg.intent == "MULTI_PLANET"
+        assert plan_hi_neg.relationship == "no_conjunction"
+        assert set(plan_hi_neg.planets) == {"mars", "venus"}

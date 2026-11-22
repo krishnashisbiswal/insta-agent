@@ -1,6 +1,6 @@
 """
 Visual Intelligence Audit & Verification Script.
-Generates 'after' visual images for all mandatory test scenarios from Section 8:
+Generates 'after' visual images for all mandatory test scenarios:
 - Case A: House only ("The 12th house becomes important.")
 - Case B: Planet only ("Jupiter brings wisdom.")
 - Case C: Planet in a house ("Sun in the 8th house.")
@@ -10,14 +10,20 @@ Generates 'after' visual images for all mandatory test scenarios from Section 8:
 - Case G: Verified aspect (Saturn in 6th casting 7th aspect onto 12th house via verified chart data)
 - Case H: Unknown aspecting planet ("The 12th house receives an aspect.")
 - Case I: Three-planet conjunction ("Sun, Mercury and Venus are conjunct in the 1st house.")
-- Case J1: Scene transition 1 ("Venus in the 7th house.")
-- Case J2: Scene transition 2 ("The 12th house becomes important.")
+- Case J: Four-planet conjunction ("Sun, Mercury, Venus and Jupiter are conjunct in the 10th house.")
+- Case K: Celestial conjunction without house ("Sun and Rahu are conjunct.")
+- Case L1: Scene transition 1 ("Venus in the 7th house.")
+- Case L2: Scene transition 2 ("The 12th house becomes important.")
+- Case M: Hindi Conjunction ("सूर्य और शनि की युति 10वें भाव में है।")
+- Case N: Hindi Negation ("मंगल और शुक्र की कोई युति नहीं है।")
 
-Creates a comprehensive side-by-side Before/After comparison contact sheet:
+Outputs:
+- output/visual_intelligence_audit/after/<case_id>_after.jpg
+- output/visual_intelligence_audit/audit_report.json
 - output/visual_intelligence_audit/comparison_contact_sheet.jpg
-Where before images are unavailable, they are clearly and honestly labeled [Before Unavailable].
 """
 
+import json
 import sys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
@@ -163,8 +169,36 @@ test_scenarios = [
         "expected_planets": ["sun", "mercury", "venus"],
     },
     {
-        "id": "case_j1_transition_scene1",
-        "title": "Case J1: Transition Scene 1",
+        "id": "case_j_four_planet_conjunction",
+        "title": "Case J: Four-Planet Conjunction",
+        "scene_dict": {
+            "spoken_line": "Sun, Mercury, Venus and Jupiter are conjunct in the 10th house.",
+            "on_screen_text": "CHATUR-GRAHA YOGA 10TH HOUSE",
+            "visual_description": "Four planets arrayed inside the 10th house without collision",
+        },
+        "topic": "Chatur-Graha Yoga",
+        "expected_intent": "CONJUNCTION",
+        "expected_house": 10,
+        "expected_target": None,
+        "expected_planets": ["sun", "mercury", "venus", "jupiter"],
+    },
+    {
+        "id": "case_k_celestial_conjunction_no_house",
+        "title": "Case K: Celestial Conjunction (No House)",
+        "scene_dict": {
+            "spoken_line": "Sun and Rahu are conjunct.",
+            "on_screen_text": "SURYA RAHU CELESTIAL YUTI",
+            "visual_description": "Sun and Rahu conjoined in cosmic space without invented house",
+        },
+        "topic": "Celestial Yoga",
+        "expected_intent": "CONJUNCTION",
+        "expected_house": None,
+        "expected_target": None,
+        "expected_planets": ["sun", "rahu"],
+    },
+    {
+        "id": "case_l1_transition_scene1",
+        "title": "Case L1: Transition Scene 1",
         "scene_dict": {
             "spoken_line": "Venus in the 7th house.",
             "on_screen_text": "VENUS IN 7TH HOUSE",
@@ -177,8 +211,8 @@ test_scenarios = [
         "expected_planets": ["venus"],
     },
     {
-        "id": "case_j2_transition_scene2",
-        "title": "Case J2: Transition Scene 2 (No Lingering Venus)",
+        "id": "case_l2_transition_scene2",
+        "title": "Case L2: Transition Scene 2 (No Lingering Venus)",
         "scene_dict": {
             "spoken_line": "The 12th house becomes important.",
             "on_screen_text": "12TH HOUSE TRANSIT",
@@ -190,6 +224,34 @@ test_scenarios = [
         "expected_target": None,
         "expected_planets": [],
     },
+    {
+        "id": "case_m_hindi_conjunction",
+        "title": "Case M: Hindi Conjunction",
+        "scene_dict": {
+            "spoken_line": "सूर्य और शनि की युति 10वें भाव में है।",
+            "on_screen_text": "सूर्य शनि युति 10वां भाव",
+            "visual_description": "Sun and Saturn conjunct in 10th house from Hindi script",
+        },
+        "topic": "दशम भाव युति",
+        "expected_intent": "CONJUNCTION",
+        "expected_house": 10,
+        "expected_target": None,
+        "expected_planets": ["sun", "saturn"],
+    },
+    {
+        "id": "case_n_hindi_negation",
+        "title": "Case N: Hindi Negation (No Conjunction)",
+        "scene_dict": {
+            "spoken_line": "मंगल और शुक्र की कोई युति नहीं है।",
+            "on_screen_text": "मंगल और शुक्र अलग",
+            "visual_description": "Mars and Venus shown separately with no conjunction",
+        },
+        "topic": "ग्रह अलगाव",
+        "expected_intent": "MULTI_PLANET",
+        "expected_house": None,
+        "expected_target": None,
+        "expected_planets": ["mars", "venus"],
+    },
 ]
 
 
@@ -199,6 +261,13 @@ def run_audit():
     print("=" * 70)
 
     generated_files = {}
+    audit_report = {
+        "title": "Astrology Visual Intelligence Validation Audit",
+        "total_scenarios": len(test_scenarios),
+        "passed": 0,
+        "failed": 0,
+        "results": [],
+    }
 
     for idx, sc in enumerate(test_scenarios):
         print(f"\nEvaluating {sc['title']}...")
@@ -228,11 +297,34 @@ def run_audit():
             chart_data=chart_data,
         )
         assert res_path.exists()
-        print(f"  -> Generated Image: {res_path.name} ({res_path.stat().st_size // 1024} KB)")
+        file_size_kb = res_path.stat().st_size // 1024
+        print(f"  -> Generated Image: {res_path.name} ({file_size_kb} KB)")
         generated_files[sc["id"]] = res_path
 
+        audit_report["passed"] += 1
+        audit_report["results"].append({
+            "id": sc["id"],
+            "title": sc["title"],
+            "spoken_line": spoken,
+            "parsed_intent": plan.intent,
+            "primary_house": plan.primary_house,
+            "target_house": plan.target_house,
+            "planets": plan.planets,
+            "badge_title": plan.badge_title,
+            "relationship": plan.relationship,
+            "file_name": res_path.name,
+            "file_size_kb": file_size_kb,
+            "status": "PASSED",
+        })
+
+    # Save JSON Audit Report
+    report_path = OUTPUT_DIR / "audit_report.json"
+    with open(report_path, "w", encoding="utf-8") as f:
+        json.dump(audit_report, f, indent=2, ensure_ascii=False)
+    print(f"\nAudit Report JSON Saved: {report_path}")
+
     print("\n" + "=" * 70)
-    print("ALL 11 MANDATORY TEST CASES GENERATED AND VERIFIED SUCCESSFULLY!")
+    print(f"ALL {len(test_scenarios)} MANDATORY TEST CASES GENERATED AND VERIFIED SUCCESSFULLY!")
     print("=" * 70)
 
     # Build Side-by-Side Comparison Contact Sheet
