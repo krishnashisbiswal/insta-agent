@@ -232,7 +232,7 @@ HOUSE_ALIASES: Dict[int, List[str]] = {
 
 @dataclasses.dataclass
 class AstrologyScenePlan:
-    intent: str  # HOUSE_ONLY, PLANET_ONLY, PLANET_IN_HOUSE, CONJUNCTION, ASPECT, GENERAL
+    intent: str  # HOUSE_ONLY, PLANET_ONLY, PLANET_IN_HOUSE, CONJUNCTION, ASPECT, MULTI_PLANET, GENERAL
     primary_house: Optional[int] = None
     target_house: Optional[int] = None
     planets: List[str] = dataclasses.field(default_factory=list)
@@ -240,6 +240,10 @@ class AstrologyScenePlan:
     aspect_count: Optional[int] = None
     badge_title: str = ""
     subtitle: str = ""
+    source_explicit: bool = False
+    target_explicit: bool = False
+    aspect_verified: bool = False
+    relationship: str = "none"  # "conjunction", "aspect", "placement", "contrast", "separate", "none"
 
 
 class KundliChartGenerator:
@@ -260,7 +264,7 @@ class KundliChartGenerator:
         Backwards-compatible extraction of house number (1-12) and planetary entity string.
         """
         plan = cls.parse_astrology_scene(text)
-        detected_house = plan.primary_house
+        detected_house = plan.primary_house or plan.target_house
         detected_planet = None
         if plan.planets:
             p_key = plan.planets[0]
@@ -274,7 +278,12 @@ class KundliChartGenerator:
         return detected_house, detected_planet
 
     @classmethod
-    def parse_astrology_scene(cls, text: str, fallback_topic: str = "") -> AstrologyScenePlan:
+    def parse_astrology_scene(
+        cls,
+        text: str,
+        fallback_topic: str = "",
+        chart_data: Optional[Dict[str, Any]] = None,
+    ) -> AstrologyScenePlan:
         """
         Intelligently parses script narration to extract exact astrological entities without random inference.
         Differentiates between:
@@ -284,26 +293,77 @@ class KundliChartGenerator:
         - Mode D: CONJUNCTION
         - Mode E: ASPECT (DRISHTI)
         - Mode F: GENERAL
+        - Mode MULTI_PLANET: Non-conjunction multiple planet comparison
         """
         if not text:
             text = fallback_topic or ""
         t = text.lower()
 
-        # 1. Detect houses
+        # Normalize chart_data verified placements if provided
+        placements: Dict[str, int] = {}
+        if chart_data:
+            if "placements" in chart_data and isinstance(chart_data["placements"], dict):
+                placements = {str(k).lower(): int(v) for k, v in chart_data["placements"].items()}
+            elif "houses" in chart_data and isinstance(chart_data["houses"], dict):
+                for h_num, plist in chart_data["houses"].items():
+                    for p in plist:
+                        placements[str(p).lower()] = int(h_num)
+            else:
+                for k, v in chart_data.items():
+                    if isinstance(k, str) and isinstance(v, (int, str)) and str(v).isdigit():
+                        placements[k.lower()] = int(v)
+
+        # 1. Detect all planets mentioned
+        found_planets: List[str] = []
+        for p_word, canonical in PLANET_CANONICAL_MAP.items():
+            has_unicode = any(ord(c) > 127 for c in p_word)
+            if (has_unicode and p_word in t) or re.search(r"\b" + re.escape(p_word) + r"\b", t):
+                if canonical not in found_planets:
+                    found_planets.append(canonical)
+
+        # 2. Extract syntactic roles for houses (Target vs Source vs General)
+        tgt_h: Optional[int] = None
+        target_explicit = False
+        target_patterns = [
+            r"(?:aspects|casts aspect onto|casts its \w+ aspect onto|drishti on|पर दृष्टि|को देखता)\s+(?:the\s+)?([1-9]|1[0-2])(?:st|nd|rd|th)?\s*(?:house|bhav|bhava|ghar|भाव|घर)?\b",
+            r"\b([1-9]|1[0-2])(?:st|nd|rd|th)?\s*(?:house|bhav|bhava|ghar|भाव|घर)?\s*(?:receives an aspect|receives drishti|पर दृष्टि|को देखता)\b",
+            r"(?:onto|into|to)\s+(?:the\s+)?([1-9]|1[0-2])(?:st|nd|rd|th)?\s*(?:house|bhav|bhava|ghar|भाव|घर)?\b",
+        ]
+        for pat in target_patterns:
+            m_tgt = re.search(pat, t)
+            if m_tgt:
+                tgt_h = int(m_tgt.group(1))
+                target_explicit = True
+                break
+
+        src_h: Optional[int] = None
+        source_explicit = False
+        source_patterns = [
+            r"\b(?:from)\b\s+(?:the\s+)?([1-9]|1[0-2])(?:st|nd|rd|th)?\s*(?:house|bhav|bhava|ghar|भाव|घर)?\b",
+            r"(?:in|occupying|sitting in|में)\s+(?:the\s+)?([1-9]|1[0-2])(?:st|nd|rd|th)?\s*(?:house|bhav|bhava|ghar|भाव|घर)?\s*(?:casts|aspects|drishti)\b",
+            r"\b([1-9]|1[0-2])(?:st|nd|rd|th)?\s*(?:house|bhav|bhava|ghar|भाव|घर)?\s*(?:se|से)\s*(?:aspect|drishti|दृष्टि)\b",
+        ]
+        for pat in source_patterns:
+            m_src = re.search(pat, t)
+            if m_src:
+                src_h = int(m_src.group(1))
+                source_explicit = True
+                break
+
+        # Detect all house numbers mentioned in text
         found_houses: List[int] = []
         for m in re.finditer(r"\b([1-9]|1[0-2])(?:st|nd|rd|th)?\s*(?:house|bhav|bhava|ghar|भाव|घर)?\b", t):
             start, end = max(0, m.start() - 10), min(len(t), m.end() + 10)
             sub = t[start:end]
             if any(k in sub for k in ["house", "bhav", "bhava", "ghar", "भाव", "घर", "drishti", "दृष्टि", "aspect", "st", "nd", "rd", "th"]):
                 post = t[m.end():m.end() + 15]
-                # If followed immediately by aspect/drishti, it's an aspect ordinal (e.g. 7th aspect), not a house
+                # If followed immediately by aspect/drishti count (e.g. 7th aspect, 3rd drishti), skip
                 if any(k in post for k in ["aspect", "drishti", "दृष्टि"]):
                     continue
                 h_val = int(m.group(1))
                 if h_val not in found_houses:
                     found_houses.append(h_val)
 
-        # Also check Hindi/English word aliases
         for h_num, aliases in HOUSE_ALIASES.items():
             if h_num not in found_houses:
                 for alias in aliases:
@@ -314,14 +374,6 @@ class KundliChartGenerator:
                     elif alias in ["लग्न", "तनु भाव", "रंध्र भाव", "व्यय भाव", "मोक्ष भाव", "भाग्य भाव", "कर्म भाव", "सुख भाव", "मातृ भाव", "धन भाव", "सहज भाव", "पुत्र भाव", "बुद्धि भाव", "शत्रु भाव", "ऋण भाव", "कलत्र भाव", "जाया भाव", "आयु भाव", "लाभ भाव", "आय भाव"] and alias in t:
                         found_houses.append(h_num)
                         break
-
-        # 2. Detect planets
-        found_planets: List[str] = []
-        for p_word, canonical in PLANET_CANONICAL_MAP.items():
-            has_unicode = any(ord(c) > 127 for c in p_word)
-            if (has_unicode and p_word in t) or re.search(r"\b" + re.escape(p_word) + r"\b", t):
-                if canonical not in found_planets:
-                    found_planets.append(canonical)
 
         # 3. Detect Aspect / Drishti
         aspect_match = re.search(r"\b(3rd|4th|5th|7th|8th|9th|10th|तीसरी|चौथी|पाँचवीं|पांचवीं|सातवीं|आठवीं|नौवीं|दसवीं)\s*(?:aspect|drishti|दृष्टि)\b", t)
@@ -339,59 +391,154 @@ class KundliChartGenerator:
             }
             aspect_count = asp_map.get(asp_str, 7)
 
-        is_aspect = bool(aspect_count) or any(k in t for k in ["aspect", "drishti", "दृष्टि", "aspects", "कास्ट", "casts aspect"])
-        is_conjunction = any(k in t for k in ["conjunction", "together", "conjoined", "युति", "एक साथ", "बुधादित्य", "budhaditya", "yoga", "योग"]) or len(found_planets) >= 2
+        is_aspect = (
+            bool(aspect_count)
+            or any(k in t for k in ["aspect", "aspects", "drishti", "दृष्टि", "कास्ट", "casts aspect", "receives an aspect", "receives drishti"])
+        )
 
         # 4. Resolve exact relationship
-        if is_aspect and (found_planets or len(found_houses) >= 2):
-            intent = "ASPECT"
-            planet = found_planets[0] if found_planets else "saturn"
-            # If two houses mentioned (source and target)
-            if len(found_houses) >= 2:
-                src_h = found_houses[0]
-                tgt_h = found_houses[1]
-                # Calculate or verify aspect count
+        if is_aspect and (found_planets or found_houses or tgt_h is not None or "aspect" in t or "drishti" in t):
+            # Aspecting planet - NEVER INVENT SATURN OR ANY DEFAULT PLANET!
+            aspecting_planet: Optional[str] = found_planets[0] if found_planets else None
+            aspect_verified = False
+
+            # If target house not explicitly caught yet, determine from found_houses
+            if tgt_h is None:
+                if any(k in t for k in ["aspects the", "aspects house", "casts aspect onto", "पर दृष्टि"]):
+                    if found_houses:
+                        tgt_h = found_houses[-1]
+                        target_explicit = True
+                elif len(found_houses) >= 2:
+                    src_h = found_houses[0]
+                    tgt_h = found_houses[1]
+                    source_explicit = True
+                    target_explicit = True
+                elif len(found_houses) == 1:
+                    if any(k in t for k in ["in the", "occupying", "sitting in", "में"]):
+                        src_h = found_houses[0]
+                        source_explicit = True
+                    else:
+                        tgt_h = found_houses[0]
+                        target_explicit = True
+
+            # If source house is unknown from text, check verified chart_data!
+            if src_h is None and aspecting_planet and aspecting_planet in placements:
+                src_h = placements[aspecting_planet]
+                aspect_verified = True
+
+            # If both source and target are known, compute aspect count if not given
+            if src_h is not None and tgt_h is not None:
                 calc_count = ((tgt_h - src_h) % 12) + 1
                 asp_num = aspect_count or calc_count
-            elif len(found_houses) == 1:
-                # One house mentioned
-                src_h = found_houses[0]
-                asp_num = aspect_count or 7
-                tgt_h = ((src_h - 1 + (asp_num - 1)) % 12) + 1
             else:
-                src_h = 10
-                asp_num = aspect_count or 7
-                tgt_h = ((src_h - 1 + (asp_num - 1)) % 12) + 1
+                asp_num = aspect_count
 
-            p_disp = PLANET_DISPLAY_NAMES.get(planet, (planet.upper(), planet.upper()))[0]
-            src_ord = cls._get_ordinal(src_h)
-            tgt_ord = cls._get_ordinal(tgt_h)
-            asp_ord = cls._get_ordinal(asp_num)
-            badge = f"{src_ord} TO {tgt_ord} HOUSE • {p_disp} {asp_ord} DRISHTI"
+            planets_list = [aspecting_planet] if aspecting_planet else []
+            p_disp = PLANET_DISPLAY_NAMES.get(aspecting_planet, (aspecting_planet.upper(), aspecting_planet.upper()))[0] if aspecting_planet else None
+
+            if src_h is not None and tgt_h is not None:
+                src_ord = cls._get_ordinal(src_h)
+                tgt_ord = cls._get_ordinal(tgt_h)
+                asp_ord = cls._get_ordinal(asp_num) if asp_num else "DIRECT"
+                p_label = f"{p_disp} " if p_disp else ""
+                badge = f"{src_ord} TO {tgt_ord} HOUSE • {p_label}{asp_ord} DRISHTI"
+                sub = f"Planetary Rays from Bhava {src_h} illuminating Bhava {tgt_h}"
+                asp_type = f"{asp_ord} DRISHTI"
+            elif tgt_h is not None:
+                tgt_ord = cls._get_ordinal(tgt_h)
+                if p_disp:
+                    badge = f"{tgt_ord} HOUSE • {p_disp} DRISHTI"
+                    sub = f"{p_disp} casting celestial rays onto Bhava {tgt_h}"
+                    asp_type = f"{p_disp} DRISHTI"
+                else:
+                    badge = f"{tgt_ord} HOUSE • ASPECT RECEIVED"
+                    sub = f"Divine celestial rays illuminating Bhava {tgt_h}"
+                    asp_type = "ASPECT RECEIVED"
+            elif src_h is not None and p_disp:
+                src_ord = cls._get_ordinal(src_h)
+                badge = f"{src_ord} HOUSE • {p_disp} ASPECTING"
+                sub = f"{p_disp} activating rays from Bhava {src_h}"
+                asp_type = f"{p_disp} ASPECT"
+            else:
+                badge = "VEDIC DRISHTI • PLANETARY ASPECT"
+                sub = "Celestial influence across Kundli Bhavas"
+                asp_type = "ASPECT"
+
             return AstrologyScenePlan(
-                intent=intent,
+                intent="ASPECT",
                 primary_house=src_h,
                 target_house=tgt_h,
-                planets=[planet],
-                aspect_type=f"{asp_ord} DRISHTI",
+                planets=planets_list,
+                aspect_type=asp_type,
                 aspect_count=asp_num,
                 badge_title=badge,
-                subtitle=f"Planetary Rays from Bhava {src_h} illuminating Bhava {tgt_h}",
+                subtitle=sub,
+                source_explicit=source_explicit,
+                target_explicit=target_explicit,
+                aspect_verified=aspect_verified,
+                relationship="aspect",
             )
 
-        elif len(found_planets) >= 2 or (is_conjunction and len(found_planets) >= 1 and found_houses):
+        # Conjunction vs Contrast / Multi-planet
+        conj_keywords = ["conjunct", "conjoined", "conjunction", "together", "युति", "एक साथ", "बुधादित्य", "budhaditya", "yoga", "योग"]
+        has_conj_kw = any(k in t for k in conj_keywords)
+
+        contrast_keywords = [
+            "while", "whereas", "different", "अलग", "जबकि",
+            "on the other hand", "represents disruption while", "disruption",
+            "clashes with", "clash", "vs", "versus", "contrast"
+        ]
+        has_contrast_kw = any(k in t for k in contrast_keywords)
+
+        # Shared house check e.g. "Sun and Rahu in the 8th house"
+        shared_house_match = re.search(r"\b(?:and|aur|तथा)\b.*?\b(?:in|occupying|sitting in|में)\s+(?:the\s+)?([1-9]|1[0-2])(?:st|nd|rd|th)?\s*(?:house|bhav|bhava|ghar|भाव|घर)?\b", t)
+        is_shared_house_conjunction = bool(shared_house_match) and len(found_planets) >= 2 and not has_contrast_kw
+
+        is_explicit_conjunction = (has_conj_kw and len(found_planets) >= 1) or is_shared_house_conjunction
+
+        if is_explicit_conjunction and not has_contrast_kw:
             intent = "CONJUNCTION"
-            h = found_houses[0] if found_houses else 1
+            h = found_houses[0] if found_houses else None
+            # Check verified placements if house not in text
+            if h is None and chart_data:
+                for p in found_planets:
+                    if p in placements:
+                        h = placements[p]
+                        break
+
             names = [PLANET_DISPLAY_NAMES.get(p, (p.upper(), p.upper()))[0] for p in found_planets]
             p_str = " & ".join(names) if names else "GRAHA YUTI"
-            h_ord = cls._get_ordinal(h)
-            badge = f"{h_ord} HOUSE • {p_str} CONJUNCTION"
+            if h is not None:
+                h_ord = cls._get_ordinal(h)
+                badge = f"{h_ord} HOUSE • {p_str} CONJUNCTION"
+                sub = f"Conjoined celestial energy activating Bhava {h}"
+            else:
+                badge = f"{p_str} • CELESTIAL CONJUNCTION"
+                sub = "Powerful conjoined planetary alignment"
+
             return AstrologyScenePlan(
                 intent=intent,
                 primary_house=h,
                 planets=found_planets,
                 badge_title=badge,
-                subtitle=f"Conjoined celestial energy activating Bhava {h}",
+                subtitle=sub,
+                relationship="conjunction",
+            )
+
+        elif len(found_planets) >= 2:
+            intent = "MULTI_PLANET"
+            names = [PLANET_DISPLAY_NAMES.get(p, (p.upper(), p.upper()))[0] for p in found_planets]
+            p_str = " & ".join(names)
+            h = found_houses[0] if found_houses else None
+            badge = f"{p_str} • DUAL CELESTIAL ENERGIES"
+            sub = "Distinct astrological archetypes and cosmic influences"
+            return AstrologyScenePlan(
+                intent=intent,
+                primary_house=h,
+                planets=found_planets,
+                badge_title=badge,
+                subtitle=sub,
+                relationship="contrast" if has_contrast_kw else "separate",
             )
 
         elif len(found_planets) == 1 and found_houses:
@@ -409,6 +556,7 @@ class KundliChartGenerator:
                 planets=[p],
                 badge_title=badge,
                 subtitle=meta.get("significance", ""),
+                relationship="placement",
             )
 
         elif len(found_planets) == 1 and not found_houses:
@@ -418,9 +566,11 @@ class KundliChartGenerator:
             badge = f"{p_hi} ({p_en}) • CELESTIAL ARCHETYPE"
             return AstrologyScenePlan(
                 intent=intent,
+                primary_house=None,
                 planets=[p],
                 badge_title=badge,
                 subtitle=f"Divine cosmological force & energetic significance of {p_en}",
+                relationship="archetype",
             )
 
         elif found_houses and not found_planets:
@@ -436,16 +586,18 @@ class KundliChartGenerator:
                 planets=[],
                 badge_title=badge,
                 subtitle=meta.get("significance", ""),
+                relationship="house_activation",
             )
 
         else:
             intent = "GENERAL"
             return AstrologyScenePlan(
                 intent=intent,
-                primary_house=1,
+                primary_house=None,
                 planets=[],
                 badge_title="VEDIC KUNDLI BIRTH CHART • SACRED GEOMETRY",
                 subtitle="North Indian Diamond Cosmic Alignment",
+                relationship="none",
             )
 
     @classmethod
@@ -920,6 +1072,7 @@ class KundliChartGenerator:
         topic: str = "",
         scene_idx: int = 0,
         output_path: Optional[Path] = None,
+        chart_data: Optional[Dict[str, Any]] = None,
     ) -> Path:
         """
         Renders a script-driven, authentic 1080x1920 3D Vedic visual without random inference.
@@ -930,16 +1083,18 @@ class KundliChartGenerator:
         - Mode D: CONJUNCTION
         - Mode E: ASPECT (DRISHTI)
         - Mode F: GENERAL
+        - Mode MULTI_PLANET: Distinct non-conjoined planetary energies
         """
         from config.settings import BASE_DIR, DEFAULT_FONT_PATH, FALLBACK_FONT_PATH
         broll_dir = BASE_DIR / "assets" / "cinematic_broll"
 
-        spoken = str(scene_dict.get("spoken_line", ""))
-        on_screen = str(scene_dict.get("on_screen_text", ""))
-        vis_desc = str(scene_dict.get("visual_description", ""))
-        # Narration is the primary source of truth; avoid topic contamination
-        scene_narration = f"{spoken} {on_screen} {vis_desc}".strip()
-        plan = cls.parse_astrology_scene(scene_narration, fallback_topic=topic)
+        spoken = str(scene_dict.get("spoken_line", "")).strip()
+        on_screen = str(scene_dict.get("on_screen_text", "")).strip()
+        vis_desc = str(scene_dict.get("visual_description", "")).strip()
+        # Spoken narration is the ground truth. Use on_screen / vis_desc only as fallback.
+        scene_narration = spoken or on_screen or vis_desc
+        passed_chart_data = chart_data or scene_dict.get("chart_data")
+        plan = cls.parse_astrology_scene(scene_narration, fallback_topic=topic, chart_data=passed_chart_data)
 
         logger.info(
             f"[KundliChartGenerator] Scene {scene_idx + 1} Plan: intent={plan.intent}, "
@@ -973,8 +1128,8 @@ class KundliChartGenerator:
         # -------------------------------------------------------------
         # MODE B: PLANET_ONLY (Deep Space Celestial Realm, NO Chart Floor!)
         # -------------------------------------------------------------
-        if plan.intent == "PLANET_ONLY":
-            planet_key = plan.planets[0] if plan.planets else "jupiter"
+        if plan.intent == "PLANET_ONLY" and plan.planets:
+            planet_key = plan.planets[0]
             p_hi, p_en = PLANET_DISPLAY_NAMES.get(planet_key, (planet_key.upper(), planet_key.upper()))
 
             # Deep cosmic starfield canvas
@@ -1052,6 +1207,58 @@ class KundliChartGenerator:
 
             # Save and return
             return cls._save_scene_output(canvas, topic, scene_idx, "planet_only", output_path)
+
+        # -------------------------------------------------------------
+        # MODE MULTI_PLANET (Distinct Non-Conjoined Planet Archetypes)
+        # -------------------------------------------------------------
+        elif plan.intent == "MULTI_PLANET" and plan.planets:
+            canvas = Image.new("RGBA", (width, height), (6, 4, 14, 255))
+            nebula = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            ndraw = ImageDraw.Draw(nebula)
+            ndraw.ellipse([width // 2 - 450, 850 - 450, width // 2 + 450, 850 + 450], fill=(210, 160, 45, 80))
+            nebula = nebula.filter(ImageFilter.GaussianBlur(120))
+            canvas = Image.alpha_composite(canvas, nebula)
+
+            planets = plan.planets
+            n_p = len(planets)
+            centers = [
+                (width // 2 - 240, 840),
+                (width // 2 + 240, 840),
+            ] if n_p == 2 else [
+                (width // 2 - 300, 840),
+                (width // 2, 840),
+                (width // 2 + 300, 840),
+            ]
+
+            for idx, p_key in enumerate(planets[:len(centers)]):
+                cx, cy = centers[idx]
+                p_sz = 300
+                p_sphere = cls.render_celestial_sphere(p_key, p_sz)
+                p_hi, p_en = PLANET_DISPLAY_NAMES.get(p_key, (p_key.upper(), p_key.upper()))
+
+                p_aura = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+                p_adraw = ImageDraw.Draw(p_aura)
+                g_col = (255, 190, 40, 130) if p_key in ["sun", "jupiter"] else (
+                    (255, 60, 25, 110) if p_key == "mars" else (
+                        (160, 90, 240, 120) if p_key in ["rahu", "ketu"] else (210, 225, 255, 110)
+                    )
+                )
+                p_adraw.ellipse([cx - p_sz // 2 - 30, cy - p_sz // 2 - 30, cx + p_sz // 2 + 30, cy + p_sz // 2 + 30], fill=g_col)
+                p_aura = p_aura.filter(ImageFilter.GaussianBlur(28))
+                canvas = Image.alpha_composite(canvas, p_aura)
+                canvas.paste(p_sphere, (cx - p_sz // 2, cy - p_sz // 2), p_sphere)
+
+            cls._draw_floating_badge(canvas, plan.badge_title, font_header, width, top_y=170)
+            cls._draw_bottom_celestial_card(
+                canvas,
+                title="DISTINCT PLANETARY FORCES",
+                subtitle=plan.subtitle,
+                width=width,
+                bottom_y=1420,
+                font_title=font_title,
+                font_sub=font_sub,
+            )
+            return cls._save_scene_output(canvas, topic, scene_idx, "multi_planet_contrast", output_path)
 
         # -------------------------------------------------------------
         # 3D PERSPECTIVE KUNDLI CANVAS SETUP (Modes A, C, D, E, F)
@@ -1156,12 +1363,20 @@ class KundliChartGenerator:
         canvas = Image.alpha_composite(canvas, altar_shadow)
         canvas = Image.alpha_composite(canvas, pedestal)
 
-        # Highlight House Selection
-        primary_h = plan.primary_house or 1
+        # Highlight House Selection (NEVER invent House 1 when no house is established!)
+        primary_h = plan.primary_house
         target_h = plan.target_house
 
         # Active Chamber Volumetric Glow
-        active_houses = [primary_h] if plan.intent != "ASPECT" else ([target_h] if target_h else [primary_h])
+        active_houses: List[int] = []
+        if plan.intent == "ASPECT":
+            if target_h:
+                active_houses.append(target_h)
+            if primary_h:
+                active_houses.append(primary_h)
+        elif primary_h:
+            active_houses.append(primary_h)
+
         for act_h in active_houses:
             target_poly_uv = uv_polygons.get(act_h, uv_polygons[1])
             proj_poly = project_poly(target_poly_uv, h=0)
@@ -1233,7 +1448,7 @@ class KundliChartGenerator:
             bbox = draw.textbbox((0, 0), rom, font=font_num)
             tw = bbox[2] - bbox[0]
             th = bbox[3] - bbox[1]
-            is_active = (h_num in active_houses) or (h_num == primary_h)
+            is_active = (h_num in active_houses)
             col = (255, 245, 180, 245) if is_active else (160, 135, 100, 150)
             draw.text((nx_pt - tw / 2, ny_pt - th / 2), rom, fill=col, font=font_num)
 
@@ -1241,9 +1456,8 @@ class KundliChartGenerator:
         # MODE A: HOUSE_ONLY
         # -------------------------------------------------------------
         if plan.intent == "HOUSE_ONLY":
-            # Pure house illumination: no planet inserted!
-            # Render upward floating golden particle motes
-            uc_a, vc_a = get_uv_centroid(uv_polygons[primary_h])
+            h_active = primary_h or 1
+            uc_a, vc_a = get_uv_centroid(uv_polygons.get(h_active, uv_polygons[1]))
             sx_fl, sy_fl, _ = project_pt(uc_a, vc_a, h=0)
 
             particles = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -1261,14 +1475,15 @@ class KundliChartGenerator:
             canvas = Image.alpha_composite(canvas, particles)
 
             cls._draw_floating_badge(canvas, plan.badge_title, font_header, width, top_y=170)
-            return cls._save_scene_output(canvas, topic, scene_idx, f"h{primary_h}_only", output_path)
+            return cls._save_scene_output(canvas, topic, scene_idx, f"h{h_active}_only", output_path)
 
         # -------------------------------------------------------------
         # MODE C: PLANET_IN_HOUSE
         # -------------------------------------------------------------
         elif plan.intent == "PLANET_IN_HOUSE":
             p_key = plan.planets[0] if plan.planets else "sun"
-            uc_c, vc_c = get_uv_centroid(uv_polygons[primary_h])
+            h_active = primary_h or 1
+            uc_c, vc_c = get_uv_centroid(uv_polygons.get(h_active, uv_polygons[1]))
             sx_fl, sy_fl, _ = project_pt(uc_c, vc_c, h=0)
             sx_pl, sy_pl, scale_p = project_pt(uc_c, vc_c, h=105)
 
@@ -1301,129 +1516,224 @@ class KundliChartGenerator:
             canvas.paste(p_sphere, (int(sx_pl - p_sphere.width // 2), int(sy_pl - p_sphere.height // 2)), p_sphere)
 
             cls._draw_floating_badge(canvas, plan.badge_title, font_header, width, top_y=170)
-            return cls._save_scene_output(canvas, topic, scene_idx, f"h{primary_h}_{p_key}", output_path)
+            return cls._save_scene_output(canvas, topic, scene_idx, f"h{h_active}_{p_key}", output_path)
 
         # -------------------------------------------------------------
-        # MODE D: CONJUNCTION (Multiple Planets Together in One House)
+        # MODE D: CONJUNCTION (All Identified Planets Together in One House)
         # -------------------------------------------------------------
         elif plan.intent == "CONJUNCTION":
-            planets = plan.planets if plan.planets else ["sun", "mercury"]
-            uc_d, vc_d = get_uv_centroid(uv_polygons[primary_h])
+            planets = plan.planets if plan.planets else ["sun"]
+            h_active = primary_h or 1
+            uc_d, vc_d = get_uv_centroid(uv_polygons.get(h_active, uv_polygons[1]))
             sx_fl, sy_fl, _ = project_pt(uc_d, vc_d, h=0)
 
             # Floor Contact Shadow
             sh = Image.new("RGBA", (width, height), (0, 0, 0, 0))
             shdraw = ImageDraw.Draw(sh)
-            shdraw.ellipse([sx_fl - 130, sy_fl - 28, sx_fl + 130, sy_fl + 28], fill=(10, 5, 2, 185))
+            shdraw.ellipse([sx_fl - 140, sy_fl - 32, sx_fl + 140, sy_fl + 32], fill=(10, 5, 2, 185))
             sh = sh.filter(ImageFilter.GaussianBlur(18))
             canvas = Image.alpha_composite(canvas, sh)
 
-            # Place both planets side by side above the house
-            offsets = [-55.0, 55.0] if len(planets) == 2 else [0.0]
-            for idx, p_key in enumerate(planets[:2]):
-                u_off = offsets[idx] if idx < len(offsets) else 0.0
-                sx_pl, sy_pl, scale_p = project_pt(uc_d + u_off, vc_d, h=105)
-                p_sz = int(175 * scale_p)
+            # Support ALL planets in conjunction cleanly without silent truncation!
+            n_p = len(planets)
+            if n_p == 1:
+                offsets = [(0.0, 0.0)]
+                scale_factor = 1.0
+            elif n_p == 2:
+                offsets = [(-48.0, 0.0), (48.0, 0.0)]
+                scale_factor = 0.82
+            elif n_p == 3:
+                offsets = [(-56.0, 15.0), (0.0, -32.0), (56.0, 15.0)]
+                scale_factor = 0.70
+            else:
+                offsets = []
+                for i in range(n_p):
+                    ang = i * (2.0 * math.pi / n_p)
+                    offsets.append((55.0 * math.cos(ang), 30.0 * math.sin(ang)))
+                scale_factor = 0.58
+
+            planet_positions = []
+            for idx, p_key in enumerate(planets):
+                u_off, v_off = offsets[idx] if idx < len(offsets) else (0.0, 0.0)
+                sx_pl, sy_pl, scale_p = project_pt(uc_d + u_off, vc_d + v_off, h=105)
+                planet_positions.append((sx_pl, sy_pl))
+
+                p_sz = int(190 * scale_p * scale_factor)
                 p_sphere = cls.render_celestial_sphere(p_key, p_sz)
 
                 p_aura = Image.new("RGBA", (width, height), (0, 0, 0, 0))
                 p_adraw = ImageDraw.Draw(p_aura)
                 glow_col = (255, 195, 45, 140) if p_key == "sun" else (
-                    (100, 240, 160, 140) if p_key == "mercury" else ((160, 90, 240, 140) if p_key == "rahu" else (220, 180, 90, 140))
+                    (100, 240, 160, 140) if p_key == "mercury" else (
+                        (255, 230, 170, 140) if p_key == "venus" else (
+                            (160, 90, 240, 140) if p_key == "rahu" else (220, 180, 90, 140)
+                        )
+                    )
                 )
                 p_adraw.ellipse([sx_pl - p_sz // 2 - 20, sy_pl - p_sz // 2 - 20, sx_pl + p_sz // 2 + 20, sy_pl + p_sz // 2 + 20], fill=glow_col)
                 p_aura = p_aura.filter(ImageFilter.GaussianBlur(20))
                 canvas = Image.alpha_composite(canvas, p_aura)
                 canvas.paste(p_sphere, (int(sx_pl - p_sphere.width // 2), int(sy_pl - p_sphere.height // 2)), p_sphere)
 
-            # Golden Linking Energy Arc between conjoined planets
-            if len(planets) >= 2:
-                sx1, sy1, _ = project_pt(uc_d - 55.0, vc_d, h=105)
-                sx2, sy2, _ = project_pt(uc_d + 55.0, vc_d, h=105)
+            # Golden Linking Energy Arc connecting all conjoined planets
+            if len(planet_positions) >= 2:
                 arc_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
                 adraw = ImageDraw.Draw(arc_layer)
-                adraw.line([(sx1, sy1), (sx2, sy2)], fill=(255, 235, 140, 220), width=4)
+                for i in range(len(planet_positions) - 1):
+                    adraw.line([planet_positions[i], planet_positions[i + 1]], fill=(255, 235, 140, 220), width=4)
+                if len(planet_positions) >= 3:
+                    adraw.line([planet_positions[-1], planet_positions[0]], fill=(255, 235, 140, 160), width=2)
                 arc_layer = arc_layer.filter(ImageFilter.GaussianBlur(4))
                 canvas = Image.alpha_composite(canvas, arc_layer)
 
             cls._draw_floating_badge(canvas, plan.badge_title, font_header, width, top_y=170)
-            return cls._save_scene_output(canvas, topic, scene_idx, f"h{primary_h}_conj", output_path)
+            return cls._save_scene_output(canvas, topic, scene_idx, f"h{h_active}_conj", output_path)
 
         # -------------------------------------------------------------
         # MODE E: ASPECT / DRISHTI
         # -------------------------------------------------------------
         elif plan.intent == "ASPECT":
-            src_h = plan.primary_house or 10
-            tgt_h = plan.target_house or 4
-            p_key = plan.planets[0] if plan.planets else "saturn"
-
-            uc_src, vc_src = get_uv_centroid(uv_polygons[src_h])
-            sx_fl, sy_fl, _ = project_pt(uc_src, vc_src, h=0)
-            sx_pl, sy_pl, scale_p = project_pt(uc_src, vc_src, h=105)
-
-            # Source Planet Floor Contact Shadow
-            sh = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-            shdraw = ImageDraw.Draw(sh)
-            shdraw.ellipse([sx_fl - 100, sy_fl - 26, sx_fl + 100, sy_fl + 26], fill=(10, 5, 2, 175))
-            sh = sh.filter(ImageFilter.GaussianBlur(16))
-            canvas = Image.alpha_composite(canvas, sh)
-
-            # Render Source Planet
-            p_sz = int(210 * scale_p)
-            p_sphere = cls.render_celestial_sphere(p_key, p_sz)
-            canvas.paste(p_sphere, (int(sx_pl - p_sphere.width // 2), int(sy_pl - p_sphere.height // 2)), p_sphere)
+            src_h = plan.primary_house
+            tgt_h = plan.target_house or 1
+            p_key = plan.planets[0] if plan.planets else None
 
             # Target House Coordinates
-            uc_tgt, vc_tgt = get_uv_centroid(uv_polygons[tgt_h])
+            uc_tgt, vc_tgt = get_uv_centroid(uv_polygons.get(tgt_h, uv_polygons[1]))
             tx, ty, _ = project_pt(uc_tgt, vc_tgt, h=0)
 
             # Impact Shockwave Mandala on Target House
             beam_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
             bdraw = ImageDraw.Draw(beam_layer)
-            bdraw.ellipse([tx - 45, ty - 16, tx + 45, ty + 16], fill=(255, 215, 60, 120), outline=(255, 245, 140, 240), width=2)
-            bdraw.ellipse([tx - 70, ty - 24, tx + 70, ty + 24], outline=(255, 215, 60, 150), width=1)
+            bdraw.ellipse([tx - 50, ty - 18, tx + 50, ty + 18], fill=(255, 215, 60, 130), outline=(255, 245, 140, 245), width=2)
+            bdraw.ellipse([tx - 75, ty - 26, tx + 75, ty + 26], outline=(255, 215, 60, 160), width=1)
 
-            # Parabolic Aspect Ray from Source Planet to Target House
-            steps = 32
-            arc_pts = []
-            apex_h = 160.0
-            for s in range(steps):
-                t_val = s / float(steps - 1)
-                u_curr = uc_src + t_val * (uc_tgt - uc_src)
-                v_curr = vc_src + t_val * (vc_tgt - vc_src)
-                h_curr = (1.0 - t_val) * 105.0 + t_val * 0.0 + 4.0 * apex_h * t_val * (1.0 - t_val)
-                ax, ay, _ = project_pt(u_curr, v_curr, h=h_curr)
-                arc_pts.append((ax, ay))
+            # Case 1: Verified/Explicit source house is known
+            if src_h is not None:
+                uc_src, vc_src = get_uv_centroid(uv_polygons.get(src_h, uv_polygons[1]))
+                sx_fl, sy_fl, _ = project_pt(uc_src, vc_src, h=0)
+                sx_pl, sy_pl, scale_p = project_pt(uc_src, vc_src, h=105)
 
-            for idx in range(len(arc_pts) - 1):
-                p_a, p_b = arc_pts[idx], arc_pts[idx + 1]
-                bdraw.line([p_a, p_b], fill=(255, 190, 30, 160), width=8)
-                bdraw.line([p_a, p_b], fill=(255, 250, 180, 250), width=3)
+                if p_key:
+                    # Floor shadow and planet sphere
+                    sh = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+                    shdraw = ImageDraw.Draw(sh)
+                    shdraw.ellipse([sx_fl - 100, sy_fl - 26, sx_fl + 100, sy_fl + 26], fill=(10, 5, 2, 175))
+                    sh = sh.filter(ImageFilter.GaussianBlur(16))
+                    canvas = Image.alpha_composite(canvas, sh)
 
-            # Directional Arrowhead landing firmly in Target House
-            p_penultimate = arc_pts[-2]
-            angle = math.atan2(ty - p_penultimate[1], tx - p_penultimate[0])
-            tip_sz = 22
-            tip1 = (tx - tip_sz * math.cos(angle - math.pi / 6), ty - tip_sz * math.sin(angle - math.pi / 6))
-            tip2 = (tx - tip_sz * math.cos(angle + math.pi / 6), ty - tip_sz * math.sin(angle + math.pi / 6))
-            bdraw.polygon([(tx, ty), tip1, tip2], fill=(255, 245, 180, 255))
+                    p_sz = int(210 * scale_p)
+                    p_sphere = cls.render_celestial_sphere(p_key, p_sz)
+                    canvas.paste(p_sphere, (int(sx_pl - p_sphere.width // 2), int(sy_pl - p_sphere.height // 2)), p_sphere)
 
-            # Ray Tag Pill (Upright, NEVER mirrored!)
-            tag_text = plan.aspect_type or "7TH DRISHTI"
-            mid_pt = arc_pts[len(arc_pts) // 2]
-            tag_x, tag_y = mid_pt[0] + (35 if uc_tgt >= uc_src else -35), mid_pt[1] - 15
-            bbox_t = bdraw.textbbox((0, 0), tag_text, font=font_badge)
-            tw, th = bbox_t[2] - bbox_t[0], bbox_t[3] - bbox_t[1]
-            px, py = int(tag_x - tw // 2), int(tag_y - th // 2)
-            bdraw.rounded_rectangle([px - 12, py - 6, px + tw + 12, py + th + 6], radius=6, fill=(15, 10, 22, 235), outline=(255, 215, 0, 210), width=1)
-            bdraw.text((px, py), tag_text, fill=(255, 235, 140), font=font_badge)
+                # Parabolic Aspect Ray from Source to Target
+                steps = 32
+                arc_pts = []
+                apex_h = 160.0
+                for s in range(steps):
+                    t_val = s / float(steps - 1)
+                    u_curr = uc_src + t_val * (uc_tgt - uc_src)
+                    v_curr = vc_src + t_val * (vc_tgt - vc_src)
+                    h_curr = (1.0 - t_val) * 105.0 + t_val * 0.0 + 4.0 * apex_h * t_val * (1.0 - t_val)
+                    ax, ay, _ = project_pt(u_curr, v_curr, h=h_curr)
+                    arc_pts.append((ax, ay))
+
+                for idx in range(len(arc_pts) - 1):
+                    p_a, p_b = arc_pts[idx], arc_pts[idx + 1]
+                    bdraw.line([p_a, p_b], fill=(255, 190, 30, 160), width=8)
+                    bdraw.line([p_a, p_b], fill=(255, 250, 180, 250), width=3)
+
+                # Arrowhead
+                p_penultimate = arc_pts[-2]
+                angle = math.atan2(ty - p_penultimate[1], tx - p_penultimate[0])
+                tip_sz = 22
+                tip1 = (tx - tip_sz * math.cos(angle - math.pi / 6), ty - tip_sz * math.sin(angle - math.pi / 6))
+                tip2 = (tx - tip_sz * math.cos(angle + math.pi / 6), ty - tip_sz * math.sin(angle + math.pi / 6))
+                bdraw.polygon([(tx, ty), tip1, tip2], fill=(255, 245, 180, 255))
+
+                # Ray Tag Pill (Upright, NEVER mirrored!)
+                tag_text = plan.aspect_type or "ASPECT DRISHTI"
+                mid_pt = arc_pts[len(arc_pts) // 2]
+                tag_x, tag_y = mid_pt[0] + (35 if uc_tgt >= uc_src else -35), mid_pt[1] - 15
+                bbox_t = bdraw.textbbox((0, 0), tag_text, font=font_badge)
+                tw, th = bbox_t[2] - bbox_t[0], bbox_t[3] - bbox_t[1]
+                px, py = int(tag_x - tw // 2), int(tag_y - th // 2)
+                bdraw.rounded_rectangle([px - 12, py - 6, px + tw + 12, py + th + 6], radius=6, fill=(15, 10, 22, 235), outline=(255, 215, 0, 210), width=1)
+                bdraw.text((px, py), tag_text, fill=(255, 235, 140), font=font_badge)
+
+                tag_out = f"aspect_{src_h}_to_{tgt_h}"
+
+            # Case 2: Target is known, planet is known, but source is UNKNOWN (e.g. Case F)
+            # DO NOT INVENT A SOURCE HOUSE! Render planet in celestial space above chart.
+            elif p_key is not None:
+                cx_cel, cy_cel = width // 2, 420
+                p_sz = 230
+                p_sphere = cls.render_celestial_sphere(p_key, p_sz)
+
+                # Planet celestial aura
+                p_aura = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+                p_adraw = ImageDraw.Draw(p_aura)
+                p_adraw.ellipse([cx_cel - 160, cy_cel - 160, cx_cel + 160, cy_cel + 160], fill=(245, 180, 50, 130))
+                p_aura = p_aura.filter(ImageFilter.GaussianBlur(28))
+                canvas = Image.alpha_composite(canvas, p_aura)
+                canvas.paste(p_sphere, (cx_cel - p_sz // 2, cy_cel - p_sz // 2), p_sphere)
+
+                # Focused celestial ray descending from planet to target house
+                p_src_ray = (cx_cel, cy_cel + p_sz // 2 - 20)
+                bdraw.line([p_src_ray, (tx, ty)], fill=(255, 195, 45, 150), width=8)
+                bdraw.line([p_src_ray, (tx, ty)], fill=(255, 250, 180, 245), width=3)
+
+                # Arrowhead
+                angle = math.atan2(ty - p_src_ray[1], tx - p_src_ray[0])
+                tip_sz = 22
+                tip1 = (tx - tip_sz * math.cos(angle - math.pi / 6), ty - tip_sz * math.sin(angle - math.pi / 6))
+                tip2 = (tx - tip_sz * math.cos(angle + math.pi / 6), ty - tip_sz * math.sin(angle + math.pi / 6))
+                bdraw.polygon([(tx, ty), tip1, tip2], fill=(255, 245, 180, 255))
+
+                # Ray Tag Pill (Upright, NEVER mirrored!)
+                p_hi, p_en = PLANET_DISPLAY_NAMES.get(p_key, (p_key.upper(), p_key.upper()))
+                tag_text = f"{p_en} DRISHTI"
+                mid_x = (p_src_ray[0] + tx) // 2 + 40
+                mid_y = (p_src_ray[1] + ty) // 2
+                bbox_t = bdraw.textbbox((0, 0), tag_text, font=font_badge)
+                tw, th = bbox_t[2] - bbox_t[0], bbox_t[3] - bbox_t[1]
+                px, py = int(mid_x - tw // 2), int(mid_y - th // 2)
+                bdraw.rounded_rectangle([px - 12, py - 6, px + tw + 12, py + th + 6], radius=6, fill=(15, 10, 22, 235), outline=(255, 215, 0, 210), width=1)
+                bdraw.text((px, py), tag_text, fill=(255, 235, 140), font=font_badge)
+
+                tag_out = f"aspect_celestial_{p_key}_to_h{tgt_h}"
+
+            # Case 3: Target is known, but NO planet is identified (e.g. Case H: "The 12th house receives an aspect")
+            # DO NOT INVENT A PLANET! Pure celestial ray descending onto target house.
+            else:
+                p_src_ray = (width // 2, 290)
+                bdraw.line([p_src_ray, (tx, ty)], fill=(255, 215, 60, 140), width=8)
+                bdraw.line([p_src_ray, (tx, ty)], fill=(255, 250, 190, 240), width=3)
+
+                # Arrowhead
+                angle = math.atan2(ty - p_src_ray[1], tx - p_src_ray[0])
+                tip_sz = 22
+                tip1 = (tx - tip_sz * math.cos(angle - math.pi / 6), ty - tip_sz * math.sin(angle - math.pi / 6))
+                tip2 = (tx - tip_sz * math.cos(angle + math.pi / 6), ty - tip_sz * math.sin(angle + math.pi / 6))
+                bdraw.polygon([(tx, ty), tip1, tip2], fill=(255, 245, 180, 255))
+
+                # Ray Tag Pill (Upright, NEVER mirrored!)
+                tag_text = "ASPECT RECEIVED"
+                mid_x = (p_src_ray[0] + tx) // 2 + 40
+                mid_y = (p_src_ray[1] + ty) // 2
+                bbox_t = bdraw.textbbox((0, 0), tag_text, font=font_badge)
+                tw, th = bbox_t[2] - bbox_t[0], bbox_t[3] - bbox_t[1]
+                px, py = int(mid_x - tw // 2), int(mid_y - th // 2)
+                bdraw.rounded_rectangle([px - 12, py - 6, px + tw + 12, py + th + 6], radius=6, fill=(15, 10, 22, 235), outline=(255, 215, 0, 210), width=1)
+                bdraw.text((px, py), tag_text, fill=(255, 235, 140), font=font_badge)
+
+                tag_out = f"aspect_received_h{tgt_h}"
 
             beam_blur = beam_layer.filter(ImageFilter.GaussianBlur(6))
             canvas = Image.alpha_composite(canvas, beam_blur)
             canvas = Image.alpha_composite(canvas, beam_layer)
 
             cls._draw_floating_badge(canvas, plan.badge_title, font_header, width, top_y=170)
-            return cls._save_scene_output(canvas, topic, scene_idx, f"aspect_{src_h}_to_{tgt_h}", output_path)
+            return cls._save_scene_output(canvas, topic, scene_idx, tag_out, output_path)
 
         # -------------------------------------------------------------
         # MODE F: GENERAL / FALLBACK

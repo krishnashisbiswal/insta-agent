@@ -1,17 +1,21 @@
 """
 Visual Intelligence Audit & Verification Script.
-Generates 'after' visual images for all mandatory test scenarios from Section 14:
-- Test A: House only ("The 12th house becomes important.")
-- Test B: Planet only ("Jupiter brings wisdom and expansion")
-- Test C: Planet in a house ("Sun in the 8th house")
-- Test D: Conjunction ("Sun and Mercury in the 1st house")
-- Test E: Aspect ("Saturn in the 10th house casts its 7th aspect onto the 4th house")
-- Test F1: Scene transition 1 ("The 4th house represents mother and peace")
-- Test F2: Scene transition 2 ("Mars enters the 10th house")
-- Test G: Complex narration ("When Rahu occupies the 8th house, it creates deep transformational shifts")
+Generates 'after' visual images for all mandatory test scenarios from Section 8:
+- Case A: House only ("The 12th house becomes important.")
+- Case B: Planet only ("Jupiter brings wisdom.")
+- Case C: Planet in a house ("Sun in the 8th house.")
+- Case D: Explicit conjunction ("Sun and Rahu are conjunct in the 8th house.")
+- Case E: Two planets mentioned but not conjunct ("Sun brings vitality while Rahu represents disruption.")
+- Case F: Aspect with target only ("Saturn aspects the 12th house.")
+- Case G: Verified aspect (Saturn in 6th casting 7th aspect onto 12th house via verified chart data)
+- Case H: Unknown aspecting planet ("The 12th house receives an aspect.")
+- Case I: Three-planet conjunction ("Sun, Mercury and Venus are conjunct in the 1st house.")
+- Case J1: Scene transition 1 ("Venus in the 7th house.")
+- Case J2: Scene transition 2 ("The 12th house becomes important.")
 
-Creates a side-by-side Before/After comparison contact sheet:
+Creates a comprehensive side-by-side Before/After comparison contact sheet:
 - output/visual_intelligence_audit/comparison_contact_sheet.jpg
+Where before images are unavailable, they are clearly and honestly labeled [Before Unavailable].
 """
 
 import sys
@@ -28,6 +32,7 @@ OUTPUT_DIR = PROJECT_ROOT / "output" / "visual_intelligence_audit"
 AFTER_DIR = OUTPUT_DIR / "after"
 BEFORE_DIR = OUTPUT_DIR / "before"
 AFTER_DIR.mkdir(parents=True, exist_ok=True)
+BEFORE_DIR.mkdir(parents=True, exist_ok=True)
 
 test_scenarios = [
     {
@@ -41,154 +46,201 @@ test_scenarios = [
         "topic": "Vedic Astrology Secrets",
         "expected_intent": "HOUSE_ONLY",
         "expected_house": 12,
+        "expected_target": None,
         "expected_planets": [],
     },
     {
         "id": "case_b_planet_only",
         "title": "Case B: Planet Only",
         "scene_dict": {
-            "spoken_line": "Jupiter brings wisdom and expansion",
+            "spoken_line": "Jupiter brings wisdom.",
             "on_screen_text": "JUPITER EXPANSION",
             "visual_description": "Planet Jupiter radiating cosmic wisdom in starry deep space",
         },
         "topic": "Jupiter Guru Guidance",
         "expected_intent": "PLANET_ONLY",
         "expected_house": None,
+        "expected_target": None,
         "expected_planets": ["jupiter"],
     },
     {
         "id": "case_c_planet_in_house",
         "title": "Case C: Planet in House",
         "scene_dict": {
-            "spoken_line": "Sun in the 8th house",
+            "spoken_line": "Sun in the 8th house.",
             "on_screen_text": "SURYA IN 8TH HOUSE",
             "visual_description": "Sun positioned inside house 8 with floor contact shadow",
         },
         "topic": "Surya Transformation",
         "expected_intent": "PLANET_IN_HOUSE",
         "expected_house": 8,
+        "expected_target": None,
         "expected_planets": ["sun"],
     },
     {
-        "id": "case_d_conjunction",
-        "title": "Case D: Conjunction",
+        "id": "case_d_explicit_conjunction",
+        "title": "Case D: Explicit Conjunction",
         "scene_dict": {
-            "spoken_line": "Sun and Mercury in the 1st house",
-            "on_screen_text": "BUDHADITYA YOGA 1ST HOUSE",
-            "visual_description": "Both Sun and Mercury together in the 1st house with dual aura",
+            "spoken_line": "Sun and Rahu are conjunct in the 8th house.",
+            "on_screen_text": "SURYA RAHU CONJUNCTION",
+            "visual_description": "Sun and Rahu together in the 8th house with dual aura",
         },
-        "topic": "Royal Astrological Yogas",
+        "topic": "Grahan Yoga",
         "expected_intent": "CONJUNCTION",
-        "expected_house": 1,
-        "expected_planets": ["sun", "mercury"],
+        "expected_house": 8,
+        "expected_target": None,
+        "expected_planets": ["sun", "rahu"],
     },
     {
-        "id": "case_e_aspect",
-        "title": "Case E: Aspect (Drishti)",
+        "id": "case_e_two_planets_not_conjunct",
+        "title": "Case E: Two Planets (Contrast, NOT Conjunct)",
         "scene_dict": {
-            "spoken_line": "Saturn in the 10th house casts its 7th aspect onto the 4th house",
-            "on_screen_text": "SHANI 7TH DRISHTI ON 4TH HOUSE",
-            "visual_description": "Saturn in house 10 casting direct golden ray onto house 4",
+            "spoken_line": "Sun brings vitality while Rahu represents disruption.",
+            "on_screen_text": "SURYA VS RAHU",
+            "visual_description": "Distinct celestial forces of Sun and Rahu in cosmic balance",
         },
-        "topic": "Shani Karmic Alignment",
+        "topic": "Planetary Contrasts",
+        "expected_intent": "MULTI_PLANET",
+        "expected_house": None,
+        "expected_target": None,
+        "expected_planets": ["sun", "rahu"],
+    },
+    {
+        "id": "case_f_aspect_target_only",
+        "title": "Case F: Aspect (Target Only)",
+        "scene_dict": {
+            "spoken_line": "Saturn aspects the 12th house.",
+            "on_screen_text": "SHANI ASPECTS 12TH HOUSE",
+            "visual_description": "Saturn casting powerful aspect rays directly into house 12",
+        },
+        "topic": "Karmic Alignment",
         "expected_intent": "ASPECT",
-        "expected_house": 10,
+        "expected_house": None,
+        "expected_target": 12,
         "expected_planets": ["saturn"],
     },
     {
-        "id": "case_f1_transition_scene1",
-        "title": "Case F1: Transition (Scene 1)",
+        "id": "case_g_verified_aspect",
+        "title": "Case G: Verified Aspect (with Chart Data)",
         "scene_dict": {
-            "spoken_line": "The 4th house represents mother and peace",
-            "on_screen_text": "4TH HOUSE SUKHA",
-            "visual_description": "4th house highlighted in golden illumination",
+            "spoken_line": "Saturn aspects the 12th house.",
+            "on_screen_text": "VERIFIED SHANI DRISHTI",
+            "visual_description": "Saturn in 6th house casting 7th drishti onto 12th house",
+            "chart_data": {"saturn": 6},
         },
-        "topic": "Life Houses Journey",
-        "expected_intent": "HOUSE_ONLY",
-        "expected_house": 4,
+        "topic": "Verified Jyotish Placements",
+        "expected_intent": "ASPECT",
+        "expected_house": 6,
+        "expected_target": 12,
+        "expected_planets": ["saturn"],
+    },
+    {
+        "id": "case_h_unknown_aspecting_planet",
+        "title": "Case H: Unknown Aspecting Planet",
+        "scene_dict": {
+            "spoken_line": "The 12th house receives an aspect.",
+            "on_screen_text": "12TH HOUSE ASPECT RECEIVED",
+            "visual_description": "Golden rays illuminating house 12 without invented planet",
+        },
+        "topic": "Subconscious Illumination",
+        "expected_intent": "ASPECT",
+        "expected_house": None,
+        "expected_target": 12,
         "expected_planets": [],
     },
     {
-        "id": "case_f2_transition_scene2",
-        "title": "Case F2: Transition (Scene 2)",
+        "id": "case_i_three_planet_conjunction",
+        "title": "Case I: Three-Planet Conjunction",
         "scene_dict": {
-            "spoken_line": "Mars enters the 10th house",
-            "on_screen_text": "MARS IN 10TH HOUSE",
-            "visual_description": "Mars entering the 10th house of career and leadership",
+            "spoken_line": "Sun, Mercury and Venus are conjunct in the 1st house.",
+            "on_screen_text": "TRIPLE CONJUNCTION 1ST HOUSE",
+            "visual_description": "All three planets cleanly arrayed inside the ascendant",
         },
-        "topic": "Life Houses Journey",
-        "expected_intent": "PLANET_IN_HOUSE",
-        "expected_house": 10,
-        "expected_planets": ["mars"],
+        "topic": "Royal Yogas",
+        "expected_intent": "CONJUNCTION",
+        "expected_house": 1,
+        "expected_target": None,
+        "expected_planets": ["sun", "mercury", "venus"],
     },
     {
-        "id": "case_g_complex_narration",
-        "title": "Case G: Complex Narration",
+        "id": "case_j1_transition_scene1",
+        "title": "Case J1: Transition Scene 1",
         "scene_dict": {
-            "spoken_line": "When Rahu occupies the 8th house, it creates deep transformational shifts",
-            "on_screen_text": "RAHU IN 8TH HOUSE",
-            "visual_description": "Rahu in the 8th house of sudden transformations",
+            "spoken_line": "Venus in the 7th house.",
+            "on_screen_text": "VENUS IN 7TH HOUSE",
+            "visual_description": "Venus positioned in the 7th house of marriage",
         },
-        "topic": "Rahu Mysteries",
+        "topic": "Relationship Journey",
         "expected_intent": "PLANET_IN_HOUSE",
-        "expected_house": 8,
-        "expected_planets": ["rahu"],
+        "expected_house": 7,
+        "expected_target": None,
+        "expected_planets": ["venus"],
+    },
+    {
+        "id": "case_j2_transition_scene2",
+        "title": "Case J2: Transition Scene 2 (No Lingering Venus)",
+        "scene_dict": {
+            "spoken_line": "The 12th house becomes important.",
+            "on_screen_text": "12TH HOUSE TRANSIT",
+            "visual_description": "12th house illuminated without lingering Venus",
+        },
+        "topic": "Relationship Journey",
+        "expected_intent": "HOUSE_ONLY",
+        "expected_house": 12,
+        "expected_target": None,
+        "expected_planets": [],
     },
 ]
 
 
 def run_audit():
     print("=" * 70)
-    print("STARTING ASTROLOGY VISUAL INTELLIGENCE AUDIT & VERIFICATION")
+    print("STARTING AUDIT: Script-Driven Astrology Visual Intelligence")
     print("=" * 70)
 
     generated_files = {}
 
     for idx, sc in enumerate(test_scenarios):
-        out_p = AFTER_DIR / f"{sc['id']}_after.jpg"
-        print(f"\nProcessing [{sc['title']}]...")
-        narration = f"{sc['scene_dict']['spoken_line']} {sc['scene_dict']['on_screen_text']}"
-        plan = KundliChartGenerator.parse_astrology_scene(narration, fallback_topic=sc["topic"])
+        print(f"\nEvaluating {sc['title']}...")
+        spoken = sc["scene_dict"]["spoken_line"]
+        chart_data = sc["scene_dict"].get("chart_data")
+        plan = KundliChartGenerator.parse_astrology_scene(spoken, fallback_topic=sc["topic"], chart_data=chart_data)
 
-        print(f" -> Parsed Intent:   {plan.intent} (Expected: {sc['expected_intent']})")
-        print(f" -> Primary House:   {plan.primary_house} (Expected: {sc['expected_house']})")
-        print(f" -> Target House:    {plan.target_house}")
-        print(f" -> Planets:         {plan.planets} (Expected: {sc['expected_planets']})")
-        print(f" -> Badge Title:     '{plan.badge_title}'")
+        print(f"  Parsed Intent: {plan.intent} (Expected: {sc['expected_intent']})")
+        print(f"  Primary House (Source): {plan.primary_house} (Expected: {sc['expected_house']})")
+        print(f"  Target House: {plan.target_house} (Expected: {sc['expected_target']})")
+        print(f"  Planets: {plan.planets} (Expected: {sc['expected_planets']})")
+        print(f"  Badge Title: '{plan.badge_title}'")
+        print(f"  Relationship: {plan.relationship}")
 
-        assert plan.intent == sc["expected_intent"], f"Intent mismatch for {sc['id']}: {plan.intent} != {sc['expected_intent']}"
-        if sc["expected_house"] is not None:
-            assert plan.primary_house == sc["expected_house"], f"House mismatch for {sc['id']}"
+        # Assertions
+        assert plan.intent == sc["expected_intent"], f"Intent mismatch for {sc['id']}"
+        assert plan.primary_house == sc["expected_house"], f"Source house mismatch for {sc['id']}"
+        assert plan.target_house == sc["expected_target"], f"Target house mismatch for {sc['id']}"
         assert set(plan.planets) == set(sc["expected_planets"]), f"Planets mismatch for {sc['id']}"
 
+        out_p = AFTER_DIR / f"{sc['id']}_after.jpg"
         res_path = KundliChartGenerator.generate_3d_kundli_planet_scene(
             scene_dict=sc["scene_dict"],
             topic=sc["topic"],
             scene_idx=idx,
             output_path=out_p,
+            chart_data=chart_data,
         )
         assert res_path.exists()
-        print(f" -> Generated Image: {res_path.name} ({res_path.stat().st_size // 1024} KB)")
+        print(f"  -> Generated Image: {res_path.name} ({res_path.stat().st_size // 1024} KB)")
         generated_files[sc["id"]] = res_path
 
     print("\n" + "=" * 70)
-    print("ALL 8 MANDATORY TEST CASES GENERATED AND VERIFIED SUCCESSFULLY!")
+    print("ALL 11 MANDATORY TEST CASES GENERATED AND VERIFIED SUCCESSFULLY!")
     print("=" * 70)
 
-    # Build Side-by-Side Comparison Contact Sheet (Cases A through E)
-    comparison_cases = [
-        ("case_a_house_only", "Case A: House Only ('12th house becomes important.')"),
-        ("case_b_planet_only", "Case B: Planet Only ('Jupiter brings wisdom and expansion')"),
-        ("case_c_planet_in_house", "Case C: Planet in House ('Sun in the 8th house')"),
-        ("case_d_conjunction", "Case D: Conjunction ('Sun and Mercury in the 1st house')"),
-        ("case_e_aspect", "Case E: Aspect ('Saturn 10th casts 7th aspect onto 4th house')"),
-    ]
-
+    # Build Side-by-Side Comparison Contact Sheet
     thumb_w, thumb_h = 360, 640
-    header_h = 100
-    rows = len(comparison_cases)
+    header_h = 90
+    rows = len(test_scenarios)
     total_w = thumb_w * 2 + 100
-    total_h = rows * (thumb_h + header_h) + 120
+    total_h = rows * (thumb_h + header_h) + 140
 
     sheet = Image.new("RGB", (total_w, total_h), (12, 10, 18))
     sdraw = ImageDraw.Draw(sheet)
@@ -196,44 +248,47 @@ def run_audit():
     try:
         font_hdr = ImageFont.truetype("arial.ttf", 28)
         font_sub = ImageFont.truetype("arial.ttf", 20)
-        font_side = ImageFont.truetype("arial.ttf", 24)
+        font_side = ImageFont.truetype("arial.ttf", 22)
     except Exception:
         font_hdr = ImageFont.load_default()
         font_sub = ImageFont.load_default()
         font_side = ImageFont.load_default()
 
     # Main Sheet Header
-    sdraw.text((40, 25), "SCRIPT-DRIVEN ASTROLOGY VISUAL INTELLIGENCE", fill=(255, 215, 60), font=font_hdr)
-    sdraw.text((40, 65), "Before (Archetype Override & Contamination) vs After (Strict Script Ground Truth)", fill=(200, 190, 180), font=font_sub)
+    sdraw.text((40, 25), "SCRIPT-DRIVEN ASTROLOGY VISUAL INTELLIGENCE AUDIT", fill=(255, 215, 60), font=font_hdr)
+    sdraw.text((40, 65), "Strict Script Ground Truth & Verification: No Invented Entities", fill=(200, 190, 180), font=font_sub)
 
-    y_cur = 120
-    for cid, ctitle in comparison_cases:
+    y_cur = 130
+    for sc in test_scenarios:
+        cid = sc["id"]
+        ctitle = f"{sc['title']} • '{sc['scene_dict']['spoken_line']}'"
         before_file = BEFORE_DIR / f"{cid}_before.jpg"
         after_file = AFTER_DIR / f"{cid}_after.jpg"
 
         # Case Title
-        sdraw.rectangle([30, y_cur, total_w - 30, y_cur + 40], fill=(22, 18, 30))
-        sdraw.text((40, y_cur + 8), ctitle, fill=(255, 235, 140), font=font_side)
-        y_cur += 50
+        sdraw.rectangle([30, y_cur, total_w - 30, y_cur + 42], fill=(22, 18, 30))
+        sdraw.text((40, y_cur + 8), ctitle[:65], fill=(255, 235, 140), font=font_side)
+        y_cur += 52
 
-        # Before Image
+        # Before Image (Honest verification: Never fabricate!)
         if before_file.exists():
             b_img = Image.open(before_file).resize((thumb_w, thumb_h), Image.Resampling.LANCZOS)
             sheet.paste(b_img, (40, y_cur))
             sdraw.rectangle([40, y_cur, 40 + thumb_w, y_cur + thumb_h], outline=(220, 60, 40), width=3)
-            sdraw.text((50, y_cur + 15), "BEFORE (Broken)", fill=(255, 80, 80), font=font_side)
+            sdraw.text((50, y_cur + 15), "BEFORE (Baseline)", fill=(255, 80, 80), font=font_side)
         else:
-            sdraw.rectangle([40, y_cur, 40 + thumb_w, y_cur + thumb_h], outline=(80, 80, 80), width=2)
-            sdraw.text((80, y_cur + thumb_h // 2), "No Before Image", fill=(140, 140, 140), font=font_sub)
+            sdraw.rectangle([40, y_cur, 40 + thumb_w, y_cur + thumb_h], fill=(16, 12, 22), outline=(80, 80, 80), width=2)
+            sdraw.text((60, y_cur + thumb_h // 2 - 20), "[Before Image Unavailable]", fill=(200, 120, 120), font=font_side)
+            sdraw.text((60, y_cur + thumb_h // 2 + 15), "No baseline recorded pre-fix.", fill=(140, 140, 140), font=font_sub)
 
         # After Image
         if after_file.exists():
             a_img = Image.open(after_file).resize((thumb_w, thumb_h), Image.Resampling.LANCZOS)
             sheet.paste(a_img, (40 + thumb_w + 20, y_cur))
             sdraw.rectangle([40 + thumb_w + 20, y_cur, 40 + thumb_w * 2 + 20, y_cur + thumb_h], outline=(50, 220, 100), width=3)
-            sdraw.text((50 + thumb_w + 20, y_cur + 15), "AFTER (Fixed & Accurate)", fill=(80, 255, 130), font=font_side)
+            sdraw.text((50 + thumb_w + 20, y_cur + 15), "AFTER (Strict Ground Truth)", fill=(80, 255, 130), font=font_side)
 
-        y_cur += thumb_h + 30
+        y_cur += thumb_h + 35
 
     comparison_path = OUTPUT_DIR / "comparison_contact_sheet.jpg"
     sheet.save(str(comparison_path), "JPEG", quality=92)
