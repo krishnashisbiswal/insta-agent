@@ -25,6 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from app.publishing.publishing_errors import PublishingValidationError
 from app.utils.ffmpeg_resolver import get_ffmpeg_binary
+from app.video.ffprobe_inspector import FFprobeInspector
 
 logger = logging.getLogger(__name__)
 
@@ -167,50 +168,21 @@ class PrePublishValidator:
 
     @classmethod
     def _probe_video(cls, video_path: Path) -> Dict[str, Any]:
-        """Probes video using ffprobe if available."""
+        """Probes video using FFprobeInspector (real FFprobe / FFmpeg binary execution)."""
         result: Dict[str, Any] = {"has_video": False, "has_audio": False}
-        ffmpeg_bin = get_ffmpeg_binary()
-        if not ffmpeg_bin:
-            return result
-
-        # Ensure Path object
-        ffmpeg_path = Path(ffmpeg_bin)
-        ffprobe_bin = ffmpeg_path.parent / ("ffprobe.exe" if os.name == "nt" else "ffprobe")
-        if not ffprobe_bin.exists():
-            ffprobe_bin = Path("ffprobe")
-
         try:
-            cmd = [
-                str(ffprobe_bin),
-                "-v", "error",
-                "-show_entries", "stream=codec_type,width,height,duration:format=duration",
-                "-of", "json",
-                str(video_path),
-            ]
-            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
-            if proc.returncode == 0:
-                data = json.loads(proc.stdout.decode("utf-8", errors="replace"))
-                streams = data.get("streams", [])
-                format_info = data.get("format", {})
-                duration = float(format_info.get("duration", 0.0))
-
-                for s in streams:
-                    if s.get("codec_type") == "video":
-                        result["has_video"] = True
-                        result["width"] = int(s.get("width", 0))
-                        result["height"] = int(s.get("height", 0))
-                        if "duration" in s and not duration:
-                            try:
-                                duration = float(s["duration"])
-                            except Exception:
-                                pass
-                    elif s.get("codec_type") == "audio":
-                        result["has_audio"] = True
-
-                result["duration"] = duration
+            meta = FFprobeInspector.probe(video_path, verify_decode=False, check_silence=False)
+            result["has_video"] = meta.has_video
+            result["has_audio"] = meta.has_audio
+            result["width"] = meta.width
+            result["height"] = meta.height
+            result["duration"] = meta.duration_seconds
+            result["video_codec"] = meta.video_codec
+            result["audio_codec"] = meta.audio_codec
+            result["fps"] = meta.fps
+            result["aspect_ratio"] = meta.aspect_ratio_float
         except Exception as exc:
-            logger.debug(f"ffprobe probe failed: {exc}")
-
+            logger.debug(f"Video probe notice: {exc}")
         return result
 
     @classmethod

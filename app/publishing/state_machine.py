@@ -33,10 +33,15 @@ class PublishingState(str, enum.Enum):
     QUEUED = "QUEUED"
     GENERATING = "GENERATING"
     RENDERING = "RENDERING"
+    RENDERED = "RENDERED"
+    VALIDATING = "VALIDATING"
+    VALIDATED = "VALIDATED"
+    REJECTED = "REJECTED"
     QUALITY_CHECK = "QUALITY_CHECK"
     READY = "READY"
     SCHEDULED = "SCHEDULED"
     UPLOADING = "UPLOADING"
+    UPLOADED = "UPLOADED"
     PROCESSING = "PROCESSING"
     PUBLISHED = "PUBLISHED"
     FAILED = "FAILED"
@@ -51,6 +56,7 @@ VALID_TRANSITIONS: Dict[PublishingState, Set[PublishingState]] = {
     PublishingState.CREATED: {
         PublishingState.QUEUED,
         PublishingState.GENERATING,
+        PublishingState.RENDERING,
         PublishingState.READY,
         PublishingState.UPLOADING,
         PublishingState.FAILED,
@@ -59,6 +65,7 @@ VALID_TRANSITIONS: Dict[PublishingState, Set[PublishingState]] = {
     },
     PublishingState.QUEUED: {
         PublishingState.GENERATING,
+        PublishingState.RENDERING,
         PublishingState.CANCELLED,
         PublishingState.FAILED,
         PublishingState.DRY_RUN,
@@ -71,13 +78,40 @@ VALID_TRANSITIONS: Dict[PublishingState, Set[PublishingState]] = {
         PublishingState.DRY_RUN,
     },
     PublishingState.RENDERING: {
+        PublishingState.RENDERED,
         PublishingState.QUALITY_CHECK,
         PublishingState.FAILED,
         PublishingState.RETRY_PENDING,
         PublishingState.CANCELLED,
         PublishingState.DRY_RUN,
     },
+    PublishingState.RENDERED: {
+        PublishingState.VALIDATING,
+        PublishingState.QUALITY_CHECK,
+        PublishingState.FAILED,
+        PublishingState.CANCELLED,
+    },
+    PublishingState.VALIDATING: {
+        PublishingState.VALIDATED,
+        PublishingState.REJECTED,
+        PublishingState.FAILED,
+        PublishingState.CANCELLED,
+    },
+    PublishingState.VALIDATED: {
+        PublishingState.UPLOADING,
+        PublishingState.READY,
+        PublishingState.SCHEDULED,
+        PublishingState.DRY_RUN,
+        PublishingState.CANCELLED,
+        PublishingState.FAILED,
+    },
+    PublishingState.REJECTED: {
+        PublishingState.FAILED,
+        PublishingState.RENDERING,
+        PublishingState.CANCELLED,
+    },
     PublishingState.QUALITY_CHECK: {
+        PublishingState.VALIDATED,
         PublishingState.READY,
         PublishingState.NEEDS_REVIEW,
         PublishingState.FAILED,
@@ -85,6 +119,7 @@ VALID_TRANSITIONS: Dict[PublishingState, Set[PublishingState]] = {
         PublishingState.DRY_RUN,
     },
     PublishingState.NEEDS_REVIEW: {
+        PublishingState.VALIDATED,
         PublishingState.READY,
         PublishingState.CANCELLED,
         PublishingState.FAILED,
@@ -103,12 +138,19 @@ VALID_TRANSITIONS: Dict[PublishingState, Set[PublishingState]] = {
     },
     PublishingState.UPLOADING: {
         PublishingState.UPLOADING,  # Retry attempt
+        PublishingState.UPLOADED,
         PublishingState.PROCESSING,
         PublishingState.PUBLISHED,
         PublishingState.FAILED,
         PublishingState.RETRY_PENDING,
         PublishingState.CANCELLED,
         PublishingState.UNCERTAIN,
+    },
+    PublishingState.UPLOADED: {
+        PublishingState.PUBLISHED,
+        PublishingState.PROCESSING,
+        PublishingState.FAILED,
+        PublishingState.CANCELLED,
     },
     PublishingState.PROCESSING: {
         PublishingState.PROCESSING,

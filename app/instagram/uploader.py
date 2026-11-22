@@ -15,6 +15,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.publishing.pre_publish_validator import PrePublishValidator
 from app.publishing.publishing_errors import (
     DuplicatePublishPreventedError,
+    HardUploadGateError,
     PublishingAuthError,
     PublishingConfigError,
     PublishingNetworkError,
@@ -23,6 +24,7 @@ from app.publishing.publishing_errors import (
     PublishingValidationError,
 )
 from app.publishing.state_machine import compute_video_fingerprint
+from app.video.video_quality_gate import ValidationReport, VideoQualityGate
 from config.settings import (
     GRAPH_API_BASE_URL,
     IG_SESSION_FILE,
@@ -216,11 +218,39 @@ class InstagramUploader:
         self._instagrapi_client = cl
         return cl
 
+    def enforce_hard_upload_gate(
+        self,
+        video_path: Path,
+        validation_report: Optional[ValidationReport] = None,
+        job_id: Optional[str] = None,
+    ) -> None:
+        """
+        Hard Pre-Upload Quality Gate.
+        Aborts upload immediately if:
+        1. File does not exist or was modified after validation.
+        2. Validation report is missing or status != 'VALIDATED'.
+        3. Fresh SHA-256 hash does not match validated hash.
+        4. Artifact does not belong to the active production job.
+        """
+        is_ok, reason = VideoQualityGate.verify_artifact_integrity_before_upload(
+            video_path=video_path,
+            expected_report=validation_report,
+            job_id=job_id,
+        )
+        if not is_ok:
+            logger.error(f"[HARD UPLOAD GATE REJECTION] {reason}")
+            raise HardUploadGateError(
+                f"Hard Upload Gate Aborted: {reason}",
+                details={"video_path": str(video_path), "job_id": job_id, "rejection_reason": reason},
+            )
+
     def upload_reel_direct(
         self,
         video_path: Path,
         caption: str,
         min_size_bytes: int = 250,
+        validation_report: Optional[ValidationReport] = None,
+        job_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Uploads a Reel directly using Instagram account credentials.
@@ -229,6 +259,9 @@ class InstagramUploader:
         video_path = Path(video_path)
         if not video_path.exists():
             raise FileNotFoundError(f"Video file not found: {video_path}")
+
+        # Hard Upload Quality Gate: strictly verify before any upload
+        self.enforce_hard_upload_gate(video_path, validation_report=validation_report, job_id=job_id)
 
         # Pre-publish content and media validation gate
         val_report = PrePublishValidator.validate_reel(video_path, caption, min_size_bytes=min_size_bytes)
@@ -307,19 +340,24 @@ class InstagramUploader:
         caption: str,
         share_to_feed: bool = True,
         max_poll_seconds: int = 180,
+        validation_report: Optional[ValidationReport] = None,
+        job_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Uploads an MP4 video directly to Instagram using the official Resumable Upload API.
         Streams video bytes directly to Meta servers via MetaInstagramClient.
         """
+        video_path = Path(video_path)
+        if not video_path.exists():
+            raise FileNotFoundError(f"Video file not found: {video_path}")
+
+        # Hard Upload Quality Gate: strictly verify before any upload
+        self.enforce_hard_upload_gate(video_path, validation_report=validation_report, job_id=job_id)
+
         if not self.has_graph_credentials():
             raise PublishingAuthError(
                 "Instagram credentials missing. Set INSTAGRAM_USER_ID and INSTAGRAM_ACCESS_TOKEN in .env"
             )
-
-        video_path = Path(video_path)
-        if not video_path.exists():
-            raise FileNotFoundError(f"Video file not found: {video_path}")
 
         # Pre-publish validation
         val_report = PrePublishValidator.validate_reel(video_path, caption, min_size_bytes=250)
@@ -361,6 +399,8 @@ class InstagramUploader:
         video_path: Path,
         caption: str,
         force_dry_run: bool = False,
+        validation_report: Optional[ValidationReport] = None,
+        job_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Unified upload dispatcher. Automatically chooses between:
@@ -368,8 +408,11 @@ class InstagramUploader:
         2. Direct account upload (instagrapi)
         3. Dry-Run Preview
         """
+        # Hard Upload Quality Gate: strictly verify before any upload or preview
+        self.enforce_hard_upload_gate(video_path, validation_report=validation_report, job_id=job_id)
+
         if force_dry_run:
-            return self.dry_run_preview(video_path, caption)
+            return self.dry_run_preview(video_path, caption, validation_report=validation_report, job_id=job_id)
 
         if not self.has_credentials():
             raise PublishingConfigError(
@@ -379,16 +422,18 @@ class InstagramUploader:
 
         method = self.get_preferred_method()
         if method == "graph_api":
-            return self.upload_reel_resumable(video_path, caption)
+            return self.upload_reel_resumable(video_path, caption, validation_report=validation_report, job_id=job_id)
         elif method == "direct":
-            return self.upload_reel_direct(video_path, caption)
+            return self.upload_reel_direct(video_path, caption, validation_report=validation_report, job_id=job_id)
         else:
-            return self.dry_run_preview(video_path, caption)
+            return self.dry_run_preview(video_path, caption, validation_report=validation_report, job_id=job_id)
 
     def dry_run_preview(
         self,
         video_path: Path,
         caption: str,
+        validation_report: Optional[ValidationReport] = None,
+        job_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Validate video and caption locally without uploading to Instagram.
@@ -397,6 +442,9 @@ class InstagramUploader:
         video_path = Path(video_path)
         exists = video_path.exists()
         file_size_mb = video_path.stat().st_size / (1024 * 1024) if exists else 0.0
+
+        # Hard Upload Quality Gate: strictly verify before dry-run approval
+        self.enforce_hard_upload_gate(video_path, validation_report=validation_report, job_id=job_id)
 
         has_caption = bool(caption and caption.strip())
         caption_len = len(caption) if caption else 0
@@ -415,6 +463,8 @@ class InstagramUploader:
             "caption_within_limit": caption_len <= 2200,
             "credentials_configured": self.has_credentials(),
             "detected_upload_method": self.get_preferred_method() if self.has_credentials() else "dry_run",
+            "validation_report": validation_report.to_dict() if validation_report else None,
+            "job_id": job_id,
         }
 
         manifest_file = OUTPUT_DIR / "latest_upload_manifest.json"
@@ -441,10 +491,18 @@ def upload_or_preview_reel(
     video_path: Path,
     caption: str,
     force_dry_run: bool = False,
+    validation_report: Optional[ValidationReport] = None,
+    job_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Convenience wrapper for Instagram publishing."""
     uploader = InstagramUploader()
-    return uploader.upload_reel(video_path, caption, force_dry_run=force_dry_run)
+    return uploader.upload_reel(
+        video_path=video_path,
+        caption=caption,
+        force_dry_run=force_dry_run,
+        validation_report=validation_report,
+        job_id=job_id,
+    )
 
 
 if __name__ == "__main__":

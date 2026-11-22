@@ -28,6 +28,7 @@ from app.analytics.audit_agent import audit_profile
 from app.analytics.seo_optimizer import generate_seo_metadata
 from app.instagram.uploader import InstagramUploader, upload_or_preview_reel
 from app.research.trend_agent import research_viral_ideas
+from app.storage.production_workspace import ProductionWorkspaceManager
 from app.video.cinematic_composer import create_cinematic_reel_video
 from app.video.preflight_checker import PreFlightQualityGate, format_preflight_report
 from app.video.tts_engine import generate_speech
@@ -105,11 +106,14 @@ def run_full_pipeline(
 
     # STEP 2: COMPOSE 1080x1920 CINEMATIC REEL (PER-SCENE AUDIO + 4K B-ROLL + SACRED SOUND DESIGN)
     print("\n[STEP 2/5] Composing 1080x1920 Cinematic Reel with frame-synced audio & 4K visuals...")
+    production_ws = ProductionWorkspaceManager.create_workspace()
+    print(f" -> Dedicated Production Workspace: {production_ws.workspace_dir}")
     video_path = create_cinematic_reel_video(
         script_data=script_data,
         voice=voice,
+        production_workspace=production_ws,
     )
-    print(f" -> Cinematic Video rendered successfully!")
+    print(f" -> Cinematic Video rendered and validated successfully!")
     print(f"    File: {video_path}")
 
     # STEP 3: OPTIMIZE CAPTION & HASHTAGS
@@ -142,11 +146,12 @@ def run_full_pipeline(
 
     # STEP 5: INSTAGRAM UPLOAD / DRY RUN
     if upload and not force_dry_run:
-        print("\n[STEP 5/5] Publishing directly to Instagram...")
+        print("\n[STEP 5/5] Publishing directly to Instagram via Hard Upload Gate...")
         upload_result = upload_or_preview_reel(
             video_path=video_path,
             caption=final_caption,
             force_dry_run=False,
+            job_id=production_ws.job_id,
         )
     else:
         print("\n[STEP 5/5] Validating Reel & generating upload manifest (Local / Dry-run mode)...")
@@ -154,6 +159,7 @@ def run_full_pipeline(
             video_path=video_path,
             caption=final_caption,
             force_dry_run=True,
+            job_id=production_ws.job_id,
         )
 
     manifest = {
@@ -176,6 +182,11 @@ def run_full_pipeline(
     manifest_file = OUTPUT_DIR / "latest_pipeline_result.json"
     with open(manifest_file, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
+
+    try:
+        production_ws.save_metadata(manifest)
+    except Exception:
+        pass
 
     print("\n" + "=" * 70)
     print("                 PIPELINE COMPLETED SUCCESSFULLY!")

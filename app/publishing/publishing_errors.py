@@ -68,3 +68,14 @@ class DuplicatePublishPreventedError(PublishingError):
     def __init__(self, message: str, existing_job_id: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
         super().__init__(message, error_category="duplicate_prevented", details=details)
         self.existing_job_id = existing_job_id
+
+
+class HardUploadGateError(PublishingValidationError):
+    """
+    Hard upload gate error: video failed mandatory technical verification,
+    hash verification failed, artifact was modified, stale, or validation report is missing/rejected.
+    NEVER upload a video when this error is raised.
+    """
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(message, details=details)
+

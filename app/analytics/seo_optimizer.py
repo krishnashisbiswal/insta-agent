@@ -54,8 +54,26 @@ Return ONLY valid JSON in this exact structure:
   ]
 }}
 """
-    data = generate_json(prompt)
-    return data
+    try:
+        data = generate_json(prompt)
+        return data
+    except Exception as e:
+        logger.warning(f"Gemini SEO generation fallback triggered: {e}")
+        import re
+        topic_clean = re.sub(r"[^\w\s]", "", topic).strip()
+        words = topic_clean.split()
+        kw = [w.capitalize() for w in words[:4]] if words else ["Vedic", "Astrology", "Planets"]
+        return {
+            "primary_search_keywords": kw,
+            "loop_closing_phrase": "Watch till the end to understand your planetary alignment.",
+            "save_trigger_reason": "Save this reel for future astrological reference.",
+            "share_trigger_reason": "Share this with someone going through this planetary transit.",
+            "recommended_hashtags": [f"#{w.lower()}" for w in kw[:3]] + ["#vedicastrology", "#kundli"][:5],
+            "retention_tactics": [
+                "Scene cut every 3 seconds",
+                "On-screen keyword badge in first 2 seconds"
+            ]
+        }
 
 
 def verify_seo_integrity(

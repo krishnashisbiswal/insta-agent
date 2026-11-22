@@ -692,6 +692,8 @@ def create_cinematic_reel_video(
     voice: Optional[str] = None,
     output_filename: Optional[str] = None,
     scene_image_paths: Optional[List[Path]] = None,
+    production_workspace: Optional[Any] = None,
+    job_id: Optional[str] = None,
 ) -> Path:
     """
     Builds a professional, human-edited Instagram Reel with a strict two-stage process:
@@ -701,6 +703,8 @@ def create_cinematic_reel_video(
     STAGE 2: Frame-Synchronized Editing & Cinematic Video Composition
              Ken Burns camera motion, kinetic 2-beat subtitles, audio mixing & rendering.
     """
+    job_start_epoch = time.time()
+    active_job_id = job_id or (getattr(production_workspace, "job_id", None) if production_workspace else f"job_{int(job_start_epoch)}")
     scenes = script_data.get("scenes", [])
     if not scenes:
         raise ValueError("Script data contains no scenes.")
@@ -923,10 +927,18 @@ def create_cinematic_reel_video(
     composite_audio = CompositeAudioClip([final_video.audio, ambient_mixed])
     final_video = final_video.with_audio(composite_audio)
 
-    # 6. Render final Reel MP4
-    if not output_filename:
-        output_filename = f"cinematic_reel_{int(time.time())}.mp4"
-    output_path = REELS_DIR / output_filename
+    # 6. Resolve output path
+    from app.storage.production_workspace import ProductionWorkspaceManager
+    if production_workspace is not None:
+        output_path = Path(production_workspace.video_path)
+    elif output_filename:
+        output_path = REELS_DIR / output_filename
+    else:
+        # Guarantee isolated, non-stale production workspace
+        isolated_ws = ProductionWorkspaceManager.create_workspace(job_id=active_job_id)
+        output_path = isolated_ws.video_path
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     print(f"\n[CINEMATIC COMPOSER] Encoding professional edited reel -> {output_path}")
     try:
@@ -969,7 +981,19 @@ def create_cinematic_reel_video(
     # Post-process: sanitize container metadata (Task 7 compliance: neutral tags, no hardware spoofing)
     output_path = sanitize_video_metadata(output_path)
 
-    # Automated Video Quality Control (QC) Gate (Task 6)
+    # 8. Mandatory Video Quality Gate (FFprobe technical audit + signed validation.json)
+    from app.video.video_quality_gate import VideoQualityGate, VideoQualityGateError
+    val_report = VideoQualityGate.validate_video(
+        video_path=output_path,
+        job_id=active_job_id,
+        job_start_epoch=job_start_epoch,
+        save_report_path=output_path.parent / "validation.json",
+    )
+    if not val_report.passed:
+        logger.error(f"[CINEMATIC COMPOSER] Video Quality Gate REJECTED output {output_path.name}: {val_report.errors}")
+        raise VideoQualityGateError(f"Video Quality Gate rejected {output_path.name}: {val_report.errors}")
+
+    # 9. Automated Video Quality Control (QC) Gate & Contact Sheet Generation
     from app.video.video_qc import VideoQualityControl, VideoQCError
     qc_report = VideoQualityControl.audit_video(
         video_path=output_path,

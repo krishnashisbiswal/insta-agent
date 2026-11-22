@@ -28,9 +28,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("FFmpegResolver")
 
-_lock = threading.Lock()
+_lock = threading.RLock()
 _cached_ffmpeg_binary: Optional[str] = None
 _cached_ffmpeg_version: Optional[str] = None
+_cached_ffprobe_binary: Optional[str] = None
+_cached_ffprobe_version: Optional[str] = None
 _cached_diagnostics: Optional[Dict[str, Any]] = None
 
 
@@ -179,3 +181,88 @@ def get_ffmpeg_diagnostics() -> Dict[str, Any]:
     if _cached_diagnostics is None:
         get_ffmpeg_binary()
     return _cached_diagnostics or {"resolved": False, "candidates_evaluated": []}
+
+
+def get_ffprobe_binary(force_refresh: bool = False) -> Optional[str]:
+    """
+    Returns the absolute path to a validated FFprobe binary, or None if unavailable.
+    Searches:
+    1. FFPROBE_BINARY / FFPROBE_PATH environment variables.
+    2. System PATH via shutil.which("ffprobe").
+    3. Directory adjacent to the resolved FFmpeg binary.
+    4. Common platform install locations.
+    """
+    global _cached_ffprobe_binary, _cached_ffprobe_version
+
+    with _lock:
+        if _cached_ffprobe_binary is not None and not force_refresh:
+            return _cached_ffprobe_binary
+
+        candidates: List[Tuple[str, str]] = []
+
+        # 1. Explicit env vars
+        env_ffprobe = os.getenv("FFPROBE_BINARY") or os.getenv("FFPROBE_PATH")
+        if env_ffprobe and env_ffprobe.strip():
+            candidates.append(("Explicit Configuration (FFPROBE_BINARY/FFPROBE_PATH)", env_ffprobe.strip()))
+
+        # 2. System PATH
+        which_probe = shutil.which("ffprobe")
+        if which_probe:
+            candidates.append(("System PATH (shutil.which)", which_probe))
+
+        # 3. Adjacent to resolved ffmpeg
+        ffmpeg_bin = get_ffmpeg_binary()
+        if ffmpeg_bin:
+            ffmpeg_dir = Path(ffmpeg_bin).parent
+            adjacent_names = ["ffprobe.exe", "ffprobe"] if os.name == "nt" else ["ffprobe"]
+            for name in adjacent_names:
+                adj_candidate = ffmpeg_dir / name
+                if adj_candidate.is_file():
+                    candidates.append(("Adjacent to FFmpeg", str(adj_candidate)))
+
+        # 4. Standard platform locations
+        common_probe_locations = [
+            "C:\\ffmpeg\\bin\\ffprobe.exe",
+            "C:\\Program Files\\ffmpeg\\bin\\ffprobe.exe",
+            "C:\\ProgramData\\chocolatey\\bin\\ffprobe.exe",
+            "/usr/bin/ffprobe",
+            "/usr/local/bin/ffprobe",
+            "/opt/homebrew/bin/ffprobe",
+        ]
+        for loc in common_probe_locations:
+            if os.path.isfile(loc):
+                candidates.append((f"Common Location ({loc})", loc))
+
+        resolved_probe: Optional[str] = None
+        resolved_probe_ver: Optional[str] = None
+
+        for src_name, cand_path in candidates:
+            try:
+                p = Path(cand_path)
+                if not p.is_file():
+                    continue
+                proc = subprocess.run(
+                    [str(p), "-version"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=5,
+                    text=True,
+                )
+                output = proc.stdout or proc.stderr or ""
+                if proc.returncode == 0 and "ffprobe version" in output.lower():
+                    resolved_probe = str(p.resolve())
+                    resolved_probe_ver = output.splitlines()[0].strip() if output.splitlines() else "ffprobe version"
+                    logger.info(f"[FFmpegResolver] Resolved FFprobe via {src_name}: {resolved_probe}")
+                    break
+            except Exception as e:
+                logger.debug(f"Candidate {cand_path} failed: {e}")
+
+        _cached_ffprobe_binary = resolved_probe
+        _cached_ffprobe_version = resolved_probe_ver
+        return _cached_ffprobe_binary
+
+
+def is_ffprobe_available(force_refresh: bool = False) -> bool:
+    """Returns True if a valid, executable FFprobe binary is available."""
+    return get_ffprobe_binary(force_refresh=force_refresh) is not None
+

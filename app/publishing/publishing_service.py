@@ -26,6 +26,7 @@ from app.models.saas_models import InstagramAccount, Organization, PublishingJob
 from app.publishing.pre_publish_validator import PrePublishValidator
 from app.publishing.publishing_errors import (
     DuplicatePublishPreventedError,
+    HardUploadGateError,
     PublishingAuthError,
     PublishingConfigError,
     PublishingError,
@@ -120,6 +121,8 @@ class PublishingService:
         force_dry_run: bool = False,
         job_id: Optional[str] = None,
         min_size_bytes: int = 250,
+        validation_report: Optional[Any] = None,
+        enforce_upload_gate: Optional[bool] = None,
     ) -> PublishingJobModel:
         db = self._get_db()
         account = db.query(InstagramAccount).filter_by(account_id=account_id).first()
@@ -229,7 +232,27 @@ class PublishingService:
             )
             return job
 
-        # 7. Live Publish with Capped Retry & Backoff
+        # 7. Live Publish with Hard Upload Quality Gate
+        gate_required = enforce_upload_gate if enforce_upload_gate is not None else (not os.getenv("TESTING", "").lower() in ("true", "1"))
+        if gate_required:
+            from app.video.video_quality_gate import VideoQualityGate
+            is_ok, reason = VideoQualityGate.verify_artifact_integrity_before_upload(
+                video_path=video_path,
+                expected_report=validation_report,
+                job_id=job_id,
+            )
+            if not is_ok:
+                logger.error(f"[PUBLISH:HARD_GATE_FAILED] Job {job_id}: {reason}")
+                self.state_machine.transition(
+                    job_id=job_id,
+                    to_state=PublishingState.FAILED,
+                    metadata={"error_message": reason, "error_category": "hard_upload_gate"},
+                )
+                raise HardUploadGateError(
+                    f"Publishing rejected by Hard Upload Gate: {reason}",
+                    details={"job_id": job_id, "video_path": str(video_path), "rejection_reason": reason},
+                )
+
         max_attempts = 3
         attempt = 0
         result: Optional[Dict[str, Any]] = None
