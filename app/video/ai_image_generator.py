@@ -110,8 +110,9 @@ class AIImageGenerator:
         out_dir = Path(target_dir) if target_dir else GENERATED_BROLL_DIR
         out_dir.mkdir(parents=True, exist_ok=True)
 
-        # Gather used hashes within the current Reel
+        # Gather used hashes and perceptual fingerprints within the current Reel
         used_reel_hashes: Set[str] = set()
+        used_reel_phashes: Set[str] = set()
         if used_images:
             for item in used_images:
                 if isinstance(item, (Path, str)):
@@ -119,11 +120,17 @@ class AIImageGenerator:
                     if p_item.exists() and p_item.is_file():
                         try:
                             with open(p_item, "rb") as f:
-                                used_reel_hashes.add(hashlib.sha256(f.read()).hexdigest())
+                                data = f.read()
+                                used_reel_hashes.add(hashlib.sha256(data).hexdigest())
+                            with Image.open(p_item) as im:
+                                used_reel_phashes.add(PermanentVisualMemory.compute_fingerprints(im)["phash"])
                         except Exception:
                             pass
-                elif isinstance(item, str) and len(item) == 64:
-                    used_reel_hashes.add(item)
+                elif isinstance(item, str):
+                    if len(item) == 64:
+                        used_reel_hashes.add(item)
+                    elif len(item) == 16:
+                        used_reel_phashes.add(item)
 
         # 3. Configure providers
         is_testing = (
@@ -216,6 +223,7 @@ class AIImageGenerator:
                 plan=plan,
                 check_permanent_duplicates=should_check_perm,
                 used_reel_hashes=used_reel_hashes,
+                used_reel_phashes=used_reel_phashes,
             )
 
             if not report.passed:
@@ -268,6 +276,7 @@ class AIImageGenerator:
                 used_images.add(target_path)
                 used_images.add(target_path.name)
                 used_images.add(rec["sha256"])
+                used_images.add(rec["phash"])
 
             logger.info(
                 f"[AIImageGenerator] Scene {scene_idx + 1}/{total_scenes}: Successfully generated fresh AI visual -> {target_path.name} "
@@ -349,6 +358,7 @@ class AIImageGenerator:
                 plan=plan,
                 check_permanent_duplicates=should_check_perm,
                 used_reel_hashes=used_reel_hashes,
+                used_reel_phashes=used_reel_phashes,
             )
 
             if not fb_report.passed:
@@ -399,6 +409,7 @@ class AIImageGenerator:
                 used_images.add(fb_target_path)
                 used_images.add(fb_target_path.name)
                 used_images.add(rec["sha256"])
+                used_images.add(rec["phash"])
 
             logger.info(
                 f"[AIImageGenerator] Scene {scene_idx + 1}/{total_scenes}: Successfully generated SEMANTIC FALLBACK visual -> {fb_target_path.name} "

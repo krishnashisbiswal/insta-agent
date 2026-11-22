@@ -28,7 +28,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple, Type
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance, ImageFilter
 
 logger = logging.getLogger("ImageProviders")
 
@@ -403,8 +403,20 @@ class MockImageProvider(BaseImageProvider):
         if fp.exists():
             with Image.open(fp) as raw:
                 rgb = raw.convert("RGB")
-                fitted = ImageOps.fit(rgb, (width, height), Image.Resampling.LANCZOS)
-                graded = ImageEnhance.Brightness(fitted).enhance(brightness * (0.96 + (seed % 9) * 0.01))
+                rw, rh = rgb.size
+                boxes = [
+                    (0, 0, rw, rh),
+                    (0, 0, int(rw * 0.85), int(rh * 0.75)),
+                    (int(rw * 0.15), 0, rw, int(rh * 0.75)),
+                    (0, int(rh * 0.25), int(rw * 0.85), rh),
+                    (int(rw * 0.15), int(rh * 0.25), rw, rh),
+                    (int(rw * 0.10), int(rh * 0.10), int(rw * 0.90), int(rh * 0.90)),
+                ]
+                box = boxes[seed % len(boxes)]
+                cropped = rgb.crop(box)
+                fitted = ImageOps.fit(cropped, (width, height), Image.Resampling.LANCZOS)
+                graded = ImageEnhance.Brightness(fitted).enhance(brightness * (0.94 + (seed % 11) * 0.015))
+                graded = ImageEnhance.Contrast(graded).enhance(0.98 + (seed % 7) * 0.02)
                 buf = io.BytesIO()
                 graded.save(buf, format="JPEG", quality=95)
                 return buf.getvalue()
@@ -435,7 +447,7 @@ class MockImageProvider(BaseImageProvider):
 
     @classmethod
     def _render_semantic_compass_plate(cls, width: int, height: int, seed: int) -> bytes:
-        return cls._render_from_photo("authentic_vedic_kundli_parchment.jpg", width, height, seed, brightness=0.98)
+        return cls._render_from_photo("astrology_consultation_scroll.jpg", width, height, seed, brightness=0.98)
 
     def generate_image_bytes(
         self,
@@ -471,6 +483,8 @@ class MockImageProvider(BaseImageProvider):
             return self._render_semantic_partnership_plate(width, height, s_val)
         if any(k in p_clean for k in ["navigational compass", "parchment navigational chart", "brass compass", "oil lamp"]):
             return self._render_semantic_compass_plate(width, height, s_val)
+        if any(k in p_clean for k in ["consultation study", "reverent vedic astrologer", "rolled parchment scroll", "ancient study", "comment shiva"]):
+            return self._render_from_photo("astrology_consultation_scroll.jpg", width, height, s_val, brightness=0.98)
 
         # Match strictly to authentic curated photography based on script prompt
         target_plate = None
@@ -515,10 +529,15 @@ class MockImageProvider(BaseImageProvider):
             target_plate = cinematic_dir / "planet_ketu.jpg"
         elif any(k in p_clean for k in ["emerald", "sapphire", "neelam", "gemstone", "रत्न", "remedies"]):
             target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
-        elif any(k in p_clean for k in ["dm", "consultation", "welcoming hands", "hands presenting", "save reel", "havan", "fire altar", "temple", "यज्ञ", "अग्नि", "mandir"]):
-            target_plate = cinematic_dir / "4_sacred_havan.jpg"
+        elif any(k in p_clean for k in ["dm", "consultation", "welcoming hands", "hands presenting", "save reel"]):
+            target_plate = cinematic_dir / "astrology_consultation_scroll.jpg"
+        elif any(k in p_clean for k in ["havan", "fire altar", "यज्ञ", "अग्नि"]):
+            target_plate = cinematic_dir / "sacred_havan_flame_altar.jpg"
+        elif any(k in p_clean for k in ["temple", "mandir", "दीपक", "दीप", "oil lamp"]):
+            target_plate = cinematic_dir / "temple_sanctum_golden_diyas.jpg"
         else:
-            all_plates = sorted([p for p in cinematic_dir.glob("*.jpg") if p.is_file()])
+            from app.video.dynamic_visual_engine import BANNED_IMAGE_NAMES
+            all_plates = sorted([p for p in cinematic_dir.glob("*.jpg") if p.is_file() and p.name not in BANNED_IMAGE_NAMES])
             target_plate = all_plates[s_val % len(all_plates)] if all_plates else None
 
         if target_plate and target_plate.exists():
@@ -526,25 +545,22 @@ class MockImageProvider(BaseImageProvider):
                 raw_rgb = raw_img.convert("RGB")
                 rw, rh = raw_rgb.size
                 scene_i = kwargs.get("scene_idx", s_val % 7)
-                if "kundli" in str(target_plate).lower():
-                    fitted = ImageOps.fit(raw_rgb, (width, height), Image.Resampling.LANCZOS)
-                else:
-                    boxes = [
-                        (0, 0, rw, rh),
-                        (0, 0, int(rw * 0.80), int(rh * 0.70)),
-                        (int(rw * 0.20), 0, rw, int(rh * 0.70)),
-                        (0, int(rh * 0.30), int(rw * 0.80), rh),
-                        (int(rw * 0.20), int(rh * 0.30), rw, rh),
-                        (int(rw * 0.15), int(rh * 0.15), int(rw * 0.85), int(rh * 0.85)),
-                        (int(rw * 0.25), int(rh * 0.25), int(rw * 0.75), int(rh * 0.75)),
-                    ]
-                    box = boxes[scene_i % len(boxes)]
-                    cropped = raw_rgb.crop(box)
-                    fitted = ImageOps.fit(cropped, (width, height), Image.Resampling.LANCZOS)
-                factor = 0.92 + ((scene_i * 3 % 17) / 100.0)
-                graded = ImageEnhance.Brightness(fitted).enhance(factor)
-                r, g, b = graded.getpixel((0, 0))
-                graded.putpixel((0, 0), ((r + scene_i * 5) % 256, (g + scene_i * 7) % 256, (b + scene_i * 11) % 256))
+                boxes = [
+                    (0, 0, rw, rh),
+                    (0, 0, int(rw * 0.80), int(rh * 0.70)),
+                    (int(rw * 0.20), 0, rw, int(rh * 0.70)),
+                    (0, int(rh * 0.30), int(rw * 0.80), rh),
+                    (int(rw * 0.20), int(rh * 0.30), rw, rh),
+                    (int(rw * 0.15), int(rh * 0.15), int(rw * 0.85), int(rh * 0.85)),
+                    (int(rw * 0.25), int(rh * 0.25), int(rw * 0.75), int(rh * 0.75)),
+                ]
+                box = boxes[scene_i % len(boxes)]
+                cropped = raw_rgb.crop(box)
+                fitted = ImageOps.fit(cropped, (width, height), Image.Resampling.LANCZOS)
+                brightness_factor = 0.90 + ((scene_i * 7 % 25) / 100.0)
+                graded = ImageEnhance.Brightness(fitted).enhance(brightness_factor)
+                contrast_factor = 0.98 + ((scene_i * 3 % 15) / 100.0)
+                graded = ImageEnhance.Contrast(graded).enhance(contrast_factor)
                 buf = io.BytesIO()
                 graded.save(buf, format="JPEG", quality=95)
                 return buf.getvalue()

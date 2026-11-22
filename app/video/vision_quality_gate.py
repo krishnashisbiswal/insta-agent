@@ -80,6 +80,7 @@ class VisionQualityGate:
         acceptance_threshold: float = ACCEPTANCE_THRESHOLD,
         check_permanent_duplicates: bool = True,
         used_reel_hashes: Optional[set] = None,
+        used_reel_phashes: Optional[set] = None,
         image_path: Optional[Union[Path, str]] = None,
     ) -> VisualValidationReport:
         """
@@ -254,7 +255,8 @@ class VisionQualityGate:
             )
 
         # 4. Fingerprints & Duplicate Detection
-        fp = PermanentVisualMemory.compute_fingerprints(img)
+        target_fp_input = target_input if isinstance(target_input, (Path, str, bytes)) else img
+        fp = PermanentVisualMemory.compute_fingerprints(target_fp_input)
         sha256 = fp["sha256"]
         phash = fp["phash"]
 
@@ -276,10 +278,29 @@ class VisionQualityGate:
                 dimensions=(w, h),
             )
 
+        if used_reel_phashes:
+            for uh in used_reel_phashes:
+                if uh and PermanentVisualMemory.hamming_distance(phash, uh) <= 5:
+                    return VisualValidationReport(
+                        scene_idx=scene_idx,
+                        image_path=image_path_str,
+                        expected_subject=expected_subject,
+                        expected_action=expected_action,
+                        actual_detected_subject="reel_duplicate",
+                        actual_detected_action="perceptual_duplicate_within_reel",
+                        semantic_relevance_score=0.0,
+                        duplicate_status=True,
+                        passed=False,
+                        rejection_reason=f"Perceptual near-duplicate visual detected within the same Reel (pHash distance <= 5).",
+                        sha256=sha256,
+                        phash=phash,
+                        dimensions=(w, h),
+                    )
+
         # Check against historical permanent visual registry
         if check_permanent_duplicates:
             is_dup, reason, matching_rec = PermanentVisualMemory.check_duplicate(
-                img,
+                target_fp_input,
                 source_identity=Path(image_path_str).name if isinstance(image_input, (Path, str)) else "",
             )
             if is_dup:

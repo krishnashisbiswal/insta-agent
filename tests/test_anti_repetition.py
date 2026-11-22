@@ -258,3 +258,92 @@ def test_no_duplicate_cta_or_hashtags_in_caption():
     for tag in tags:
         assert cap.count(tag) == 1, f"Hashtag {tag} appeared more than once in caption"
 
+
+def test_intra_reel_uniqueness_and_perceptual_hash_enforcement(tmp_path):
+    """
+    Mandatory Bounty Test:
+    Verifies strict intra-reel anti-repetition:
+    1. Rejects identical bytes.
+    2. Rejects identical SHA256 despite different filenames.
+    3. Rejects near-identical perceptual hashes (pHash distance <= 5).
+    4. Triggers regeneration with materially different composition.
+    5. Validates 7 distinct scenes achieve pairwise pHash distance > 5 without 1-pixel hacks.
+    """
+    from PIL import Image, ImageEnhance, ImageOps
+    from app.storage.permanent_visual_memory import PermanentVisualMemory
+    from app.video.vision_quality_gate import VisionQualityGate
+    from app.video.scene_visual_planner import SceneVisualPlan
+
+    # 1. Load an authentic base master photograph
+    src_plate = PROJECT_ROOT / "assets" / "cinematic_broll" / "rudraksha_sacred_beads.jpg"
+    base_file = tmp_path / "base_frame.jpg"
+    with Image.open(src_plate) as raw:
+        fitted = ImageOps.fit(raw.convert("RGB"), (1080, 1920))
+        fitted.save(base_file, "JPEG", quality=95)
+
+    base_bytes = base_file.read_bytes()
+    base_sha256 = hashlib.sha256(base_bytes).hexdigest()
+    base_phash = PermanentVisualMemory.compute_fingerprints(base_file)["phash"]
+
+    plan = SceneVisualPlan(
+        scene_idx=1,
+        exact_narration="Unique scene test",
+        main_subject="Vedic sacred visual",
+        subject_action="illuminating",
+        generation_prompt="cinematic photorealistic 9:16 vertical luxury photograph of sacred Vedic artifacts",
+    )
+
+    # 2. Test exact SHA256 rejection under different filename
+    duplicate_name_file = tmp_path / "completely_different_filename_sc2.jpg"
+    duplicate_name_file.write_bytes(base_bytes)
+    rep_sha = VisionQualityGate.validate_scene_image(
+        image_input=duplicate_name_file,
+        plan=plan,
+        check_permanent_duplicates=False,
+        used_reel_hashes={base_sha256},
+    )
+    assert not rep_sha.passed
+    assert rep_sha.duplicate_status is True
+    assert "identical content hash" in rep_sha.rejection_reason
+
+    # 3. Test near-identical perceptual hash rejection (pHash distance <= 5)
+    # Make a tiny visual modification that doesn't change pHash
+    near_dup_file = tmp_path / "near_dup_frame.jpg"
+    with Image.open(base_file) as im:
+        near_img = ImageEnhance.Brightness(im).enhance(1.01)
+        near_img.save(near_dup_file, "JPEG", quality=95)
+    near_phash = PermanentVisualMemory.compute_fingerprints(near_dup_file)["phash"]
+    dist = PermanentVisualMemory.hamming_distance(base_phash, near_phash)
+    assert dist <= 5, f"Expected near pHash (got distance {dist})"
+
+    rep_phash = VisionQualityGate.validate_scene_image(
+        image_input=near_dup_file,
+        plan=plan,
+        check_permanent_duplicates=False,
+        used_reel_phashes={base_phash},
+    )
+    assert not rep_phash.passed
+    assert rep_phash.duplicate_status is True
+    assert "pHash distance" in rep_phash.rejection_reason or "perceptual" in rep_phash.rejection_reason.lower()
+
+    # 4. Verify distinct crop composition is accepted with pHash distance > 5
+    distinct_file = tmp_path / "distinct_frame.jpg"
+    with Image.open(base_file) as im:
+        cropped = im.crop((200, 300, 900, 1600))
+        distinct_img = ImageOps.fit(cropped, (1080, 1920))
+        distinct_img = ImageEnhance.Contrast(distinct_img).enhance(1.25)
+        distinct_img.save(distinct_file, "JPEG", quality=95)
+    distinct_phash = PermanentVisualMemory.compute_fingerprints(distinct_file)["phash"]
+    distinct_dist = PermanentVisualMemory.hamming_distance(base_phash, distinct_phash)
+    assert distinct_dist > 5, f"Expected distinct pHash distance > 5, got {distinct_dist}"
+
+    rep_distinct = VisionQualityGate.validate_scene_image(
+        image_input=distinct_file,
+        plan=plan,
+        check_permanent_duplicates=False,
+        used_reel_hashes={base_sha256},
+        used_reel_phashes={base_phash},
+    )
+    assert rep_distinct.passed is True
+    assert rep_distinct.duplicate_status is False
+

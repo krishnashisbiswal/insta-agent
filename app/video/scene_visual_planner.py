@@ -605,6 +605,19 @@ class SceneVisualPlanner:
                 ),
             }
 
+        # Check Category CTA: Call to Action / DM Consultation / Sacred Guidance
+        cta_keywords = ["comment", "कमेंट", "dm", "save", "सेव", "guidance", "consultation", "परामर्श", "मार्गदर्शन"]
+        if any(k in spoken for k in cta_keywords):
+            return {
+                "visual_intent": "sacred_consultation_guidance",
+                "required_entities": ["astrology consultation study", "antique scroll", "warm sacred oil lamp"],
+                "primary_visual_strategy": "reverent Vedic astrologer consultation desk with brass oil lamps and rolled parchment",
+                "fallback_visual_strategy": "sacred temple sanctum with warm golden diyas and ancient stone carvings in tranquil amber light",
+                "fallback_generation_prompt": (
+                    "cinematic photorealistic 9:16 vertical luxury photograph of an authentic ancient temple sanctum illuminated by warm golden oil lamps, sacred stone relief carvings, tranquil amber chiaroscuro, serene reverent atmosphere, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons"
+                ),
+            }
+
         # Check Category G: Kundli Chart (strictly if explicitly in narration)
         if has_kundli:
             return {

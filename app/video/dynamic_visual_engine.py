@@ -1224,8 +1224,8 @@ class DynamicVisualEngine:
         on_screen = scene_dict.get("on_screen_text", "").lower()
         vis_desc = scene_dict.get("visual_description", "").lower()
         scene_txt = f"{spoken} {on_screen} {vis_desc}".lower()
-        t_lower = (topic or "").lower()
-        full_context = f"{t_lower} {scene_txt}"
+        # Narration is the primary authority; topic must never override narration meaning
+        full_context = scene_txt if any(c.isalnum() for c in scene_txt) else (topic or "").lower()
 
         # 1. Identify Topic Category & Specific Master Entity
         curated_master_plate: Optional[Path] = None

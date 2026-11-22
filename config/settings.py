@@ -91,7 +91,7 @@ IMAGE_FALLBACK_PROVIDER = os.getenv("IMAGE_FALLBACK_PROVIDER", "").strip().lower
 IMAGE_MODEL = os.getenv("IMAGE_MODEL", "").strip()
 IMAGE_TIMEOUT = int(os.getenv("IMAGE_TIMEOUT", "15"))
 IMAGE_MAX_RETRIES = int(os.getenv("IMAGE_MAX_RETRIES", "1"))
-ALLOW_STATIC_FALLBACK = os.getenv("ALLOW_STATIC_FALLBACK", "true").strip().lower() in ("true", "1")
+ALLOW_STATIC_FALLBACK = os.getenv("ALLOW_STATIC_FALLBACK", "false").strip().lower() in ("true", "1")
 GENERATED_BROLL_DIR = BASE_DIR / "assets" / "generated_broll"
 GENERATED_BROLL_DIR.mkdir(parents=True, exist_ok=True)
 

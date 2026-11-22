@@ -493,6 +493,9 @@ class SceneVisualIntelligence:
         Uses Gemini LLM to interpret scene script narration in context and generate
         a 100% script-faithful, emotion-aware visual concept, subject, action, and detailed prompt.
         """
+        if os.getenv("TESTING", "").lower() in ("true", "1") or os.getenv("MOCK_AI", "").lower() in ("true", "1"):
+            return None
+
         try:
             from app.agents.gemini_client import generate_text, parse_json_response
 

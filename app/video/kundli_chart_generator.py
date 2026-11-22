@@ -961,7 +961,6 @@ class KundliChartGenerator:
         return Image.fromarray(out, "RGBA")
 
     @classmethod
-    @classmethod
     def render_celestial_sphere(cls, planet_key: str, sz: int = 320) -> Image.Image:
         """
         Renders a photorealistic, physically plausible 3D celestial sphere for any of the 9 Vedic planets.
