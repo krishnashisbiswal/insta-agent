@@ -1523,17 +1523,21 @@ class DynamicVisualEngine:
 
         # Tier 1: Check NASA API strictly for celestial/astronomical space queries
         chosen_cand: Optional[Path] = None
+        source_master_asset: Optional[Path] = None
         search_query = cls.get_scene_search_query(scene_dict, topic, scene_idx)
         if any(w in search_query.lower() for w in ["moon", "saturn", "jupiter", "mars", "nebula", "galaxy"]):
             nasa_asset = cls.search_online_photographic_asset(search_query, target_file)
             if nasa_asset and nasa_asset.exists():
                 chosen_cand = nasa_asset
+                source_master_asset = nasa_asset
 
         # Tier 2: Check matching candidates in candidates list that haven't been used in this reel
         if not chosen_cand:
             for cand in candidates:
-                if cand.exists() and cand not in used_images and cand.name not in used_images:
+                cand_str = str(cand.resolve()) if cand.exists() else str(cand)
+                if cand.exists() and cand not in used_images and cand.name not in used_images and cand_str not in used_images:
                     chosen_cand = cand
+                    source_master_asset = cand
                     break
 
         # Tier 3: Authentic photographic canvas adaptation (STRICTLY 100% genuine photograph, ZERO 3D drawings)
@@ -1553,11 +1557,26 @@ class DynamicVisualEngine:
             chosen_cand = target_file
 
         # Record in current reel's memory
+        if source_master_asset:
+            used_images.add(source_master_asset)
+            used_images.add(source_master_asset.name)
+            try:
+                used_images.add(str(source_master_asset.resolve()))
+            except Exception:
+                pass
         if chosen_cand:
             used_images.add(chosen_cand)
             used_images.add(chosen_cand.name)
-            used_images.add(target_file)
-            used_images.add(target_file.name)
+            try:
+                used_images.add(str(chosen_cand.resolve()))
+            except Exception:
+                pass
+        used_images.add(target_file)
+        used_images.add(target_file.name)
+        try:
+            used_images.add(str(target_file.resolve()))
+        except Exception:
+            pass
 
         # Durable permanent registration of the generated target image
         cls.register_used_image(target_file)

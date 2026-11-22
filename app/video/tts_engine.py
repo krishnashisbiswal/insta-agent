@@ -293,7 +293,12 @@ def generate_sarvam_speech(
             with httpx.Client(timeout=45.0) as client:
                 resp = client.post(url, json=payload, headers=headers)
                 if resp.status_code != 200:
-                    raise RuntimeError(f"Sarvam AI TTS failed ({resp.status_code}): {resp.text}")
+                    err_msg = f"Sarvam AI TTS failed ({resp.status_code}): {resp.text}"
+                    # Don't retry on quota exhaustion, bad credentials, or forbidden
+                    if resp.status_code in (401, 402, 403):
+                        logger.warning(f"Sarvam AI credential/quota notice ({resp.status_code}): {resp.text}")
+                        raise RuntimeError(err_msg)
+                    raise RuntimeError(err_msg)
 
                 data = resp.json()
                 audio_b64 = None
@@ -310,6 +315,8 @@ def generate_sarvam_speech(
                 break
         except Exception as exc:
             last_err = exc
+            if any(code in str(exc) for code in ("401", "402", "403", "insufficient_quota")):
+                raise last_err
             if attempt < max_retries:
                 logger.warning(f"Sarvam TTS attempt {attempt} failed ({exc}). Retrying...")
                 import time

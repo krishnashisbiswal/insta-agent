@@ -775,7 +775,22 @@ def create_cinematic_reel_video(
         if h in unique_hashes:
             raise ValueError(f"CRITICAL REPETITION ERROR: Duplicate image content hash ({h}) detected across scenes!")
         unique_hashes.add(h)
-    print(f"[STAGE 1 COMPLETE] All {total_scenes} scene images generated, verified 100% unique & diverse.")
+
+    # Validate perceptual hash distance across all assigned scene images
+    from app.storage.permanent_visual_memory import PermanentVisualMemory
+    phashes = []
+    for p in assigned_scene_images:
+        with Image.open(p) as im:
+            phashes.append(PermanentVisualMemory.compute_fingerprints(im)["phash"])
+    for i in range(len(phashes)):
+        for j in range(i + 1, len(phashes)):
+            p_dist = PermanentVisualMemory.hamming_distance(phashes[i], phashes[j])
+            if p_dist <= 5:
+                raise ValueError(
+                    f"CRITICAL REPETITION ERROR: Near-identical perceptual hash (distance {p_dist}/64) between Scene {i+1} and Scene {j+1}!"
+                )
+
+    print(f"[STAGE 1 COMPLETE] All {total_scenes} scene images generated, verified 100% unique & diverse (cryptographic & perceptual hashes).")
 
     def get_scene_badge(sc_dict: Dict[str, Any], scene_idx: int, topic_str: str) -> str:
         raw_badge = sc_dict.get("badge", "")
