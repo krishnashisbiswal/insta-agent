@@ -241,25 +241,31 @@ def generate_sarvam_speech(
         language_code = "hi-IN" if detected in ["hindi", "hinglish"] else "en-IN"
 
     # Map requested persona to valid Sarvam Bulbul:v4-flash speaker keys
-    requested_sp = (speaker or os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER) or "astrologer").lower()
+    requested_sp = (speaker or os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER) or "shubh").lower()
     speaker_map = {
         "arjun": "ratan_hi_latenight_warm" if language_code == "hi-IN" else "girish_en_documentary",
         "arjun_hindi": "ratan_hi_latenight_warm",
         "arjun_english": "girish_en_documentary",
-        "astrologer": "ratan_hi_latenight_warm",
-        "warm_astrologer": "ratan_hi_latenight_warm",
-        "calm": "ratan_hi_latenight_warm",
-        "gentle": "ratan_hi_latenight_warm",
+        "astrologer": "shubh_hi_devotional",
+        "vedic_astrologer": "shubh_hi_devotional",
+        "pandit": "shubh_hi_devotional",
+        "guruji": "shubh_hi_devotional",
+        "warm_astrologer": "shubh_hi_devotional",
+        "calm": "shubh_hi_devotional",
+        "gentle": "shubh_hi_devotional",
+        "shubh": "shubh_hi_devotional",
+        "subh": "shubh_hi_devotional",
+        "shubh_astrologer": "shubh_hi_devotional",
+        "subh_astrologer": "shubh_hi_devotional",
         "ratan": "ratan_hi_latenight_warm",
         "anand": "anand_hi_documentary",
         "mahesh": "mahesh_hi_documentary",
-        "shubh": "shubh_hi_devotional",
         "girish": "girish_hi_devotional",
         "ishita": "ishita_hi_devotional",
     }
     target_speaker = speaker_map.get(requested_sp, requested_sp)
     target_model = model or os.getenv("SARVAM_MODEL", SARVAM_MODEL) or "bulbul:v4-flash"
-    if target_model == "bulbul:v1":
+    if target_model.lower() in ("bulbul:v1", "bulbul:v2", "bulbul v4", "bulbul-v4", "bulbul:v4"):
         target_model = "bulbul:v4-flash"
 
     url = "https://api.sarvam.ai/text-to-speech"
@@ -334,7 +340,7 @@ def generate_speech(
 ) -> Dict[str, Any]:
     """
     Unified voice synthesizer with calm, resonant Vedic Astrologer delivery:
-    1. Sarvam AI Indic Neural Voice (Ratan Warm Astrologer speaker) at calm pace (1.05x)
+    1. Sarvam AI Indic Neural Voice (Shubh / Shubh Devotional Astrologer speaker in Bulbul v4) at calm pace (1.05x)
     2. Mastered Microsoft Edge-TTS Astrologer voice pack (deep baritone pitch=-12Hz, calm tempo rate=-3%,
        with 140Hz chest resonance EQ boost & broadcast loudness mastering)
     """
@@ -350,8 +356,10 @@ def generate_speech(
     # Resolve target voice persona
     raw_voice = voice or get_recommended_voice(clean_text)
     is_astrologer = (
-        raw_voice in ("astrologer", "vedic_astrologer", "pandit", "guruji")
+        raw_voice in ("astrologer", "vedic_astrologer", "pandit", "guruji", "shubh", "subh")
         or "astrologer" in raw_voice.lower()
+        or "shubh" in raw_voice.lower()
+        or "subh" in raw_voice.lower()
     )
 
     eff_rate = rate or ("-3%" if is_astrologer else "+0%")
@@ -371,11 +379,12 @@ def generate_speech(
 
     if can_use_sarvam:
         try:
-            speaker_choice = "ratan_hi_latenight_warm" if is_astrologer else "arjun"
-            if voice and ("arjun" in voice.lower() or voice.startswith("sarvam:")):
+            default_astrologer_sp = os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER or "shubh").strip()
+            speaker_choice = default_astrologer_sp if is_astrologer else "arjun"
+            if voice and ("arjun" in voice.lower() or "shubh" in voice.lower() or "subh" in voice.lower() or voice.startswith("sarvam:")):
                 speaker_choice = voice.split(":")[-1] if ":" in voice else voice
-            elif os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER):
-                speaker_choice = os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER).strip()
+            elif default_astrologer_sp:
+                speaker_choice = default_astrologer_sp
 
             sarvam_pace = 1.05 if is_astrologer else float(os.getenv("SARVAM_PACE", SARVAM_PACE or "1.20"))
             logger.info(f"Synthesizing authentic Indic voice with Sarvam AI (Speaker: {speaker_choice}, Pace: {sarvam_pace})...")
