@@ -92,7 +92,7 @@ def test_provider_rate_limit_retry():
             raise urllib.error.HTTPError("http://test", 429, "Too Many Requests", {}, None)
         return mock_resp
 
-    with patch("urllib.request.urlopen", side_effect=mock_urlopen):
+    with patch("urllib.request.urlopen", side_effect=mock_urlopen), patch("time.sleep"):
         result = provider.generate("test prompt", seed=42)
         assert result == valid_img
         assert call_count == 2

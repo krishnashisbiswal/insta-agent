@@ -714,10 +714,10 @@ def create_cinematic_reel_video(
 
     # 1. Determine active voice model
     active_voice = voice
-    if not active_voice:
+    if not active_voice or active_voice in ["smart", "auto"]:
         has_devanagari = any(bool(re.search(r"[\u0900-\u097F]", sc.get("spoken_line", ""))) for sc in scenes)
         if has_devanagari or script_data.get("language", "").lower() in ["hindi", "hi"]:
-            active_voice = "hi-IN-MadhurNeural"
+            active_voice = "astrologer"
         else:
             active_voice = "en-IN-PrabhatNeural"
 
@@ -850,7 +850,7 @@ def create_cinematic_reel_video(
         spoken_text = sc.get("spoken_line", "").strip()
 
         # Pronunciation sanitization for Indian pandit voice
-        if active_voice.startswith("hi-"):
+        if active_voice in ("astrologer", "vedic_astrologer") or str(active_voice).startswith("hi-"):
             spoken_text = clean_pronunciation_for_hindi(spoken_text)
 
         # Generate audio for THIS scene's spoken dialogue

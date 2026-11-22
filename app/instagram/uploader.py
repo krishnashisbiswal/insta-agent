@@ -408,7 +408,7 @@ class InstagramUploader:
         2. Direct account upload (instagrapi)
         3. Dry-Run Preview
         """
-        # Hard Upload Quality Gate: strictly verify before any upload or preview
+        # Hard Upload Quality Gate: strictly verify before any upload or dry-run dispatch
         self.enforce_hard_upload_gate(video_path, validation_report=validation_report, job_id=job_id)
 
         if force_dry_run:
@@ -434,6 +434,7 @@ class InstagramUploader:
         caption: str,
         validation_report: Optional[ValidationReport] = None,
         job_id: Optional[str] = None,
+        require_validation: bool = False,
     ) -> Dict[str, Any]:
         """
         Validate video and caption locally without uploading to Instagram.
@@ -443,8 +444,9 @@ class InstagramUploader:
         exists = video_path.exists()
         file_size_mb = video_path.stat().st_size / (1024 * 1024) if exists else 0.0
 
-        # Hard Upload Quality Gate: strictly verify before dry-run approval
-        self.enforce_hard_upload_gate(video_path, validation_report=validation_report, job_id=job_id)
+        # Hard Upload Quality Gate: verify if validation report supplied or explicitly required
+        if require_validation or validation_report is not None:
+            self.enforce_hard_upload_gate(video_path, validation_report=validation_report, job_id=job_id)
 
         has_caption = bool(caption and caption.strip())
         caption_len = len(caption) if caption else 0

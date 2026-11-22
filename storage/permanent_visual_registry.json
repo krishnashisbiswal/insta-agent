@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0.0",
   "created_at": "2026-11-15T09:55:14.062123Z",
-  "last_updated": "2026-11-22T18:16:24.513356+00:00",
+  "last_updated": "2026-11-22T18:38:19.539439+00:00",
   "total_records": 1951,
   "records": {
     "legacy:1_gemstone_hook.jpg": {
@@ -82678,7 +82678,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-22T17:43:48.317805+00:00"
+      "usage_timestamp": "2026-11-22T18:38:16.668057+00:00"
     },
     "c7410462753b477eb2089f489e642094e4994d3245470728ecc537d341403f99": {
       "asset_id": "c7410462753b477eb2089f489e642094e4994d3245470728ecc537d341403f99",
@@ -82764,7 +82764,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-22T17:43:48.673511+00:00"
+      "usage_timestamp": "2026-11-22T18:38:17.084122+00:00"
     },
     "1d90a964672926a93fc6597963c00730774697baf66e93c0740ecbcf445c0b79": {
       "asset_id": "1d90a964672926a93fc6597963c00730774697baf66e93c0740ecbcf445c0b79",
@@ -82850,7 +82850,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-22T17:43:49.037092+00:00"
+      "usage_timestamp": "2026-11-22T18:38:17.510688+00:00"
     },
     "1a6ada3b61bffdd311a650dcf86459d742a773f84811d37098cd1fa3a3ee2332": {
       "asset_id": "1a6ada3b61bffdd311a650dcf86459d742a773f84811d37098cd1fa3a3ee2332",
@@ -82936,7 +82936,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-22T17:43:49.409921+00:00"
+      "usage_timestamp": "2026-11-22T18:38:17.997457+00:00"
     },
     "e055bb995498ac0a0d59a52ea20319c3649b8e7756328604a24314852f13e3cd": {
       "asset_id": "e055bb995498ac0a0d59a52ea20319c3649b8e7756328604a24314852f13e3cd",
@@ -83022,7 +83022,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-22T17:43:49.799337+00:00"
+      "usage_timestamp": "2026-11-22T18:38:18.531853+00:00"
     },
     "56d07c4baccf2508ca0bbebeceb55bd3f56ab37991e8aa8e17902ba3ad70a682": {
       "asset_id": "56d07c4baccf2508ca0bbebeceb55bd3f56ab37991e8aa8e17902ba3ad70a682",
@@ -83108,7 +83108,7 @@
       "reel_id": "",
       "topic": "",
       "scene_idx": null,
-      "usage_timestamp": "2026-11-22T17:43:50.247092+00:00"
+      "usage_timestamp": "2026-11-22T18:38:19.391709+00:00"
     },
     "62f2891170bcd307c473d2a2797a033c64a3c4046a528f7c9750ded523cb19a4": {
       "asset_id": "62f2891170bcd307c473d2a2797a033c64a3c4046a528f7c9750ded523cb19a4",

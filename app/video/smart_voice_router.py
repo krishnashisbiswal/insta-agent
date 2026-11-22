@@ -146,8 +146,11 @@ def determine_smart_voice(
     """
     mode = voice_mode.lower().strip()
 
+    if mode in ["astrologer", "vedic", "pandit", "guruji"]:
+        return "Hindi", "astrologer", "pure_hindi"
+
     if mode in ["hindi", "hi"]:
-        voice_id = "hi-IN-MadhurNeural" if gender == "male" else "hi-IN-SwaraNeural"
+        voice_id = "astrologer" if gender == "male" else "hi-IN-SwaraNeural"
         return "Hindi", voice_id, "pure_hindi"
 
     if mode in ["english", "en"]:
@@ -157,13 +160,13 @@ def determine_smart_voice(
     # SMART AUTOMATIC MODE (Topic-based intelligence)
     traditional_markers = [
         "dosh", "pitru", "shani", "sade sati", "havan", "kundli", "rahu", "ketu",
-        "puja", "mantra", "sanctum", "peepal", "bhairav", "moksha", "karma"
+        "puja", "mantra", "sanctum", "peepal", "bhairav", "moksha", "karma", "surya", "graha"
     ]
     t_lower = topic.lower()
     is_traditional = any(m in t_lower for m in traditional_markers)
 
     if is_traditional:
-        voice_id = "hi-IN-MadhurNeural" if gender == "male" else "hi-IN-SwaraNeural"
+        voice_id = "astrologer" if gender == "male" else "hi-IN-SwaraNeural"
         return "Hindi", voice_id, "pure_hindi"
     else:
         voice_id = "en-IN-PrabhatNeural" if gender == "male" else "en-IN-NeerjaNeural"

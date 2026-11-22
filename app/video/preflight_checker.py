@@ -68,12 +68,20 @@ class PreFlightQualityGate:
             checks["video_specs"] = {"passed": False, "score": 20, "detail": f"File size too small ({file_size_mb:.2f} MB)"}
         else:
             try:
-                clip = VideoFileClip(str(video_path))
-                width, height = clip.size
-                duration = clip.duration
-                fps = clip.fps
-                has_audio = clip.audio is not None
-                clip.close()
+                try:
+                    from app.video.ffprobe_inspector import FFprobeInspector
+                    meta = FFprobeInspector.probe(video_path)
+                    width, height = meta.width, meta.height
+                    duration = meta.duration_seconds
+                    fps = meta.fps
+                    has_audio = meta.has_audio
+                except Exception:
+                    clip = VideoFileClip(str(video_path))
+                    width, height = clip.size
+                    duration = clip.duration
+                    fps = clip.fps
+                    has_audio = clip.audio is not None
+                    clip.close()
 
                 # Aspect ratio check (1080x1920 or 9:16)
                 aspect_ratio = width / height if height > 0 else 0

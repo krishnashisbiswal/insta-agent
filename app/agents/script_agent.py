@@ -3,7 +3,7 @@ import logging
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 # Add paths
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -36,6 +36,70 @@ import detect
 
 logger = logging.getLogger(__name__)
 HOOKS_FILE = REEL_TOOLS / "hooks.json"
+
+
+class DeterministicScriptValidator:
+    """
+    High-speed deterministic script validator.
+    Validates word counts, duration estimate, scene coherence, lack of duplicate lines,
+    and required structural elements (Hook, Points, CTA) in < 1ms without calling external LLMs.
+    """
+
+    @classmethod
+    def validate_script(cls, script_data: Dict[str, Any]) -> Tuple[bool, List[str]]:
+        errors: List[str] = []
+        if not isinstance(script_data, dict):
+            return False, ["Script data must be a dictionary."]
+
+        # 1. Required Top-Level Schema Keys
+        for req_key in ["topic", "scenes", "selected_hook"]:
+            if req_key not in script_data:
+                errors.append(f"Missing required script key: '{req_key}'")
+
+        scenes = script_data.get("scenes", [])
+        if not isinstance(scenes, list) or len(scenes) < 3:
+            errors.append(f"Script must contain at least 3 scenes (got {len(scenes) if isinstance(scenes, list) else 0})")
+            return False, errors
+
+        # 2. Scene-Level Narrative and Dialogue Checks
+        seen_spoken: Set[str] = set()
+        total_words = 0
+
+        for idx, sc in enumerate(scenes):
+            spoken = sc.get("spoken_line", "").strip()
+            on_screen = sc.get("on_screen_text", "").strip()
+
+            if not spoken:
+                errors.append(f"Scene {idx + 1} has empty spoken dialogue.")
+            if not on_screen:
+                errors.append(f"Scene {idx + 1} has empty on-screen card text.")
+
+            words = spoken.split()
+            total_words += len(words)
+            if len(words) < 2:
+                errors.append(f"Scene {idx + 1} spoken line too short ({len(words)} words).")
+            elif len(words) > 55:
+                errors.append(f"Scene {idx + 1} spoken line too long for 9:16 Instagram pacing ({len(words)} words).")
+
+            # Duplicate spoken line check
+            norm_spoken = re.sub(r"[^\w\s]", "", spoken.lower()).strip()
+            if norm_spoken in seen_spoken:
+                errors.append(f"Scene {idx + 1} repeats spoken dialogue from an earlier scene: '{spoken[:30]}...'")
+            seen_spoken.add(norm_spoken)
+
+        # 3. Overall Script Length and Pacing Check
+        if total_words < 20:
+            errors.append(f"Total script word count ({total_words} words) is below minimum threshold for engagement (20 words).")
+        elif total_words > 320:
+            errors.append(f"Total script word count ({total_words} words) exceeds 90-second Reel ceiling (320 words).")
+
+        # 4. Hook Presence
+        hook_obj = script_data.get("selected_hook", {})
+        if not hook_obj.get("spoken") and not scenes[0].get("spoken_line"):
+            errors.append("Opening hook dialogue is missing.")
+
+        is_valid = len(errors) == 0
+        return is_valid, errors
 
 
 def load_hook_formulas() -> List[Dict[str, Any]]:
@@ -1526,6 +1590,13 @@ Return ONLY valid JSON in this exact structure:
         "timing": timing,
         "human_score": human_score,
     }
+
+    # Deterministic Script Validation (Phase 3 compliance: zero external AI calls)
+    is_valid, script_errors = DeterministicScriptValidator.validate_script(result)
+    result["is_valid"] = is_valid
+    result["validation_errors"] = script_errors
+    if not is_valid:
+        logger.warning(f"[DeterministicScriptValidator] Script validation notices: {script_errors}")
 
     # Save to scripts directory
     filename = re.sub(r"[^\w\-]", "_", topic.lower())[:30] + ".json"

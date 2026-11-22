@@ -48,10 +48,34 @@ from app.publishing.publishing_errors import (
 
 @pytest.fixture
 def dummy_video_file(tmp_path: Path) -> Path:
-    """Creates a minimal valid dummy MP4 file for testing."""
+    """Creates a minimal valid dummy MP4 file for testing with valid validation report."""
+    import hashlib
+    import json
+    import time
+
     vf = tmp_path / "test_reel.mp4"
-    # Write at least 300 bytes of dummy mp4 header
-    vf.write_bytes(b"\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isomiso2mp41" + b"\x00" * 500)
+    content = b"\x00\x00\x00\x1cftypisom\x00\x00\x02\x00isomiso2mp41" + b"\x00" * 500
+    vf.write_bytes(content)
+
+    h = hashlib.sha256(content).hexdigest()
+    val_json = tmp_path / "validation.json"
+    val_json.write_text(
+        json.dumps({
+            "job_id": "test_job",
+            "video_path": str(vf),
+            "sha256_hash": h,
+            "file_size_bytes": len(content),
+            "created_at_epoch": time.time(),
+            "job_start_epoch": time.time(),
+            "validation_timestamp": time.time(),
+            "status": "VALIDATED",
+            "passed": True,
+            "check_results": {"file_exists": True, "size_positive": True},
+            "errors": [],
+            "warnings": [],
+        }),
+        encoding="utf-8",
+    )
     return vf
 
 
@@ -205,7 +229,7 @@ def test_04_processing_timeout(dummy_video_file: Path):
         access_token="EAAB_test_token_123",
     )
 
-    with patch("requests.get") as mock_get:
+    with patch("requests.get") as mock_get, patch("time.sleep"):
         # Polling returns IN_PROGRESS continuously
         mock_poll = MagicMock()
         mock_poll.json.return_value = {"status_code": "IN_PROGRESS", "id": "cont_99"}
@@ -264,7 +288,7 @@ def test_05_publish_api_failure(dummy_video_file: Path):
 
         mock_get.side_effect = [mock_recent, mock_poll, mock_recent]
 
-        with pytest.raises(PublishingUncertainOutcomeError) as exc_info:
+        with pytest.raises(PublishingUncertainOutcomeError) as exc_info, patch("time.sleep"):
             uploader.upload_reel(video_path=dummy_video_file, caption="Test Caption")
 
         assert "Publish container call failed" in str(exc_info.value)

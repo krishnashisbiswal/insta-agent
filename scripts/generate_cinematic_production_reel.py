@@ -108,7 +108,7 @@ def main():
     print(f"Minimum pairwise pHash distance: {min_p_dist}/64 (strictly > 5 required)")
     assert min_p_dist > 5, "Perceptual near-duplicate detected!"
 
-    print("\n[STEP 2] Rendering Cinematic Reel with Real Neural Hindi Voiceover...")
+    print("\n[STEP 2] Rendering Cinematic Reel with Authentic Vedic Astrologer Voiceover...")
     script_data = {
         "topic": topic,
         "selected_hook": "Surya & Shani Cosmic Karmic Balance",
@@ -119,14 +119,14 @@ def main():
     output_filename = "cinematic_astrology_surya_shani_reel.mp4"
     rendered_path = create_cinematic_reel_video(
         script_data=script_data,
-        voice="hi-IN-MadhurNeural",
+        voice="astrologer",
         output_filename=output_filename,
         scene_image_paths=curated_visuals,
     )
 
     print(f"\n[STEP 3] Video Successfully Rendered: {rendered_path} ({rendered_path.stat().st_size:,} bytes)")
 
-    print("\n[STEP 4] Running Automated Video Quality Control...")
+    print("\n[STEP 4] Running Automated Video Quality Control & 17-Point Quality Gate...")
     qc_report = VideoQualityControl.audit_video(
         video_path=rendered_path,
         expected_scenes=len(scenes),
@@ -137,6 +137,14 @@ def main():
     print(f"Dimensions: {qc_report.dimensions}")
     print(f"Audio synced: {qc_report.audio_synced}")
     assert qc_report.passed is True, f"Video QC failed: {qc_report.errors}"
+
+    from app.video.video_quality_gate import VideoQualityGate
+    gate_report = VideoQualityGate.validate_video(
+        video_path=rendered_path,
+        require_audio=True,
+    )
+    print(f"VideoQualityGate Passed: {gate_report.passed}")
+    assert gate_report.passed is True, f"VideoQualityGate failed: {gate_report.errors}"
 
     print("\n[STEP 5] Copying Video Artifact to Brain Artifact Directory...")
     artifact_dir = Path(r"C:\Users\KRISHNA\.gemini\antigravity\brain\d9179029-ca97-4c92-bf81-012bf8248fe6")

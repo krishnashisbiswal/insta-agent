@@ -11,7 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from unittest.mock import patch
 
 from app.agents.gemini_client import check_health, generate_text, generate_json
-from app.video.visual_generator import generate_scene_frame
+from app.video.scene_visual_planner import SceneVisualPlanner
 from app.instagram.uploader import InstagramUploader
 from app.video.tts_engine import detect_language
 from app.autonomous.timing_engine import get_next_optimal_post_time, is_in_optimal_window
@@ -66,10 +66,11 @@ def test_language_detection():
 
 
 def test_visual_frame_generation(tmp_path):
-    frame_path = tmp_path / "test_frame.jpg"
-    im = generate_scene_frame(scene_index=0, theme_name="cosmic", output_path=frame_path)
-    assert frame_path.exists()
-    assert im.size == (1080, 1920)
+    scenes = [{"scene_num": 1, "spoken_line": "Shani Dev controls your karmic discipline.", "on_screen_text": "KARMA DISCIPLINE"}]
+    plans = SceneVisualPlanner.plan_reel_visuals(scenes=scenes, topic="Shani Dev Karma")
+    assert len(plans) == 1
+    assert plans[0].aspect_ratio == "9:16"
+    assert plans[0].is_valid is True
 
 
 def test_instagram_dry_run(tmp_path):
