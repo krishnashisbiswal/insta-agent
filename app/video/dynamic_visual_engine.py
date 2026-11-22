@@ -1382,19 +1382,18 @@ class DynamicVisualEngine:
             if any(k in scene_txt for k in ["tiger", "tigers eye", "टाइगर"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "fresh_tiger_eye_macro.jpg")
             if (any(k in scene_txt for k in ["rahu", "राहु"]) and any(k in scene_txt for k in ["surya", "sun", "सूर्य"])) or "sun rahu" in scene_txt:
-                from app.video.kundli_chart_generator import KundliChartGenerator
-                candidates.append(KundliChartGenerator.generate_3d_kundli_planet_scene(scene_dict, topic, scene_idx, target_file))
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_sun.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_rahu.jpg")
             if any(k in scene_txt for k in ["mangal", "mars", "मंगल"]):
-                from app.video.kundli_chart_generator import KundliChartGenerator
-                candidates.append(KundliChartGenerator.generate_3d_kundli_planet_scene(scene_dict, topic, scene_idx, target_file))
+                candidates.append(CINEMATIC_BROLL_DIR / "fresh_planet_mars_hubble.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_mars.jpg")
             if any(k in scene_txt for k in ["shani", "saturn", "शनि", "drishti", "दृष्टि"]):
-                from app.video.kundli_chart_generator import KundliChartGenerator
-                candidates.append(KundliChartGenerator.generate_3d_kundli_planet_scene(scene_dict, topic, scene_idx, target_file))
+                candidates.append(CINEMATIC_BROLL_DIR / "planet_saturn.jpg")
             if any(k in scene_txt for k in ["emerald", "पन्ना", "gemstone", "sapphire", "नीलम", "रत्न"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg")
             if any(k in scene_txt for k in ["12th", "बारहवें", "बारहवां", "twelfth", "vyaya", "व्यय", "kundli", "कुंडली"]):
-                from app.video.kundli_chart_generator import KundliChartGenerator
-                candidates.append(KundliChartGenerator.generate_3d_kundli_planet_scene(scene_dict, topic, scene_idx, target_file))
+                candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
+                candidates.append(CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg")
             if any(k in scene_txt for k in ["guru", "brihaspati", "jupiter", "गुरु", "बृहस्पति"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_jupiter.jpg")
             if any(k in scene_txt for k in ["chandra", "moon", "चंद्रमा", "चन्द्र"]):

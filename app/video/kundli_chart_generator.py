@@ -961,10 +961,12 @@ class KundliChartGenerator:
         return Image.fromarray(out, "RGBA")
 
     @classmethod
+    @classmethod
     def render_celestial_sphere(cls, planet_key: str, sz: int = 320) -> Image.Image:
         """
         Renders a photorealistic, physically plausible 3D celestial sphere for any of the 9 Vedic planets.
-        Uses procedural atmospheric banding, lunar craters, iron-oxide terrain, or solar plasma.
+        Strictly avoids high-frequency sine-wave crosshatching / moiré artifacts.
+        Uses photographic master plates when available.
         """
         from config.settings import BASE_DIR
         broll_dir = BASE_DIR / "assets" / "cinematic_broll"
@@ -973,7 +975,37 @@ class KundliChartGenerator:
         if planet_key == "saturn":
             return cls._render_realistic_saturn_sphere(sz)
 
-        # Dedicated high-fidelity procedural generation with spherical projection
+        # Check for authentic photographic master plate first
+        photo_map = {
+            "jupiter": "planet_jupiter.jpg",
+            "mars": "fresh_planet_mars_hubble.jpg",
+            "sun": "planet_sun.jpg",
+            "venus": "planet_venus.jpg",
+            "mercury": "planet_mercury.jpg",
+            "moon": "planet_moon.jpg",
+            "rahu": "planet_rahu.jpg",
+            "ketu": "planet_ketu.jpg",
+        }
+        asset_name = photo_map.get(planet_key)
+        if asset_name and (broll_dir / asset_name).exists():
+            try:
+                with Image.open(broll_dir / asset_name) as p_img:
+                    pw, ph = p_img.size
+                    min_d = min(pw, ph)
+                    left = (pw - min_d) // 2
+                    top = (ph - min_d) // 2
+                    cropped = p_img.crop((left, top, left + min_d, top + min_d)).resize((sz, sz), Image.Resampling.LANCZOS)
+                    mask = Image.new("L", (sz, sz), 0)
+                    draw = ImageDraw.Draw(mask)
+                    draw.ellipse([4, 4, sz - 4, sz - 4], fill=255)
+                    mask = mask.filter(ImageFilter.GaussianBlur(1.8))
+                    sphere_out = Image.new("RGBA", (sz, sz), (0, 0, 0, 0))
+                    sphere_out.paste(cropped.convert("RGBA"), (0, 0), mask)
+                    return sphere_out
+            except Exception as e:
+                logger.warning(f"Notice: Photographic sphere extraction fallback for {planet_key}: {e}")
+
+        # Smooth procedural generation without moire crosshatch
         y, x = np.mgrid[:sz, :sz]
         cx = cy = sz / 2.0
         r = sz / 2.0
@@ -984,13 +1016,6 @@ class KundliChartGenerator:
 
         nz = np.zeros((sz, sz), dtype=np.float32)
         nz[mask] = np.sqrt(np.maximum(0.0, 1.0 - r2[mask]))
-
-        theta = np.arcsin(np.clip(ny, -1.0, 1.0))
-        cos_theta = np.maximum(np.cos(theta), 1e-4)
-        phi = np.arcsin(np.clip(nx / cos_theta, -1.0, 1.0))
-
-        u = phi / np.pi + 0.5
-        v = theta / np.pi + 0.5
 
         # Key light from top-left
         lx, ly, lz = -0.45, -0.45, 0.77
@@ -1007,15 +1032,13 @@ class KundliChartGenerator:
         out = np.zeros((sz, sz, 4), dtype=np.float32)
 
         if planet_key == "sun":
-            # Self-luminous solar star: granulation + blazing limb
-            gran = np.sin(phi * 24.0) * np.cos(theta * 24.0) * 0.15 + np.sin(phi * 48.0 + theta * 36.0) * 0.10
-            limb = 0.65 + 0.35 * nz
-            c_core = np.array([255.0, 240.0, 150.0])
-            c_mid = np.array([255.0, 180.0, 25.0])
-            c_edge = np.array([230.0, 95.0, 10.0])
-            t_val = np.clip(nz + gran, 0.0, 1.0)
+            limb = 0.75 + 0.25 * nz
+            c_core = np.array([255.0, 245.0, 180.0])
+            c_mid = np.array([255.0, 185.0, 40.0])
+            c_edge = np.array([230.0, 105.0, 20.0])
+            t_val = np.clip(nz, 0.0, 1.0)
             col = (1.0 - t_val)[..., None] * c_edge + t_val[..., None] * (0.45 * c_mid + 0.55 * c_core)
-            col = col * limb[..., None] * 1.25
+            col = col * limb[..., None] * 1.15
             out[:, :, :3] = col
 
         elif planet_key == "jupiter":
@@ -1359,23 +1382,15 @@ class KundliChartGenerator:
             ys = [p[1] for p in poly]
             return sum(xs) / len(xs), sum(ys) / len(ys)
 
-        # Base backdrop: authentic ancient parchment with vignette
+        # Base backdrop: authentic ancient parchment
         parchment_path = broll_dir / "authentic_vedic_kundli_parchment.jpg"
-        if parchment_path.exists():
+        has_parchment = parchment_path.exists()
+        if has_parchment:
             base_raw = Image.open(parchment_path).convert("RGB")
             base_raw = ImageOps.fit(base_raw, (width, height), Image.Resampling.LANCZOS)
-            base_blur = base_raw.filter(ImageFilter.GaussianBlur(28))
-            base_dark = ImageEnhance.Brightness(base_blur).enhance(0.48)
-            base_graded = ImageEnhance.Contrast(base_dark).enhance(1.20)
-
-            vignette = Image.new("L", (width, height), 0)
-            vdraw = ImageDraw.Draw(vignette)
-            vdraw.ellipse([60, 140, width - 60, height - 230], fill=255)
-            vignette = vignette.filter(ImageFilter.GaussianBlur(140))
-            v_arr = np.array(vignette, dtype=float) / 255.0
-            bg_arr = np.array(base_graded, dtype=float)
-            darkened = bg_arr * (0.35 + 0.65 * v_arr[..., None])
-            canvas = Image.fromarray(np.clip(darkened, 0, 255).astype(np.uint8)).convert("RGBA")
+            base_dark = ImageEnhance.Brightness(base_raw).enhance(0.82)
+            base_graded = ImageEnhance.Contrast(base_dark).enhance(1.10)
+            canvas = base_graded.convert("RGBA")
         else:
             canvas = Image.new("RGBA", (width, height), (10, 8, 18, 255))
 
@@ -1452,38 +1467,39 @@ class KundliChartGenerator:
             pillar = pillar.filter(ImageFilter.GaussianBlur(8))
             canvas = Image.alpha_composite(canvas, pillar)
 
-        # 3D Engraved Gold Lines
-        draw = ImageDraw.Draw(canvas)
-        def _draw_3d_line(u1: float, v1: float, u2: float, v2: float, w: int = 3) -> None:
-            p1 = project_pt(u1, v1, h=0)[:2]
-            p2 = project_pt(u2, v2, h=0)[:2]
-            draw.line([p1, p2], fill=(15, 10, 5, 140), width=w + 2)
-            draw.line([p1, p2], fill=(230, 190, 65, 245), width=w)
+        # 3D Engraved Gold Lines (synthetic fallback only)
+        if not has_parchment:
+            draw = ImageDraw.Draw(canvas)
+            def _draw_3d_line(u1: float, v1: float, u2: float, v2: float, w: int = 3) -> None:
+                p1 = project_pt(u1, v1, h=0)[:2]
+                p2 = project_pt(u2, v2, h=0)[:2]
+                draw.line([p1, p2], fill=(15, 10, 5, 140), width=w + 2)
+                draw.line([p1, p2], fill=(230, 190, 65, 245), width=w)
 
-        _draw_3d_line(0, 0, 1000, 0, 4)
-        _draw_3d_line(1000, 0, 1000, 1000, 4)
-        _draw_3d_line(1000, 1000, 0, 1000, 4)
-        _draw_3d_line(0, 1000, 0, 0, 4)
-        _draw_3d_line(0, 0, 1000, 1000, 3)
-        _draw_3d_line(1000, 0, 0, 1000, 3)
-        _draw_3d_line(500, 0, 1000, 500, 3)
-        _draw_3d_line(1000, 500, 500, 1000, 3)
-        _draw_3d_line(500, 1000, 0, 500, 3)
-        _draw_3d_line(0, 500, 500, 0, 3)
+            _draw_3d_line(0, 0, 1000, 0, 4)
+            _draw_3d_line(1000, 0, 1000, 1000, 4)
+            _draw_3d_line(1000, 1000, 0, 1000, 4)
+            _draw_3d_line(0, 1000, 0, 0, 4)
+            _draw_3d_line(0, 0, 1000, 1000, 3)
+            _draw_3d_line(1000, 0, 0, 1000, 3)
+            _draw_3d_line(500, 0, 1000, 500, 3)
+            _draw_3d_line(1000, 500, 500, 1000, 3)
+            _draw_3d_line(500, 1000, 0, 500, 3)
+            _draw_3d_line(0, 500, 500, 0, 3)
 
-        # Roman Numerals
-        for h_num, poly_uv in uv_polygons.items():
-            h_uc, h_vc = get_uv_centroid(poly_uv)
-            du = (h_uc - 500.0) * 0.35
-            dv = (h_vc - 500.0) * 0.35
-            nx_pt, ny_pt, _ = project_pt(h_uc + du, h_vc + dv, h=0)
-            rom = ROMAN_NUMS[h_num]
-            bbox = draw.textbbox((0, 0), rom, font=font_num)
-            tw = bbox[2] - bbox[0]
-            th = bbox[3] - bbox[1]
-            is_active = (h_num in active_houses)
-            col = (255, 245, 180, 245) if is_active else (160, 135, 100, 150)
-            draw.text((nx_pt - tw / 2, ny_pt - th / 2), rom, fill=col, font=font_num)
+            # Roman Numerals
+            for h_num, poly_uv in uv_polygons.items():
+                h_uc, h_vc = get_uv_centroid(poly_uv)
+                du = (h_uc - 500.0) * 0.35
+                dv = (h_vc - 500.0) * 0.35
+                nx_pt, ny_pt, _ = project_pt(h_uc + du, h_vc + dv, h=0)
+                rom = ROMAN_NUMS[h_num]
+                bbox = draw.textbbox((0, 0), rom, font=font_num)
+                tw = bbox[2] - bbox[0]
+                th = bbox[3] - bbox[1]
+                is_active = (h_num in active_houses)
+                col = (255, 245, 180, 245) if is_active else (160, 135, 100, 150)
+                draw.text((nx_pt - tw / 2, ny_pt - th / 2), rom, fill=col, font=font_num)
 
         # -------------------------------------------------------------
         # MODE A: HOUSE_ONLY
@@ -1964,10 +1980,22 @@ class KundliChartGenerator:
         p_hi, p_en = PLANET_DISPLAY_NAMES.get(planet_key, (planet_key.upper(), planet_key.upper()))
 
         from config.settings import BASE_DIR
-        master_sat = BASE_DIR / "assets" / "cinematic_broll" / "planet_saturn.jpg"
-        if planet_key == "saturn" and master_sat.exists():
-            sat_base = Image.open(master_sat).convert("RGB")
-            c_space = ImageOps.fit(sat_base, (width, height), Image.Resampling.LANCZOS).convert("RGBA")
+        master_map = {
+            "saturn": "planet_saturn.jpg",
+            "sun": "planet_sun.jpg",
+            "jupiter": "planet_jupiter.jpg",
+            "mars": "fresh_planet_mars_hubble.jpg",
+            "moon": "planet_moon.jpg",
+            "venus": "planet_venus.jpg",
+            "mercury": "planet_mercury.jpg",
+            "rahu": "planet_rahu.jpg",
+            "ketu": "planet_ketu.jpg",
+        }
+        master_file = master_map.get(planet_key)
+        master_path = (BASE_DIR / "assets" / "cinematic_broll" / master_file) if master_file else None
+        if master_path and master_path.exists():
+            base_img = Image.open(master_path).convert("RGB")
+            c_space = ImageOps.fit(base_img, (width, height), Image.Resampling.LANCZOS).convert("RGBA")
             cls._draw_floating_badge(c_space, plan.badge_title, font_header, width, top_y=170)
             cls._draw_bottom_celestial_card(
                 c_space,

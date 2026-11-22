@@ -639,22 +639,24 @@ class MockImageProvider(BaseImageProvider):
         elif any(k in p_clean for k in ["saturn", "shani", "शनि"]):
             target_plate = cinematic_dir / "planet_saturn.jpg"
         elif any(k in p_clean for k in ["kundli", "birth chart", "कुंडली"]):
-            from app.video.kundli_chart_generator import KundliChartGenerator
-            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
-                scene_dict=actual_scene_dict,
-                topic=str(actual_scene_dict.get("topic", "Astrology Insight")),
-                scene_idx=s_val % 7,
-            )
-        elif any(k in p_clean for k in [
-            "jupiter", "guru", "बृहस्पति", "rahu", "ketu", "sun", "surya", "सूर्य",
-            "mars", "mangal", "मंगल", "venus", "shukra", "शुक्र", "mercury", "budh", "बुध", "moon", "chandra", "चंद्र"
-        ]):
-            from app.video.kundli_chart_generator import KundliChartGenerator
-            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
-                scene_dict=actual_scene_dict,
-                topic=str(actual_scene_dict.get("topic", "Astrology Insight")),
-                scene_idx=s_val % 7,
-            )
+            target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
+        elif any(k in p_clean for k in ["jupiter", "guru", "बृहस्पति"]):
+            target_plate = cinematic_dir / "planet_jupiter.jpg"
+        elif any(k in p_clean for k in ["sun", "surya", "सूर्य"]):
+            target_plate = cinematic_dir / "planet_sun.jpg"
+        elif any(k in p_clean for k in ["mars", "mangal", "मंगल"]):
+            primary = cinematic_dir / "fresh_planet_mars_hubble.jpg"
+            target_plate = primary if primary.exists() else (cinematic_dir / "planet_mars.jpg")
+        elif any(k in p_clean for k in ["venus", "shukra", "शुक्र"]):
+            target_plate = cinematic_dir / "planet_venus.jpg"
+        elif any(k in p_clean for k in ["mercury", "budh", "बुध"]):
+            target_plate = cinematic_dir / "planet_mercury.jpg"
+        elif any(k in p_clean for k in ["moon", "chandra", "चंद्र"]):
+            target_plate = cinematic_dir / "planet_moon.jpg"
+        elif any(k in p_clean for k in ["rahu", "राहु"]):
+            target_plate = cinematic_dir / "planet_rahu.jpg"
+        elif any(k in p_clean for k in ["ketu", "केतु"]):
+            target_plate = cinematic_dir / "planet_ketu.jpg"
         elif any(k in p_clean for k in ["emerald", "sapphire", "neelam", "gemstone", "रत्न", "remedies"]):
             target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
         elif any(k in p_clean for k in ["dm", "consultation", "welcoming hands", "hands presenting", "save reel", "havan", "fire altar", "temple", "यज्ञ", "अग्नि", "mandir"]):
