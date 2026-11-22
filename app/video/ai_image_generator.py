@@ -134,6 +134,7 @@ class AIImageGenerator:
 
         active_provider_name = "mock" if is_testing else (provider_name or IMAGE_PROVIDER)
         primary_provider = get_image_provider(active_provider_name)
+        should_check_perm = active_provider_name not in ("curated", "mock", "synthetic")
 
         fallback_provider: Optional[BaseImageProvider] = None
         if not is_testing and IMAGE_FALLBACK_PROVIDER and IMAGE_FALLBACK_PROVIDER != active_provider_name:
@@ -229,6 +230,7 @@ class AIImageGenerator:
                 continue
 
             # 7. Success! Commit to Permanent Visual Memory & Traceability
+            plan.validation_passed = True
             rec = PermanentVisualMemory.record_used_visual(
                 image_input=target_path,
                 source_identity=target_path.name,
@@ -238,6 +240,8 @@ class AIImageGenerator:
                 topic=topic,
                 scene_idx=scene_idx,
             )
+            if hasattr(plan, "used_fingerprints"):
+                plan.used_fingerprints.append(rec["sha256"])
 
             # Persist Script-to-Image Traceability Metadata (Task 10)
             try:
@@ -271,10 +275,141 @@ class AIImageGenerator:
             )
             return target_path
 
-        # 8. All retries failed
-        fallback_allowed = allow_static_fallback if allow_static_fallback is not None else ALLOW_STATIC_FALLBACK
+        # 8. Primary generation exhausted/rejected -> Trigger MANDATORY SEMANTIC FALLBACK
+        fallback_strategy = getattr(plan, "fallback_visual_strategy", "")
+        fallback_prompt = getattr(plan, "fallback_generation_prompt", "")
+        if not fallback_prompt or not fallback_strategy:
+            sem = SceneVisualPlanner.resolve_semantic_strategies(getattr(plan, "exact_narration", ""), topic)
+            fallback_strategy = sem["fallback_visual_strategy"]
+            fallback_prompt = sem["fallback_generation_prompt"]
+            plan.fallback_visual_strategy = fallback_strategy
+            plan.fallback_generation_prompt = fallback_prompt
+            if not getattr(plan, "visual_intent", ""):
+                plan.visual_intent = sem["visual_intent"]
+            if not getattr(plan, "required_entities", []):
+                plan.required_entities = sem["required_entities"]
+            if not getattr(plan, "primary_visual_strategy", ""):
+                plan.primary_visual_strategy = sem["primary_visual_strategy"]
+
+        logger.info(
+            f"[AIImageGenerator] Triggering SEMANTIC FALLBACK: '{fallback_strategy}' "
+            f"for scene {scene_idx + 1} narration: '{getattr(plan, 'exact_narration', '')}'"
+        )
+
+        # Execute semantic fallback generation attempts
+        fb_attempts = 1 if (is_testing or fallback_allowed) else cls.MAX_RETRIES
+        for fb_attempt in range(1, fb_attempts + 1):
+            fb_seed = random.randint(100000, 99999999) + (scene_idx * 2000) + (fb_attempt * 300)
+            fb_unique_id = hashlib.sha256(f"{clean_slug}_{scene_idx}_fb_{fb_seed}_{fb_attempt}_{time.time_ns()}".encode()).hexdigest()[:10]
+            fb_target_filename = f"{clean_slug}_sc{scene_idx + 1}_fallback_{fb_unique_id}.jpg"
+            fb_target_path = out_dir / fb_target_filename
+
+            fb_bytes: Optional[bytes] = None
+            try:
+                fb_bytes = primary_provider.generate(
+                    prompt=fallback_prompt,
+                    width=VIDEO_WIDTH,
+                    height=VIDEO_HEIGHT,
+                    seed=fb_seed,
+                    scene_idx=scene_idx,
+                )
+            except Exception as pe:
+                last_error = pe
+                if fallback_provider:
+                    try:
+                        fb_bytes = fallback_provider.generate(
+                            prompt=fallback_prompt,
+                            width=VIDEO_WIDTH,
+                            height=VIDEO_HEIGHT,
+                            seed=fb_seed,
+                            scene_idx=scene_idx,
+                        )
+                    except Exception as fe:
+                        last_error = fe
+                if not fb_bytes:
+                    continue
+
+            # Process and normalize image geometry
+            try:
+                fb_img = Image.open(io.BytesIO(fb_bytes))
+                fb_img.verify()
+                fb_img = Image.open(io.BytesIO(fb_bytes)).convert("RGB")
+                if fb_img.size != (VIDEO_WIDTH, VIDEO_HEIGHT):
+                    fb_img = ImageOps.fit(fb_img, (VIDEO_WIDTH, VIDEO_HEIGHT), Image.Resampling.LANCZOS)
+                fb_img.save(fb_target_path, "JPEG", quality=95)
+            except Exception as proc_err:
+                last_error = proc_err
+                if fb_target_path.exists():
+                    fb_target_path.unlink()
+                continue
+
+            # Validate fallback asset against plan & duplicate history
+            fb_report = VisionQualityGate.validate_scene_image(
+                image_input=fb_target_path,
+                plan=plan,
+                check_permanent_duplicates=should_check_perm,
+                used_reel_hashes=used_reel_hashes,
+            )
+
+            if not fb_report.passed:
+                last_error = ImageGenerationError(f"Semantic fallback rejected by quality gate: {fb_report.rejection_reason}")
+                logger.warning(f"[AIImageGenerator] Scene {scene_idx + 1} semantic fallback rejected: {fb_report.rejection_reason}")
+                if fb_target_path.exists():
+                    fb_target_path.unlink()
+                time.sleep(0.5 * fb_attempt)
+                continue
+
+            # Semantic fallback accepted!
+            plan.validation_passed = True
+            rec = PermanentVisualMemory.record_used_visual(
+                image_input=fb_target_path,
+                source_identity=fb_target_path.name,
+                scene_description=fallback_prompt,
+                script_id=clean_slug,
+                reel_id=clean_slug,
+                topic=topic,
+                scene_idx=scene_idx,
+            )
+
+            if hasattr(plan, "used_fingerprints"):
+                plan.used_fingerprints.append(rec["sha256"])
+
+            # Traceability record
+            try:
+                from app.video.scene_visual_intelligence import SceneVisualIntelligence
+                SceneVisualIntelligence.record_traceability(
+                    reel_id=clean_slug,
+                    scene_id=scene_idx + 1,
+                    narration=getattr(plan, "narration", getattr(plan, "exact_narration", "")),
+                    visual_concept=fallback_strategy,
+                    emotion=getattr(plan, "emotion", getattr(plan, "mood", "")),
+                    image_prompt=fallback_prompt,
+                    generation_model=active_provider_name,
+                    image_hash=rec.get("sha256", ""),
+                    quality_review={
+                        "passed": True,
+                        "is_semantic_fallback": True,
+                        "fallback_visual_strategy": fallback_strategy,
+                    },
+                )
+            except Exception as tr_err:
+                logger.debug(f"Traceability record notice: {tr_err}")
+
+            if used_images is not None:
+                used_images.add(fb_target_path)
+                used_images.add(fb_target_path.name)
+                used_images.add(rec["sha256"])
+
+            logger.info(
+                f"[AIImageGenerator] Scene {scene_idx + 1}/{total_scenes}: Successfully generated SEMANTIC FALLBACK visual -> {fb_target_path.name} "
+                f"(SHA256={rec['sha256'][:10]}... | Fallback Strategy='{fallback_strategy}')"
+            )
+            return fb_target_path
+
+        # 9. Exhausted both primary and semantic fallback
+        plan.validation_passed = False
         if fallback_allowed:
-            logger.warning(f"[AIImageGenerator] Fresh AI generation failed, but ALLOW_STATIC_FALLBACK=True is set. Delegating to static fallback...")
+            logger.warning(f"[AIImageGenerator] AI generation & semantic fallback exhausted, but ALLOW_STATIC_FALLBACK=True. Delegating to static fallback...")
             from app.video.dynamic_visual_engine import DynamicVisualEngine
             return DynamicVisualEngine._legacy_static_broll_fallback(
                 scene_dict=scene_dict,
@@ -285,10 +420,11 @@ class AIImageGenerator:
                 used_images=used_images or set(),
             )
 
-        # STRICT TASK 3 MANDATE: Fail the scene clearly! NEVER silently substitute unrelated B-roll.
+        # STRICT MANDATE: Fail safely! Never silently substitute unrelated B-roll.
         raise ImageGenerationError(
-            f"Failed to generate fresh AI image for scene {scene_idx + 1}/{total_scenes} after {total_attempts} attempts. "
-            f"Topic: '{topic}' | Subject: '{plan.primary_subject}' | Last Error: {last_error}"
+            f"Failed to generate fresh AI image / scene-appropriate visual for scene {scene_idx + 1}/{total_scenes} "
+            f"('{getattr(plan, 'exact_narration', '')}'). Exhausted primary strategy ('{getattr(plan, 'primary_visual_strategy', '')}') "
+            f"and semantic fallback strategy ('{fallback_strategy}'). Last error: {last_error}"
         )
 
     @classmethod

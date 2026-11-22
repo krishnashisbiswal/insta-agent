@@ -68,6 +68,14 @@ class SceneVisualPlan:
     camera_angle: str = ""
     continuity_notes: str = ""
     image_prompt: str = ""
+    # Script-first & semantic fallback intelligence fields
+    visual_intent: str = ""
+    required_entities: List[str] = field(default_factory=list)
+    primary_visual_strategy: str = ""
+    fallback_visual_strategy: str = ""
+    fallback_generation_prompt: str = ""
+    used_fingerprints: List[str] = field(default_factory=list)
+    validation_passed: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)
@@ -89,6 +97,14 @@ class SceneVisualPlan:
         d["camera_angle"] = self.camera_angle or self.camera_framing
         d["continuity_notes"] = self.continuity_notes or self.continuity_requirements
         d["image_prompt"] = self.image_prompt or self.generation_prompt
+        # Script-first & semantic fallback metadata
+        d["visual_intent"] = self.visual_intent
+        d["required_entities"] = self.required_entities
+        d["primary_visual_strategy"] = self.primary_visual_strategy
+        d["fallback_visual_strategy"] = self.fallback_visual_strategy
+        d["fallback_generation_prompt"] = self.fallback_generation_prompt
+        d["used_fingerprints"] = self.used_fingerprints
+        d["validation_passed"] = self.validation_passed
         # Backward compatibility aliases
         d["main_subject"] = self.main_subject
         d["subject_action"] = self.subject_action
@@ -472,6 +488,147 @@ class SceneVisualPlanner:
         return None
 
     @classmethod
+    def resolve_semantic_strategies(cls, narration: str, topic: str = "") -> Dict[str, Any]:
+        """
+        Determines semantic visual intent, required entities, primary visual strategy,
+        and fallback visual strategy strictly driven by the narration text.
+        Guarantees:
+        - Script narration is the sole source of truth.
+        - Saturn is never in primary or fallback unless explicitly in narration.
+        - Generic Kundli chart is never in primary or fallback unless explicitly in narration.
+        - Fallback visual is an alternative visual representing the same semantic meaning
+          (e.g., career struggle/hourglass for career delays; solitary traveler/distant misty mountain
+          for 12th house isolation; scales/ledger for financial pressure; serene dawn forest for vital calm).
+        """
+        text = f"{narration} {topic}".lower()
+        spoken = narration.lower()
+
+        has_saturn = any(k in spoken for k in ["saturn", "shani", "शनि"])
+        has_kundli = any(k in spoken for k in ["kundli", "kundali", "birth chart", "कुंडली", "chart", "horoscope"])
+
+        # Check Category A: Career delays / workplace obstacles / professional struggle
+        career_keywords = [
+            "career", "job", "promotion", "work", "business", "delay", "delays",
+            "obstacle", "obstacles", "struggle", "struggles", "profession", "office",
+            "workplace", "patience", "perseverance", "कर्म", "करियर", "नौकरी", "व्यापार",
+            "बाधा", "विलंब", "धीमा", "रुकावट", "मेहनत"
+        ]
+        if any(k in spoken for k in career_keywords) or (any(k in text for k in ["career", "profession"]) and any(k in spoken for k in ["delay", "obstacle", "slow", "struggle"])):
+            return {
+                "visual_intent": "career_perseverance",
+                "required_entities": ["focused professional", "time and perseverance elements"],
+                "primary_visual_strategy": "cinematic photorealistic Saturn celestial body with Cassini rings" if has_saturn else "professional overcoming workplace obstacles with patience",
+                "fallback_visual_strategy": "professional facing workplace obstacles, focused perseverance at desk with hourglass and warm natural lamp light",
+                "fallback_generation_prompt": (
+                    "cinematic photorealistic 9:16 vertical luxury photograph of a determined professional sitting at a wooden work desk with an ancient hourglass, papers, warm morning window light, atmospheric depth, focused perseverance, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons, no planets"
+                ),
+            }
+
+        # Check Category B: 12th house / isolation / solitude / foreign lands / quiet contemplation / subconscious
+        isolation_keywords = [
+            "12th house", "twelfth house", "12th bhav", "12वां", "बारहवां", "isolation",
+            "solitude", "isolated", "foreign", "overseas", "distant land", "subconscious",
+            "sleep", "dream", "moksha", "meditation", "contemplation", "अकेलापन", "एकांत",
+            "विदेश", "बारहवां भाव", "ध्यान", "मोक्ष"
+        ]
+        if any(k in spoken for k in isolation_keywords):
+            return {
+                "visual_intent": "solitude_and_contemplation",
+                "required_entities": ["solitary contemplative figure", "distant tranquil landscape"],
+                "primary_visual_strategy": "12th house Vedic chart contemplation" if has_kundli else "solitary contemplative traveler on distant tranquil horizon",
+                "fallback_visual_strategy": "solitary figure contemplating on a distant misty mountain ridge overlooking foreign horizon in quiet dawn light",
+                "fallback_generation_prompt": (
+                    "cinematic photorealistic 9:16 vertical luxury photograph of a solitary contemplative traveler standing on a misty tranquil highland at dawn overlooking vast distant horizons, quiet peace, soft atmospheric mist, ethereal morning illumination, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons, no chart"
+                ),
+            }
+
+        # Check Category C: Financial pressure / wealth / debts / expenses / economic stress / savings
+        finance_keywords = [
+            "wealth", "money", "finance", "financial", "debt", "debts", "savings",
+            "income", "expenses", "loss", "losses", "balance", "ledger", "budget",
+            "monetary", "धन", "पैसा", "आर्थिक", "कर्ज", "बचत", "खर्च", "नुकसान", "घाटा"
+        ]
+        if any(k in spoken for k in finance_keywords):
+            return {
+                "visual_intent": "financial_equilibrium",
+                "required_entities": ["financial ledger", "brass balance scales", "vintage coins"],
+                "primary_visual_strategy": "financial resources and monetary equilibrium",
+                "fallback_visual_strategy": "vintage brass balance scales weighing coins on an antique oak ledger table under focused warm amber directional light",
+                "fallback_generation_prompt": (
+                    "cinematic photorealistic 9:16 vertical luxury photograph of classical brass balance scales with golden coins and an open leather ledger on an oak table, dramatic warm directional side lighting, timeless financial contemplation, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons, no planets"
+                ),
+            }
+
+        # Check Category D: Health / nervous system / vitality / physical calm / healing / biology
+        health_keywords = [
+            "health", "nervous system", "neural", "brain", "healing", "vitality",
+            "body", "energy", "calm", "wellness", "stress", "swasthya", "स्वास्थ्य",
+            "तंत्रिका", "आरोग्य", "ऊर्जा", "तनाव", "शांति"
+        ]
+        if any(k in spoken for k in health_keywords):
+            return {
+                "visual_intent": "biological_vitality_and_calm",
+                "required_entities": ["neural synapse or serene vital calm"],
+                "primary_visual_strategy": "neural balance and bio-electric calm",
+                "fallback_visual_strategy": "tranquil serene forest with morning sunlight filtering through ancient cedar trees, radiating natural biological calm and vitality",
+                "fallback_generation_prompt": (
+                    "cinematic photorealistic 9:16 vertical luxury photograph of a sun-drenched serene cedar forest canopy at sunrise, golden god rays filtering through pine needles, dew drops, peaceful revitalizing morning atmosphere, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons"
+                ),
+            }
+
+        # Check Category E: Relationships / marriage / partnership / 7th house / love / harmony
+        relationship_keywords = [
+            "relationship", "relationships", "marriage", "partner", "partnership",
+            "7th house", "seventh house", "7th bhav", "love", "spouse", "satva bhav",
+            "सातवां", "विवाह", "संबंध", "सातवां भाव", "जीवनसाथी", "प्रेम"
+        ]
+        if any(k in spoken for k in relationship_keywords):
+            return {
+                "visual_intent": "relational_harmony",
+                "required_entities": ["two harmonious silhouettes", "warm twilight horizon"],
+                "primary_visual_strategy": "relational partnership and 7th house dynamics",
+                "fallback_visual_strategy": "two respectful partner silhouettes walking side by side toward a warm golden sunset horizon in an open peaceful meadow",
+                "fallback_generation_prompt": (
+                    "cinematic photorealistic 9:16 vertical luxury photograph of two elegant silhouettes walking side by side along a tranquil path towards a glowing golden amber sunset, soft lens flare, emotional harmony, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons"
+                ),
+            }
+
+        # Check Category F: Explicit Saturn (when Saturn is explicitly mentioned)
+        if has_saturn:
+            return {
+                "visual_intent": "saturn_cosmic_governance",
+                "required_entities": ["Saturn celestial sphere with physical rings"],
+                "primary_visual_strategy": "cinematic photorealistic Saturn celestial body with Cassini rings and atmospheric bands",
+                "fallback_visual_strategy": "ancient stone sundial in quiet misty courtyard marking cosmic time and karmic discipline",
+                "fallback_generation_prompt": (
+                    "cinematic photorealistic 9:16 vertical luxury photograph of an ancient weathered stone sundial in a quiet monastery stone courtyard, soft morning mist, shadow marking time, solemn discipline and perseverance, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons"
+                ),
+            }
+
+        # Check Category G: Kundli Chart (strictly if explicitly in narration)
+        if has_kundli:
+            return {
+                "visual_intent": "kundli_chart_analysis",
+                "required_entities": ["authentic Vedic Kundli birth chart"],
+                "primary_visual_strategy": "authentic Vedic Kundli birth chart parchment with illuminated Sanskrit glyphs",
+                "fallback_visual_strategy": "vintage brass navigational compass resting on an antique parchment map beside a glowing oil lantern",
+                "fallback_generation_prompt": (
+                    "cinematic photorealistic 9:16 vertical luxury photograph of an ornate brass navigational compass resting on an aged parchment navigational chart beside an amber oil lamp on dark mahogany wood, warm soft glow, exploration and destiny, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons"
+                ),
+            }
+
+        # Default Category H: General wisdom / destiny / karma / philosophical guidance
+        return {
+            "visual_intent": "philosophical_guidance",
+            "required_entities": ["antique brass compass", "parchment map", "warm study"],
+            "primary_visual_strategy": "philosophical reflection and life direction",
+            "fallback_visual_strategy": "vintage brass navigational compass resting on an antique parchment map beside a glowing oil lantern",
+            "fallback_generation_prompt": (
+                "cinematic photorealistic 9:16 vertical luxury photograph of an ornate brass navigational compass resting on an aged parchment navigational chart beside an amber oil lamp on dark mahogany wood, warm soft glow, exploration and destiny, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons"
+            ),
+        }
+
+    @classmethod
     def plan_scene_visual(
         cls,
         scene_dict: Dict[str, Any],
@@ -583,6 +740,9 @@ class SceneVisualPlanner:
             f"no text overlays, no watermarks, no cgi cartoons, no flat solid colors"
         )
 
+        # Resolve script-first semantic intent and strategies
+        semantic_info = cls.resolve_semantic_strategies(narration=scene_text, topic=topic)
+
         plan = SceneVisualPlan(
             scene_id=scene_id,
             scene_idx=scene_idx,
@@ -614,6 +774,13 @@ class SceneVisualPlanner:
             camera_angle=spec.camera_angle,
             continuity_notes=spec.continuity_notes,
             image_prompt=clean_gen_prompt,
+            visual_intent=semantic_info["visual_intent"],
+            required_entities=semantic_info["required_entities"],
+            primary_visual_strategy=semantic_info["primary_visual_strategy"],
+            fallback_visual_strategy=semantic_info["fallback_visual_strategy"],
+            fallback_generation_prompt=semantic_info["fallback_generation_prompt"],
+            used_fingerprints=[],
+            validation_passed=False,
             is_valid=True,
         )
         return cls.validate_and_repair_plan(plan)
@@ -798,18 +965,29 @@ class SceneVisualPlanner:
         repaired = copy.deepcopy(plan)
         errors: List[str] = []
 
+        # Ensure semantic strategies are populated
+        if not getattr(repaired, "fallback_visual_strategy", None):
+            sem = cls.resolve_semantic_strategies(repaired.exact_narration)
+            repaired.visual_intent = getattr(repaired, "visual_intent", "") or sem["visual_intent"]
+            repaired.required_entities = getattr(repaired, "required_entities", []) or sem["required_entities"]
+            repaired.primary_visual_strategy = getattr(repaired, "primary_visual_strategy", "") or sem["primary_visual_strategy"]
+            repaired.fallback_visual_strategy = sem["fallback_visual_strategy"]
+            repaired.fallback_generation_prompt = sem["fallback_generation_prompt"]
+
         # 1. Subject validation
         if not repaired.main_subject or len(repaired.main_subject.strip()) < 3:
             errors.append("Empty or trivial main_subject.")
-            repaired.main_subject = "ancient authentic Vedic astrological Kundli birth chart"
-            repaired.entity_key = "kundli_chart"
+            sem = cls.resolve_semantic_strategies(repaired.exact_narration)
+            repaired.main_subject = sem["required_entities"][0] if sem["required_entities"] else "contemplative subject reflecting on cosmic guidance"
+            repaired.entity_key = sem["visual_intent"]
 
         # Check for generic placeholders
         generic_words = {"placeholder", "image", "visual", "something", "tbd", "graphic", "picture"}
         if any(w == repaired.main_subject.lower() for w in generic_words):
             errors.append(f"Generic main_subject detected: '{repaired.main_subject}'.")
-            repaired.main_subject = "sacred glowing brass oil lamps in ancient temple sanctum"
-            repaired.entity_key = "sacred_temple_lamps"
+            sem = cls.resolve_semantic_strategies(repaired.exact_narration)
+            repaired.main_subject = sem["required_entities"][0] if sem["required_entities"] else "contemplative subject reflecting on cosmic guidance"
+            repaired.entity_key = sem["visual_intent"]
 
         # 2. Composition validation
         if not repaired.composition:

@@ -1451,7 +1451,6 @@ class DynamicVisualEngine:
             # 9. Astral Dreams & Cosmic Dreamscape
             if any(k in scene_txt for k in ["dream", "astral", "dreamscape", "sleep", "नींद", "सपनों"]):
                 candidates.append(CINEMATIC_BROLL_DIR / "planet_moon.jpg")
-                candidates.append(CINEMATIC_BROLL_DIR / "planet_saturn.jpg")
 
             # 10. Sacred Mala Beads & Devotional Desk
             if any(k in scene_txt for k in ["mala", "bead", "माला"]):
@@ -1510,14 +1509,17 @@ class DynamicVisualEngine:
                     CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
                 ])
             else:
+                # Universal fallbacks - strictly forbid Saturn or Kundli charts unless explicitly in narration
+                if any(k in scene_txt for k in ["kundli", "kundali", "chart", "horoscope", "कुंडली", "birth chart"]):
+                    candidates.append(CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg")
+                    candidates.append(CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg")
+                if any(k in scene_txt for k in ["saturn", "shani", "शनि"]):
+                    candidates.append(CINEMATIC_BROLL_DIR / "planet_saturn.jpg")
                 candidates.extend([
-                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-                    CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
-                    CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
-                    CINEMATIC_BROLL_DIR / "planet_moon.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
                     CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
+                    CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
                 ])
 
         # Tier 1: Check NASA API strictly for celestial/astronomical space queries

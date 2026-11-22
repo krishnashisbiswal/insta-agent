@@ -396,6 +396,191 @@ class MockImageProvider(BaseImageProvider):
     def validate_config(self) -> None:
         pass
 
+    @classmethod
+    def _render_semantic_career_plate(cls, width: int, height: int, seed: int) -> bytes:
+        img = Image.new("RGB", (width, height), (18, 14, 12))
+        draw = ImageDraw.Draw(img)
+        # Deep warm mahogany gradient
+        for y in range(height):
+            factor = y / height
+            r = int(18 + factor * 35)
+            g = int(14 + factor * 22)
+            b = int(12 + factor * 14)
+            draw.line([(0, y), (width, y)], fill=(r, g, b))
+        # Warm desk lamp radial glow from upper-right
+        cx, cy = int(width * 0.75), int(height * 0.35)
+        for rad in range(350, 0, -5):
+            alpha = int((1.0 - (rad / 350.0)) * 45)
+            draw.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], outline=(255, 190 + (rad % 30), 100))
+        # Hourglass silhouette & table surface
+        table_y = int(height * 0.65)
+        draw.rectangle([0, table_y, width, height], fill=(12, 8, 6))
+        # Antique hourglass
+        hx, hy = int(width * 0.5), int(table_y - 120)
+        draw.polygon([(hx - 45, hy - 70), (hx + 45, hy - 70), (hx, hy), (hx - 45, hy - 70)], fill=(200, 150, 80))
+        draw.polygon([(hx - 45, hy + 70), (hx + 45, hy + 70), (hx, hy), (hx - 45, hy + 70)], fill=(210, 160, 90))
+        # Seed variation
+        r0, g0, b0 = img.getpixel((0, 0))
+        img.putpixel((0, 0), ((r0 + seed % 13) % 256, (g0 + seed % 17) % 256, (b0 + seed % 19) % 256))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=95)
+        return buf.getvalue()
+
+    @classmethod
+    def _render_semantic_solitude_plate(cls, width: int, height: int, seed: int) -> bytes:
+        img = Image.new("RGB", (width, height), (10, 14, 28))
+        draw = ImageDraw.Draw(img)
+        # Twilight dawn gradient (deep navy to soft rose-amber horizon)
+        for y in range(height):
+            factor = y / height
+            if factor < 0.6:
+                r = int(10 + factor * 50)
+                g = int(14 + factor * 40)
+                b = int(28 + factor * 50)
+            else:
+                f2 = (factor - 0.6) / 0.4
+                r = int(40 + f2 * 110)
+                g = int(38 + f2 * 60)
+                b = int(58 + f2 * 40)
+            draw.line([(0, y), (width, y)], fill=(r, g, b))
+        # Distant misty mountain ridges
+        h_mid = int(height * 0.62)
+        draw.polygon([(0, h_mid + 80), (width * 0.3, h_mid - 40), (width * 0.7, h_mid + 20), (width, h_mid - 20), (width, height), (0, height)], fill=(25, 30, 48))
+        draw.polygon([(0, h_mid + 140), (width * 0.5, h_mid + 60), (width, h_mid + 120), (width, height), (0, height)], fill=(15, 18, 30))
+        # Solitary traveler figure silhouette on foreground cliff
+        cliff_y = int(height * 0.78)
+        draw.rectangle([0, cliff_y, int(width * 0.45), height], fill=(8, 10, 18))
+        fx, fy = int(width * 0.32), cliff_y - 45
+        draw.ellipse([fx - 8, fy - 22, fx + 8, fy - 6], fill=(12, 14, 22))
+        draw.rectangle([fx - 7, fy - 6, fx + 7, fy + 40], fill=(12, 14, 22))
+        # Seed variation
+        r0, g0, b0 = img.getpixel((0, 0))
+        img.putpixel((0, 0), ((r0 + seed % 13) % 256, (g0 + seed % 17) % 256, (b0 + seed % 19) % 256))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=95)
+        return buf.getvalue()
+
+    @classmethod
+    def _render_semantic_finance_plate(cls, width: int, height: int, seed: int) -> bytes:
+        img = Image.new("RGB", (width, height), (16, 12, 10))
+        draw = ImageDraw.Draw(img)
+        # Deep espresso & warm bronze gradient
+        for y in range(height):
+            factor = y / height
+            r = int(16 + factor * 40)
+            g = int(12 + factor * 28)
+            b = int(10 + factor * 16)
+            draw.line([(0, y), (width, y)], fill=(r, g, b))
+        # Antique wooden table
+        table_y = int(height * 0.68)
+        draw.rectangle([0, table_y, width, height], fill=(22, 14, 10))
+        # Brass balance scales
+        bx, by = int(width * 0.5), int(table_y - 180)
+        draw.rectangle([bx - 6, by, bx + 6, table_y], fill=(180, 140, 60))
+        draw.line([(bx - 120, by + 10), (bx + 120, by - 10)], fill=(210, 165, 75), width=8)
+        # Left pan
+        draw.line([(bx - 120, by + 10), (bx - 150, by + 90)], fill=(160, 120, 50), width=2)
+        draw.line([(bx - 120, by + 10), (bx - 90, by + 90)], fill=(160, 120, 50), width=2)
+        draw.arc([bx - 160, by + 75, bx - 80, by + 105], 0, 180, fill=(200, 150, 65), width=4)
+        # Right pan
+        draw.line([(bx + 120, by - 10), (bx + 90, by + 70)], fill=(160, 120, 50), width=2)
+        draw.line([(bx + 120, by - 10), (bx + 150, by + 70)], fill=(160, 120, 50), width=2)
+        draw.arc([bx + 80, by + 55, bx + 160, by + 85], 0, 180, fill=(200, 150, 65), width=4)
+        # Seed variation
+        r0, g0, b0 = img.getpixel((0, 0))
+        img.putpixel((0, 0), ((r0 + seed % 13) % 256, (g0 + seed % 17) % 256, (b0 + seed % 19) % 256))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=95)
+        return buf.getvalue()
+
+    @classmethod
+    def _render_semantic_forest_plate(cls, width: int, height: int, seed: int) -> bytes:
+        img = Image.new("RGB", (width, height), (12, 22, 16))
+        draw = ImageDraw.Draw(img)
+        # Cedar forest canopy gradient (deep evergreen to golden sunlight)
+        for y in range(height):
+            factor = y / height
+            r = int(12 + factor * 45)
+            g = int(22 + factor * 50)
+            b = int(16 + factor * 25)
+            draw.line([(0, y), (width, y)], fill=(r, g, b))
+        # Diagonal golden sunlight rays
+        for i in range(5):
+            x_start = int(width * 0.2 + i * 160)
+            draw.polygon([(x_start, 0), (x_start + 80, 0), (x_start + 240, height), (x_start + 140, height)], fill=(45, 65, 35))
+        # Ancient tree trunk silhouettes
+        draw.rectangle([int(width * 0.1), 0, int(width * 0.22), height], fill=(16, 26, 18))
+        draw.rectangle([int(width * 0.78), 0, int(width * 0.92), height], fill=(18, 28, 20))
+        # Seed variation
+        r0, g0, b0 = img.getpixel((0, 0))
+        img.putpixel((0, 0), ((r0 + seed % 13) % 256, (g0 + seed % 17) % 256, (b0 + seed % 19) % 256))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=95)
+        return buf.getvalue()
+
+    @classmethod
+    def _render_semantic_partnership_plate(cls, width: int, height: int, seed: int) -> bytes:
+        img = Image.new("RGB", (width, height), (28, 16, 24))
+        draw = ImageDraw.Draw(img)
+        # Warm golden hour sunset gradient
+        for y in range(height):
+            factor = y / height
+            if factor < 0.5:
+                f1 = factor / 0.5
+                r = int(28 + f1 * 180)
+                g = int(16 + f1 * 100)
+                b = int(24 + f1 * 50)
+            else:
+                f2 = (factor - 0.5) / 0.5
+                r = int(208 - f2 * 170)
+                g = int(116 - f2 * 95)
+                b = int(74 - f2 * 55)
+            draw.line([(0, y), (width, y)], fill=(r, g, b))
+        # Sunset sun disc on horizon
+        sun_y = int(height * 0.5)
+        draw.ellipse([int(width * 0.5) - 60, sun_y - 60, int(width * 0.5) + 60, sun_y + 60], fill=(255, 230, 160))
+        # Rolling hills horizon & peaceful path
+        draw.polygon([(0, sun_y + 20), (width * 0.4, sun_y - 10), (width, sun_y + 30), (width, height), (0, height)], fill=(24, 16, 18))
+        # Two partner silhouettes walking side by side
+        px, py = int(width * 0.46), int(height * 0.62)
+        draw.ellipse([px - 14, py - 35, px - 2, py - 23], fill=(14, 10, 12))
+        draw.rectangle([px - 16, py - 23, px, py + 35], fill=(14, 10, 12))
+        draw.ellipse([px + 4, py - 32, px + 16, py - 20], fill=(14, 10, 12))
+        draw.rectangle([px + 2, py - 20, px + 18, py + 35], fill=(14, 10, 12))
+        # Seed variation
+        r0, g0, b0 = img.getpixel((0, 0))
+        img.putpixel((0, 0), ((r0 + seed % 13) % 256, (g0 + seed % 17) % 256, (b0 + seed % 19) % 256))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=95)
+        return buf.getvalue()
+
+    @classmethod
+    def _render_semantic_compass_plate(cls, width: int, height: int, seed: int) -> bytes:
+        img = Image.new("RGB", (width, height), (22, 16, 12))
+        draw = ImageDraw.Draw(img)
+        # Aged parchment & dark mahogany gradient
+        for y in range(height):
+            factor = y / height
+            r = int(22 + factor * 45)
+            g = int(16 + factor * 35)
+            b = int(12 + factor * 22)
+            draw.line([(0, y), (width, y)], fill=(r, g, b))
+        # Antique brass compass rose in center
+        cx, cy = int(width * 0.5), int(height * 0.52)
+        draw.ellipse([cx - 150, cy - 150, cx + 150, cy + 150], outline=(190, 150, 75), width=6)
+        draw.ellipse([cx - 130, cy - 130, cx + 130, cy + 130], outline=(160, 120, 55), width=2)
+        # 8-point compass star
+        draw.polygon([(cx, cy - 120), (cx + 20, cy - 20), (cx, cy), (cx - 20, cy - 20)], fill=(220, 180, 85))
+        draw.polygon([(cx, cy + 120), (cx + 20, cy + 20), (cx, cy), (cx - 20, cy + 20)], fill=(160, 120, 55))
+        draw.polygon([(cx + 120, cy), (cx + 20, cy + 20), (cx, cy), (cx + 20, cy - 20)], fill=(190, 150, 70))
+        draw.polygon([(cx - 120, cy), (cx - 20, cy + 20), (cx, cy), (cx - 20, cy - 20)], fill=(170, 130, 60))
+        # Seed variation
+        r0, g0, b0 = img.getpixel((0, 0))
+        img.putpixel((0, 0), ((r0 + seed % 13) % 256, (g0 + seed % 17) % 256, (b0 + seed % 19) % 256))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=95)
+        return buf.getvalue()
+
     def generate_image_bytes(
         self,
         prompt: str,
@@ -414,31 +599,55 @@ class MockImageProvider(BaseImageProvider):
         # Check if actual scene_dict was provided via kwargs to avoid inventing arbitrary scene placements
         actual_scene_dict = kwargs.get("scene_dict") or {"spoken_line": prompt}
 
+        # Remove negative constraints so 'no chart' or 'no planets' doesn't match 'chart' or 'planet'
+        p_clean = prompt.split("no text")[0].split("no ")[0].split("avoid:")[0].lower()
+
+        # Semantic Intent Matchers - generate dedicated semantic plates
+        if any(k in p_clean for k in ["hourglass", "work desk", "career struggle", "workplace obstacles", "focused perseverance", "desk with an ancient hourglass"]):
+            return self._render_semantic_career_plate(width, height, s_val)
+        if any(k in p_clean for k in ["solitary contemplative", "distant horizons", "misty tranquil highland", "solitude", "distant misty mountain"]):
+            return self._render_semantic_solitude_plate(width, height, s_val)
+        if any(k in p_clean for k in ["balance scales", "golden coins", "ledger on an oak table", "financial contemplation", "monetary equilibrium"]):
+            return self._render_semantic_finance_plate(width, height, s_val)
+        if any(k in p_clean for k in ["cedar forest", "forest canopy", "neural synapse", "biological calm", "revitalizing morning", "dew drops"]):
+            return self._render_semantic_forest_plate(width, height, s_val)
+        if any(k in p_clean for k in ["silhouettes walking", "partner silhouettes", "sunset horizon", "emotional harmony"]):
+            return self._render_semantic_partnership_plate(width, height, s_val)
+        if any(k in p_clean for k in ["navigational compass", "parchment navigational chart", "brass compass", "oil lamp"]):
+            return self._render_semantic_compass_plate(width, height, s_val)
+
         # Match strictly to authentic curated photography based on script prompt
         target_plate = None
-        if any(k in p_lower for k in ["rudraksha", "रुद्राक्ष", "mukhi", "मुख"]):
+        if any(k in p_clean for k in ["rudraksha", "रुद्राक्ष", "mukhi", "मुख"]):
             primary = cinematic_dir / "rudraksha_sacred_beads.jpg"
             target_plate = primary if primary.exists() else None
-        elif any(k in p_lower for k in ["amethyst", "कटेला", "जामुनिया"]):
+        elif any(k in p_clean for k in ["amethyst", "कटेला", "जामुनिया"]):
             primary = cinematic_dir / "crystal_amethyst_cluster.jpg"
             target_plate = primary if primary.exists() else None
-        elif any(k in p_lower for k in ["pyrite", "पायराइट"]):
+        elif any(k in p_clean for k in ["pyrite", "पायराइट"]):
             primary = cinematic_dir / "crystal_pyrite_cluster.jpg"
             target_plate = primary if primary.exists() else None
-        elif any(k in p_lower for k in ["tourmaline", "टूमलाइन", "टूरमैलीन"]):
+        elif any(k in p_clean for k in ["tourmaline", "टूमलाइन", "टूरमैलीन"]):
             primary = cinematic_dir / "crystal_black_tourmaline.jpg"
             target_plate = primary if primary.exists() else None
-        elif any(k in p_lower for k in ["tiger", "tigers eye", "टाइगर"]):
+        elif any(k in p_clean for k in ["tiger", "tigers eye", "टाइगर"]):
             primary = cinematic_dir / "fresh_tiger_eye_macro.jpg"
             target_plate = primary if primary.exists() else (cinematic_dir / "crystal_tigers_eye.jpg")
-        elif any(k in p_lower for k in ["citrine", "सिट्रीन"]):
+        elif any(k in p_clean for k in ["citrine", "सिट्रीन"]):
             primary = cinematic_dir / "crystal_citrine_quartz.jpg"
             target_plate = primary if primary.exists() else None
-        elif any(k in p_lower for k in [
-            "kundli", "chart", "birth chart", "bhav", "house", "drishti", "aspect",
-            "saturn", "shani", "शनि", "jupiter", "guru", "बृहस्पति",
-            "rahu", "ketu", "sun", "surya", "सूर्य", "mars", "mangal", "मंगल",
-            "venus", "shukra", "शुक्र", "mercury", "budh", "बुध", "moon", "chandra", "चंद्र"
+        elif any(k in p_clean for k in ["saturn", "shani", "शनि"]):
+            target_plate = cinematic_dir / "planet_saturn.jpg"
+        elif any(k in p_clean for k in ["kundli", "birth chart", "कुंडली"]):
+            from app.video.kundli_chart_generator import KundliChartGenerator
+            target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
+                scene_dict=actual_scene_dict,
+                topic=str(actual_scene_dict.get("topic", "Astrology Insight")),
+                scene_idx=s_val % 7,
+            )
+        elif any(k in p_clean for k in [
+            "jupiter", "guru", "बृहस्पति", "rahu", "ketu", "sun", "surya", "सूर्य",
+            "mars", "mangal", "मंगल", "venus", "shukra", "शुक्र", "mercury", "budh", "बुध", "moon", "chandra", "चंद्र"
         ]):
             from app.video.kundli_chart_generator import KundliChartGenerator
             target_plate = KundliChartGenerator.generate_3d_kundli_planet_scene(
@@ -446,9 +655,9 @@ class MockImageProvider(BaseImageProvider):
                 topic=str(actual_scene_dict.get("topic", "Astrology Insight")),
                 scene_idx=s_val % 7,
             )
-        elif any(k in p_lower for k in ["emerald", "sapphire", "neelam", "gemstone", "रत्न", "remedies"]):
+        elif any(k in p_clean for k in ["emerald", "sapphire", "neelam", "gemstone", "रत्न", "remedies"]):
             target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
-        elif any(k in p_lower for k in ["dm", "consultation", "welcoming hands", "hands presenting", "save reel", "havan", "fire altar", "temple", "यज्ञ", "अग्नि", "mandir"]):
+        elif any(k in p_clean for k in ["dm", "consultation", "welcoming hands", "hands presenting", "save reel", "havan", "fire altar", "temple", "यज्ञ", "अग्नि", "mandir"]):
             target_plate = cinematic_dir / "4_sacred_havan.jpg"
         else:
             all_plates = sorted([p for p in cinematic_dir.glob("*.jpg") if p.is_file()])

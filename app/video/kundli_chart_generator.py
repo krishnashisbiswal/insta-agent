@@ -969,19 +969,9 @@ class KundliChartGenerator:
         from config.settings import BASE_DIR
         broll_dir = BASE_DIR / "assets" / "cinematic_broll"
 
-        # Special case: Saturn with 3D rings
+        # Special case: Saturn with 3D rings rendered with physical fidelity
         if planet_key == "saturn":
-            sat_cutout = Path("output/saturn_3d_feathered.png")
-            if not sat_cutout.exists():
-                sat_cutout = Path("output/saturn_seamless.png")
-            if sat_cutout.exists():
-                try:
-                    s_img = Image.open(sat_cutout).convert("RGBA")
-                    sw = sz
-                    sh = int(sw * s_img.height / s_img.width)
-                    return s_img.resize((sw, sh), Image.Resampling.LANCZOS)
-                except Exception:
-                    pass
+            return cls._render_realistic_saturn_sphere(sz)
 
         # Dedicated high-fidelity procedural generation with spherical projection
         y, x = np.mgrid[:sz, :sz]
@@ -1227,84 +1217,10 @@ class KundliChartGenerator:
         # MODE B: PLANET_ONLY (Deep Space Celestial Realm, NO Chart Floor!)
         # -------------------------------------------------------------
         if plan.intent == "PLANET_ONLY" and plan.planets:
-            planet_key = plan.planets[0]
-            p_hi, p_en = PLANET_DISPLAY_NAMES.get(planet_key, (planet_key.upper(), planet_key.upper()))
-
-            # Deep cosmic starfield canvas
             canvas = Image.new("RGBA", (width, height), (6, 4, 14, 255))
-            c_draw = ImageDraw.Draw(canvas)
-
-            # Cosmic Nebula Glow
-            nebula = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-            ndraw = ImageDraw.Draw(nebula)
-            glow_col = (255, 175, 45, 110) if planet_key in ["sun", "jupiter"] else (
-                (255, 60, 25, 90) if planet_key == "mars" else (
-                    (140, 75, 230, 95) if planet_key in ["rahu", "ketu"] else (210, 225, 255, 90)
-                )
+            return cls._render_planet_only_scene(
+                canvas, plan, topic, scene_idx, output_path, font_title, font_sub, font_header
             )
-            ndraw.ellipse([width // 2 - 420, 850 - 420, width // 2 + 420, 850 + 420], fill=glow_col)
-            nebula = nebula.filter(ImageFilter.GaussianBlur(110))
-            canvas = Image.alpha_composite(canvas, nebula)
-
-            # Sacred Geometrical Mandalas in background
-            yantra_path = broll_dir / "sacred_geometric_yantra.jpg"
-            if yantra_path.exists():
-                try:
-                    y_img = Image.open(yantra_path).convert("RGBA")
-                    y_res = ImageOps.fit(y_img, (760, 760), Image.Resampling.LANCZOS)
-                    rad_mask = Image.new("L", (760, 760), 0)
-                    rmdraw = ImageDraw.Draw(rad_mask)
-                    rmdraw.ellipse([40, 40, 720, 720], fill=255)
-                    rad_mask = rad_mask.filter(ImageFilter.GaussianBlur(60))
-                    y_mask = ImageChops.multiply(y_res.convert("L").filter(ImageFilter.GaussianBlur(3)), rad_mask)
-                    y_fade = ImageEnhance.Brightness(y_res).enhance(0.18)
-                    y_fade.putalpha(y_mask)
-                    canvas.paste(y_fade, (width // 2 - 380, 850 - 380), y_fade)
-                except Exception:
-                    pass
-
-            # Render Large Celestial Sphere
-            sphere_sz = 520
-            p_sphere = cls.render_celestial_sphere(planet_key, sphere_sz)
-
-            # Planet Aura
-            p_aura = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-            p_adraw = ImageDraw.Draw(p_aura)
-            p_adraw.ellipse([width // 2 - 320, 850 - 320, width // 2 + 320, 850 + 320], fill=glow_col)
-            if planet_key == "sun":
-                # Sun Coronal Flares
-                for ang in range(0, 360, 8):
-                    rad = math.radians(ang)
-                    fl_len = 310 + (ang % 24) * 5
-                    p_adraw.line(
-                        [(width // 2, 850), (width // 2 + math.cos(rad) * fl_len, 850 + math.sin(rad) * fl_len)],
-                        fill=(255, 225, 90, 180),
-                        width=4,
-                    )
-            p_aura = p_aura.filter(ImageFilter.GaussianBlur(34))
-            canvas = Image.alpha_composite(canvas, p_aura)
-
-            # Paste planet sphere
-            px0 = width // 2 - p_sphere.width // 2
-            py0 = 850 - p_sphere.height // 2
-            canvas.paste(p_sphere, (px0, py0), p_sphere)
-
-            # Top Floating Badge Pill
-            cls._draw_floating_badge(canvas, plan.badge_title, font_header, width, top_y=170)
-
-            # Bottom Celestial Card
-            cls._draw_bottom_celestial_card(
-                canvas,
-                title=f"{p_hi} ({p_en}) • COSMIC RULERSHIP",
-                subtitle=plan.subtitle,
-                width=width,
-                bottom_y=1420,
-                font_title=font_title,
-                font_sub=font_sub,
-            )
-
-            # Save and return
-            return cls._save_scene_output(canvas, topic, scene_idx, "planet_only", output_path)
 
         # -------------------------------------------------------------
         # MODE MULTI_PLANET (Distinct Non-Conjoined Planet Archetypes)
@@ -1917,6 +1833,121 @@ class KundliChartGenerator:
         return glows.get(p_key, (255, 215, 100, 140))
 
     @classmethod
+    def _render_realistic_saturn_sphere(cls, sz: int = 320) -> Image.Image:
+        """
+        Renders a physically accurate 3D celestial sphere of Saturn with realistic Cassini atmospheric
+        banding, true oblate spheroid geometry, optical ring transparency, and planetary shadow physics.
+        """
+        rw = int(sz * 2.2)
+        rh = int(sz * 0.68)
+        canvas_w = rw + 20
+        canvas_h = sz + rh + 20
+        cx = canvas_w // 2
+        cy = canvas_h // 2
+        tilt = 0.26
+
+        # 1. Back rings (passes behind planet)
+        back = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        bdraw = ImageDraw.Draw(back)
+
+        r_a_out = rw // 2
+        r_a_in = int(rw * 0.44)
+        r_cas = int(rw * 0.425)
+        r_b_in = int(rw * 0.31)
+        r_c_in = int(rw * 0.24)
+
+        # A Ring
+        bdraw.ellipse([cx - r_a_out, cy - int(r_a_out * tilt), cx + r_a_out, cy + int(r_a_out * tilt)], fill=(195, 170, 125, 200))
+        bdraw.ellipse([cx - r_a_in, cy - int(r_a_in * tilt), cx + r_a_in, cy + int(r_a_in * tilt)], fill=(0, 0, 0, 0))
+        # B Ring (dense, bright)
+        bdraw.ellipse([cx - r_cas, cy - int(r_cas * tilt), cx + r_cas, cy + int(r_cas * tilt)], fill=(225, 200, 150, 240))
+        bdraw.ellipse([cx - r_b_in, cy - int(r_b_in * tilt), cx + r_b_in, cy + int(r_b_in * tilt)], fill=(0, 0, 0, 0))
+        # C Ring
+        bdraw.ellipse([cx - r_b_in, cy - int(r_b_in * tilt), cx + r_b_in, cy + int(r_b_in * tilt)], fill=(140, 120, 90, 110))
+        bdraw.ellipse([cx - r_c_in, cy - int(r_c_in * tilt), cx + r_c_in, cy + int(r_c_in * tilt)], fill=(0, 0, 0, 0))
+
+        # Shadow cast by planet on back rings (to upper-right)
+        s_mask = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        sdraw = ImageDraw.Draw(s_mask)
+        sdraw.polygon([(cx, cy), (cx + int(sz * 0.7), cy - int(rh * 0.55)), (cx + int(sz * 1.3), cy - int(rh * 0.45)), (cx + int(sz * 0.4), cy)], fill=(0, 0, 0, 240))
+        s_mask = s_mask.filter(ImageFilter.GaussianBlur(14))
+        back = ImageChops.subtract(back, s_mask)
+
+        # 2. Globe rendering
+        y, x = np.mgrid[:sz, :sz]
+        pcx = pcy = sz / 2.0
+        r = sz / 2.0
+        nx = (x - pcx) / r
+        ny = (y - pcy) / (r * 0.90)  # true Saturn oblate flattening
+        r2 = nx ** 2 + ny ** 2
+        mask = r2 <= 1.0
+
+        nz = np.zeros((sz, sz), dtype=np.float32)
+        nz[mask] = np.sqrt(np.maximum(0.0, 1.0 - r2[mask]))
+
+        # Key light: upper-left (-0.45, -0.40, 0.79)
+        lx, ly, lz = -0.45, -0.40, 0.79
+        l_mag = math.sqrt(lx * lx + ly * ly + lz * lz)
+        lx, ly, lz = lx / l_mag, ly / l_mag, lz / l_mag
+        diff = np.maximum(0.0, nx * lx + ny * ly + nz * lz)
+        fresnel = (1.0 - nz) ** 2.2
+
+        # High-resolution atmospheric bands
+        v = (ny + 1.0) * 0.5
+        bands = (
+            np.sin(v * 42.0) * 0.22
+            + np.sin(v * 84.0) * 0.12
+            + np.sin(v * 21.0) * 0.18
+            + np.sin(v * 168.0) * 0.05
+        )
+        c_cream = np.array([238.0, 218.0, 178.0])
+        c_amber = np.array([205.0, 170.0, 118.0])
+        c_ochre = np.array([175.0, 138.0, 92.0])
+        b_val = np.clip((bands + 1.0) * 0.5, 0.0, 1.0)
+        col = (1.0 - b_val)[..., None] * c_amber + b_val[..., None] * (0.65 * c_cream + 0.35 * c_ochre)
+
+        # Subtle polar hexagon darkening at top
+        polar_mask = (ny < -0.70) & mask
+        col[polar_mask] = col[polar_mask] * 0.82
+
+        # Ring shadow cast on globe across upper-equator
+        ring_shadow = (ny > -0.16) & (ny < 0.08) & mask
+        shadow_factor = np.ones((sz, sz), dtype=np.float32)
+        shadow_factor[ring_shadow] = 0.40
+
+        light = (0.32 + 0.68 * diff) * shadow_factor
+        globe_rgb = col * light[..., None] + np.array([235.0, 210.0, 150.0]) * fresnel[..., None] * 0.28
+        globe_a = np.clip((1.0 - np.sqrt(r2)) * sz * 0.85, 0.0, 1.0) * 255.0
+
+        globe_out = np.zeros((sz, sz, 4), dtype=np.uint8)
+        globe_out[:, :, :3] = np.clip(globe_rgb, 0, 255).astype(np.uint8)
+        globe_out[:, :, 3] = np.clip(globe_a, 0, 255).astype(np.uint8)
+        globe_img = Image.fromarray(globe_out, "RGBA")
+
+        # 3. Front rings (lower half)
+        front = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        fdraw = ImageDraw.Draw(front)
+        fdraw.ellipse([cx - r_a_out, cy - int(r_a_out * tilt), cx + r_a_out, cy + int(r_a_out * tilt)], fill=(200, 175, 130, 210))
+        fdraw.ellipse([cx - r_a_in, cy - int(r_a_in * tilt), cx + r_a_in, cy + int(r_a_in * tilt)], fill=(0, 0, 0, 0))
+        fdraw.ellipse([cx - r_cas, cy - int(r_cas * tilt), cx + r_cas, cy + int(r_cas * tilt)], fill=(230, 205, 155, 250))
+        fdraw.ellipse([cx - r_b_in, cy - int(r_b_in * tilt), cx + r_b_in, cy + int(r_b_in * tilt)], fill=(0, 0, 0, 0))
+        fdraw.ellipse([cx - r_b_in, cy - int(r_b_in * tilt), cx + r_b_in, cy + int(r_b_in * tilt)], fill=(145, 125, 95, 120))
+        fdraw.ellipse([cx - r_c_in, cy - int(r_c_in * tilt), cx + r_c_in, cy + int(r_c_in * tilt)], fill=(0, 0, 0, 0))
+
+        f_mask = Image.new("L", (canvas_w, canvas_h), 0)
+        ImageDraw.Draw(f_mask).rectangle([0, cy, canvas_w, canvas_h], fill=255)
+        f_alpha = ImageChops.multiply(front.split()[3], f_mask)
+        front.putalpha(f_alpha)
+
+        # Composite: back -> globe -> front
+        comp = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        comp.paste(back, (0, 0), back)
+        comp.paste(globe_img, (cx - sz // 2, cy - sz // 2), globe_img)
+        comp.paste(front, (0, 0), front)
+        comp = comp.filter(ImageFilter.SMOOTH)
+        return comp
+
+    @classmethod
     def _render_planet_only_scene(
         cls,
         canvas: Image.Image,
@@ -1931,6 +1962,23 @@ class KundliChartGenerator:
         width, height = canvas.size
         planet_key = plan.planets[0] if plan.planets else "jupiter"
         p_hi, p_en = PLANET_DISPLAY_NAMES.get(planet_key, (planet_key.upper(), planet_key.upper()))
+
+        from config.settings import BASE_DIR
+        master_sat = BASE_DIR / "assets" / "cinematic_broll" / "planet_saturn.jpg"
+        if planet_key == "saturn" and master_sat.exists():
+            sat_base = Image.open(master_sat).convert("RGB")
+            c_space = ImageOps.fit(sat_base, (width, height), Image.Resampling.LANCZOS).convert("RGBA")
+            cls._draw_floating_badge(c_space, plan.badge_title, font_header, width, top_y=170)
+            cls._draw_bottom_celestial_card(
+                c_space,
+                title=f"{p_hi} ({p_en}) • COSMIC RULERSHIP",
+                subtitle=plan.subtitle,
+                width=width,
+                bottom_y=1620,
+                font_title=font_title,
+                font_sub=font_sub,
+            )
+            return cls._save_scene_output(c_space, topic, scene_idx, f"planet_{planet_key}", output_path)
 
         c_space = Image.new("RGBA", (width, height), (6, 4, 14, 255))
         nebula = Image.new("RGBA", (width, height), (0, 0, 0, 0))
