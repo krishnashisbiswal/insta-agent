@@ -17,9 +17,14 @@ from config.settings import (
     SARVAM_MODEL,
     SARVAM_PACE,
     SARVAM_SPEAKER,
+    SARVAM_SPEAKER_CANDIDATES,
+    EDGE_VOICE_CANDIDATES,
     VOICE_ENGINE,
     VOICE_MAP,
 )
+from app.video.pronunciation_preprocessor import PronunciationPreprocessor
+from app.video.audio_validator import AudioQualityValidator
+
 
 import edge_tts
 
@@ -143,6 +148,13 @@ async def generate_speech_async(
     else:
         chosen_voice = raw_voice
 
+    prep_text = PronunciationPreprocessor.preprocess_for_tts(
+        text=clean_text,
+        engine="edge_neural",
+        voice=chosen_voice,
+        language="hindi" if ("hi-" in chosen_voice or is_astrologer) else "en",
+    )
+
     if os.getenv("TESTING", "").lower() in ("true", "1"):
         output_path.parent.mkdir(parents=True, exist_ok=True)
         if not output_path.exists():
@@ -162,7 +174,8 @@ async def generate_speech_async(
     last_exc = None
     for attempt in range(1, max_attempts + 1):
         try:
-            tts = edge_tts.Communicate(clean_text, voice=chosen_voice, rate=rate, pitch=pitch)
+            tts = edge_tts.Communicate(prep_text, voice=chosen_voice, rate=rate, pitch=pitch)
+
             sentences = []
             audio_chunks = []
 
@@ -241,7 +254,7 @@ def generate_sarvam_speech(
         language_code = "hi-IN" if detected in ["hindi", "hinglish"] else "en-IN"
 
     # Map requested persona to valid Sarvam Bulbul:v4-flash speaker keys
-    requested_sp = (speaker or os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER) or "shubh").lower()
+    requested_sp = (speaker or os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER) or "shubh_hi_devotional").lower()
     speaker_map = {
         "arjun": "ratan_hi_latenight_warm" if language_code == "hi-IN" else "girish_en_documentary",
         "arjun_hindi": "ratan_hi_latenight_warm",
@@ -250,7 +263,7 @@ def generate_sarvam_speech(
         "vedic_astrologer": "shubh_hi_devotional",
         "pandit": "shubh_hi_devotional",
         "guruji": "shubh_hi_devotional",
-        "warm_astrologer": "shubh_hi_devotional",
+        "warm_astrologer": "ratan_hi_latenight_warm",
         "calm": "shubh_hi_devotional",
         "gentle": "shubh_hi_devotional",
         "shubh": "shubh_hi_devotional",
@@ -258,15 +271,29 @@ def generate_sarvam_speech(
         "shubh_astrologer": "shubh_hi_devotional",
         "subh_astrologer": "shubh_hi_devotional",
         "ratan": "ratan_hi_latenight_warm",
+        "sunny": "sunny_hi_reels",
+        "reels": "sunny_hi_reels",
         "anand": "anand_hi_documentary",
+        "documentary": "anand_hi_documentary",
         "mahesh": "mahesh_hi_documentary",
         "girish": "girish_hi_devotional",
         "ishita": "ishita_hi_devotional",
+        "companion": "shubh_enhi_companion",
+        "shubh_hinglish": "shubh_enhi_companion",
+        "simran_hinglish": "simran_enhi_companion",
     }
     target_speaker = speaker_map.get(requested_sp, requested_sp)
     target_model = model or os.getenv("SARVAM_MODEL", SARVAM_MODEL) or "bulbul:v4-flash"
     if target_model.lower() in ("bulbul:v1", "bulbul:v2", "bulbul v4", "bulbul-v4", "bulbul:v4"):
         target_model = "bulbul:v4-flash"
+
+    # Preprocess text for Indic pronunciation, astrology terms, and punctuation pauses
+    prep_text = PronunciationPreprocessor.preprocess_for_tts(
+        text=clean_text,
+        engine="sarvam",
+        voice=target_speaker,
+        language=language_code,
+    )
 
     url = "https://api.sarvam.ai/text-to-speech"
     headers = {
@@ -275,13 +302,14 @@ def generate_sarvam_speech(
     }
 
     payload = {
-        "text": clean_text,
+        "text": prep_text,
         "target_language_code": language_code,
         "speaker": target_speaker,
         "model": target_model,
         "pace": pace,
         "speech_sample_rate": 22050,
     }
+
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     temp_wav = output_path.with_suffix(".temp.wav")
@@ -354,11 +382,6 @@ def generate_speech(
     clean_text = clean_speech_text(text)
     if not clean_text or not clean_text.strip():
         clean_text = "कुंडली के नियमों को गहराई से समझें और सही मार्गदर्शन प्राप्त करें।"
-    if not output_filename:
-        safe_name = re.sub(r"[^\w\-]", "_", clean_text[:25].lower()).strip("_")
-        output_filename = f"voice_{safe_name}.mp3"
-
-    output_path = AUDIO_DIR / output_filename
 
     # Resolve target voice persona
     raw_voice = voice or get_recommended_voice(clean_text)
@@ -384,30 +407,68 @@ def generate_speech(
     if sarvam_key and active_engine in ["sarvam", "sarvam_ai", "arjun", "auto", "smart"]:
         can_use_sarvam = True
 
+    default_astrologer_sp = os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER or "shubh_hi_devotional").strip()
+    speaker_choice = default_astrologer_sp if is_astrologer else "ratan_hi_latenight_warm"
+    if voice and (any(k in voice.lower() for k in ["arjun", "shubh", "subh", "sunny", "anand", "ratan", "ishita", "girish"]) or voice.startswith("sarvam:")):
+        speaker_choice = voice.split(":")[-1] if ":" in voice else voice
+    elif default_astrologer_sp:
+        speaker_choice = default_astrologer_sp
+
+    sarvam_pace = 1.05 if is_astrologer else float(os.getenv("SARVAM_PACE", SARVAM_PACE or "1.05"))
+    chosen_voice = raw_voice if (raw_voice and ("Neural" in raw_voice or is_astrologer)) else get_recommended_voice(clean_text)
+
+    # 1. Content-Hashed Audio Caching (Idempotent Audio Generation)
+    effective_engine = "sarvam" if can_use_sarvam else ("edge_neural_mastered" if is_astrologer else "edge_neural")
+    effective_voice_id = speaker_choice if can_use_sarvam else chosen_voice
+    audio_hash = AudioQualityValidator.compute_audio_hash(
+        text=clean_text,
+        voice=effective_voice_id,
+        engine=effective_engine,
+        rate=eff_rate,
+        pitch=eff_pitch,
+        pace=sarvam_pace,
+    )
+
+    if not output_filename:
+        output_filename = f"voice_{audio_hash}.mp3"
+
+    output_path = AUDIO_DIR / output_filename
+
+    # If already cached and valid, reuse without re-synthesizing
+    if output_path.exists() and output_path.stat().st_size > 0:
+        is_valid, q_metrics, q_issues = AudioQualityValidator.validate_audio_file(
+            audio_path=output_path,
+            expected_text=clean_text,
+        )
+        if is_valid:
+            logger.info(f"Reusing validated audio cache ({output_path.name}, duration={q_metrics['duration']}s, WPM={q_metrics.get('estimated_wpm')})")
+            reported_voice = f"Sarvam AI ({speaker_choice})" if can_use_sarvam else ("Vedic Astrologer (Baritone Pandit)" if is_astrologer else chosen_voice)
+            return {
+                "audio_path": str(output_path),
+                "duration": q_metrics["duration"],
+                "sentences": [{"text": clean_text, "start": 0.0, "duration": q_metrics["duration"], "end": q_metrics["duration"]}],
+                "voice": reported_voice,
+                "engine": f"{effective_engine}_cached",
+                "quality_metrics": q_metrics,
+            }
+
     if can_use_sarvam:
         try:
-            default_astrologer_sp = os.getenv("SARVAM_SPEAKER", SARVAM_SPEAKER or "shubh").strip()
-            speaker_choice = default_astrologer_sp if is_astrologer else "arjun"
-            if voice and ("arjun" in voice.lower() or "shubh" in voice.lower() or "subh" in voice.lower() or voice.startswith("sarvam:")):
-                speaker_choice = voice.split(":")[-1] if ":" in voice else voice
-            elif default_astrologer_sp:
-                speaker_choice = default_astrologer_sp
-
-            sarvam_pace = 1.05 if is_astrologer else float(os.getenv("SARVAM_PACE", SARVAM_PACE or "1.20"))
             logger.info(f"Synthesizing authentic Indic voice with Sarvam AI (Speaker: {speaker_choice}, Pace: {sarvam_pace})...")
             out_p, dur, sents = generate_sarvam_speech(clean_text, output_path, speaker=speaker_choice, pace=sarvam_pace)
+            _, q_metrics, _ = AudioQualityValidator.validate_audio_file(out_p, expected_text=clean_text)
             return {
                 "audio_path": str(out_p),
                 "duration": dur,
                 "sentences": sents,
                 "voice": f"Sarvam AI ({speaker_choice})",
                 "engine": "sarvam",
+                "quality_metrics": q_metrics,
             }
         except Exception as exc:
             logger.warning(f"Sarvam AI synthesis notice ({exc}). Falling back to Mastered Astrologer Neural voice...")
 
     # High-Fidelity Edge Neural Voice Fallback with Vedic Astrologer Mastering
-    chosen_voice = raw_voice if (raw_voice and ("Neural" in raw_voice or is_astrologer)) else get_recommended_voice(clean_text)
     output_path, total_duration, sentences = asyncio.run(
         generate_speech_async(
             text=clean_text,
@@ -418,6 +479,10 @@ def generate_speech(
         )
     )
 
+    _, q_metrics, q_issues = AudioQualityValidator.validate_audio_file(output_path, expected_text=clean_text)
+    if q_issues:
+        logger.info(f"Audio quality notice on {output_path.name}: {q_issues}")
+
     reported_voice = "Vedic Astrologer (Baritone Pandit)" if is_astrologer else chosen_voice
     return {
         "audio_path": str(output_path),
@@ -425,7 +490,9 @@ def generate_speech(
         "sentences": sentences,
         "voice": reported_voice,
         "engine": "edge_neural_mastered" if is_astrologer else "edge_neural",
+        "quality_metrics": q_metrics,
     }
+
 
 
 if __name__ == "__main__":

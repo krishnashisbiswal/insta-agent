@@ -47,6 +47,9 @@ from config.settings import (
 )
 from app.video.tts_engine import generate_speech
 from app.video.smart_voice_router import clean_pronunciation_for_hindi
+from app.video.pronunciation_preprocessor import PronunciationPreprocessor
+from app.video.audio_validator import AudioQualityValidator
+
 
 logger = logging.getLogger("CinematicComposer")
 CINEMATIC_BROLL_DIR = PROJECT_ROOT / "assets" / "cinematic_broll"
@@ -862,16 +865,26 @@ def create_cinematic_reel_video(
     for idx, sc in enumerate(scenes):
         scene_num = idx + 1
         screen_text = sc.get("on_screen_text", topic)
-        spoken_text = sc.get("spoken_line", "").strip()
+        original_spoken_text = sc.get("spoken_line", "").strip()
 
-        # Pronunciation sanitization for Indian pandit voice
-        if active_voice in ("astrologer", "vedic_astrologer") or str(active_voice).startswith("hi-"):
-            spoken_text = clean_pronunciation_for_hindi(spoken_text)
+        # Pronunciation sanitization for Indian TTS voice synthesis
+        # Crucial: original_spoken_text is preserved for captions and on-screen cards
+        tts_spoken_text = PronunciationPreprocessor.preprocess_for_tts(
+            text=original_spoken_text,
+            engine="sarvam" if "sarvam" in str(active_voice).lower() else "edge_neural",
+            voice=str(active_voice),
+            language="hindi",
+        )
 
-        # Generate audio for THIS scene's spoken dialogue
-        sc_audio_filename = f"scene_{idx}_{int(time.time()*1000)}.mp3"
+        # Deterministic content-hashed audio filename (idempotency: avoids unnecessary audio regeneration)
+        scene_audio_hash = AudioQualityValidator.compute_audio_hash(
+            text=tts_spoken_text,
+            voice=str(active_voice),
+        )
+        sc_audio_filename = f"scene_{idx}_{scene_audio_hash}.mp3"
+
         sc_speech_meta = generate_speech(
-            text=spoken_text,
+            text=tts_spoken_text,
             output_filename=sc_audio_filename,
             voice=active_voice,
         )
@@ -883,10 +896,23 @@ def create_cinematic_reel_video(
         audio_clips_to_close.append(sc_audio_clip)
         speech_dur = sc_audio_clip.duration
 
-        # Natural breath pause between cuts (0.18s) to feel human, never rushed
-        scene_dur = max(1.2, speech_dur + 0.18)
+        # Natural conversational pacing with deliberate pauses:
+        # Scene 1 (Hook): allow 0.45s after question/hook so the viewer absorbs the premise
+        # Revelation/Question scenes (ending with '?' or ':'): allow 0.38s
+        # Final CTA scene: allow 0.65s so viewers can read on-screen DM/comment prompt
+        # Standard content scene: allow 0.28s pause
+        if scene_num == 1:
+            pause_dur = 0.45
+        elif scene_num == total_scenes:
+            pause_dur = 0.65
+        elif any(punct in original_spoken_text for punct in ("?", ":", "।")):
+            pause_dur = 0.38
+        else:
+            pause_dur = 0.28
 
-        print(f" -> Scene {scene_num}/{total_scenes}: {speech_dur:.2f}s speech -> {scene_dur:.2f}s clip | \"{screen_text}\"")
+        scene_dur = max(1.5, speech_dur + pause_dur)
+
+        print(f" -> Scene {scene_num}/{total_scenes}: {speech_dur:.2f}s speech (+{pause_dur:.2f}s pause) -> {scene_dur:.2f}s clip | \"{screen_text}\"")
 
         img_file = assigned_scene_images[idx]
         badge = get_scene_badge(sc, idx, topic)
@@ -895,10 +921,11 @@ def create_cinematic_reel_video(
         zoom_rates = [0.15, 0.10, 0.12, 0.14, 0.08]
         z_rate = zoom_rates[idx % len(zoom_rates)]
 
+        # Pass ORIGINAL spoken_line to create_cinematic_scene_clip for clean captions
         clip = create_cinematic_scene_clip(
             image_path=img_file,
             duration=scene_dur,
-            spoken_line=spoken_text,
+            spoken_line=original_spoken_text,
             on_screen_fallback=screen_text,
             scene_number=scene_num,
             total_scenes=total_scenes,
@@ -909,6 +936,7 @@ def create_cinematic_reel_video(
         # Attach this scene's vocal audio directly to the scene clip
         clip = clip.with_audio(sc_audio_clip)
         video_clips.append(clip)
+
 
     # 4. Strict Anti-Repetition Verification
     unique_assigned = set(str(p.resolve()) for p in assigned_scene_images)

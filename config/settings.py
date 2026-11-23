@@ -124,15 +124,33 @@ VOICE_MAP = {
 }
 DEFAULT_VOICE = os.getenv("DEFAULT_VOICE", "hi-IN-MadhurNeural")
 
-# Voice engine selector: "sarvam" (Sarvam AI Arjun) with automatic fallback to "edge_neural"
+# Voice candidates for comparison and benchmark testing
+SARVAM_SPEAKER_CANDIDATES = [
+    "shubh_hi_devotional",     # Calm, resonant, authoritative Vedic astrologer
+    "ratan_hi_latenight_warm",  # Warm, deep late-night conversational narrator
+    "sunny_hi_reels",           # Engaging, punchy modern Reel voice
+    "anand_hi_documentary",     # Serious, grounded documentary authority
+    "shubh_enhi_companion",     # Natural modern bilingual Hinglish companion
+]
+
+EDGE_VOICE_CANDIDATES = [
+    "hi-IN-MadhurNeural",       # Mastered Vedic Astrologer baritone male
+    "hi-IN-SwaraNeural",        # Clear devotional Indian female
+    "en-IN-PrabhatNeural",      # Clear conversational Indian English male
+    "en-IN-NeerjaExpressiveNeural", # Expressive Indian English female
+]
+
+# Voice engine selector: "sarvam" (Sarvam AI) with automatic fallback to "edge_neural"
 VOICE_ENGINE = os.getenv("VOICE_ENGINE", "sarvam").strip().lower()
 
-# Sarvam AI - Indian Native Expressive Voice Engine (Arjun speaker)
+# Sarvam AI - Indian Native Expressive Voice Engine
 # Sign up at dashboard.sarvam.ai for ₹100 free developer credits (zero monthly subscription)
 SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "").strip()
-SARVAM_SPEAKER = os.getenv("SARVAM_SPEAKER", "shubh").strip()
+SARVAM_SPEAKER = os.getenv("SARVAM_SPEAKER", "shubh_hi_devotional").strip()
 SARVAM_MODEL = os.getenv("SARVAM_MODEL", "bulbul:v4-flash").strip()
-SARVAM_PACE = float(os.getenv("SARVAM_PACE", "1.25"))
+SARVAM_PACE = float(os.getenv("SARVAM_PACE", "1.05"))
+DEFAULT_SPEECH_PACE = SARVAM_PACE
+
 
 # Brand watermark for Instagram reels
 BRAND_WATERMARK = os.getenv("BRAND_WATERMARK", "@neovibestore.in").strip()

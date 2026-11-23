@@ -811,7 +811,7 @@ def calculate_spoken_duration(text: str, language: str = "hindi") -> float:
     Calculates realistic spoken duration based on natural conversational speech rates:
     - Hindi (Devanagari): ~135 WPM (~2.25 words/sec -> 0.44s per word).
     - English: ~150 WPM (~2.5 words/sec -> 0.40s per word).
-    - Punctuation breath pauses: commas add 0.20s, full-stops/questions add 0.40s.
+    - Punctuation breath pauses: commas add 0.20s, full-stops/questions/colons add 0.40s.
     - Clamped between minimum 2.5s and maximum 6.5s per scene.
     """
     if not text or not text.strip():
@@ -825,15 +825,17 @@ def calculate_spoken_duration(text: str, language: str = "hindi") -> float:
 
     if is_hindi:
         base_sec = word_count * 0.44
-        pauses = len(re.findall(r"[।\?\!]", clean_text)) * 0.40
+        pauses = len(re.findall(r"[।\?\!:]", clean_text)) * 0.40
         commas = len(re.findall(r"[,،]", clean_text)) * 0.20
     else:
         base_sec = word_count * 0.40
-        pauses = len(re.findall(r"[\.\?\!]", clean_text)) * 0.35
+        pauses = len(re.findall(r"[\.\?\!:]", clean_text)) * 0.35
         commas = len(re.findall(r"[,;]", clean_text)) * 0.15
 
     total = base_sec + pauses + commas
     return round(max(2.5, min(6.5, total)), 1)
+
+
 
 
 def segment_narration_into_scenes(
@@ -1058,53 +1060,53 @@ def _generate_fallback_reel_data(
 
     # Detect primary subject entity from topic
     if any(k in t_lower for k in ["rudraksha", "रुद्राक्ष", "mukhi"]):
-        entity_name = "5-Mukhi Rudraksha"
+        entity_name = "पंचमुखी रुद्राक्ष"
         hook_on_screen = "RUDRAKSHA ENERGY CLASH"
-        hook_spoken = "क्या आपका 5-Mukhi Rudraksha आपकी कुंडली की energy के साथ clash कर रहा है?"
+        hook_spoken = "क्या आपका पंचमुखी रुद्राक्ष आपकी कुंडली की एनर्जी से क्लैश कर रहा है?"
         hook_visual = "Extreme macro photograph of authentic sacred 5-Mukhi Rudraksha beads showing natural deep crevices and facets on dark antique Sanskrit parchment"
-        secondary_crystal = "Amethyst Crystal"
+        secondary_crystal = "अमेथिस्ट क्रिस्टल"
         sec_visual = "Deep purple natural raw amethyst crystal cluster glowing under cinematic directional lighting"
     elif any(k in t_lower for k in ["amethyst", "एमेथिस्ट"]):
-        entity_name = "Amethyst Crystal"
+        entity_name = "अमेथिस्ट क्रिस्टल"
         hook_on_screen = "AMETHYST ENERGY CLASH"
-        hook_spoken = "क्या आपका Amethyst crystal आपकी कुंडली की energy के साथ clash कर रहा है?"
+        hook_spoken = "क्या आपका अमेथिस्ट क्रिस्टल आपकी कुंडली की ऊर्जा से क्लैश कर रहा है?"
         hook_visual = "Extreme macro photograph of raw deep purple Amethyst crystal cluster with natural light refractions on dark velvet parchment"
-        secondary_crystal = "5-Mukhi Rudraksha"
+        secondary_crystal = "पंचमुखी रुद्राक्ष"
         sec_visual = "Authentic sacred five mukhi rudraksha beads resting on ancient Vedic chart"
     elif any(k in t_lower for k in ["pyrite", "पायराइट"]):
-        entity_name = "Golden Pyrite"
+        entity_name = "गोल्डन पायराइट"
         hook_on_screen = "PYRITE MONEY CLASH"
-        hook_spoken = "क्या आपका Pyrite stone आपकी कुंडली की wealth energy को block कर रहा है?"
+        hook_spoken = "क्या आपका पायराइट स्टोन आपकी वेल्थ एनर्जी को ब्लॉक कर रहा है?"
         hook_visual = "Macro photograph of shimmering golden pyrite crystal cluster with brassy cubic crystals on dark velvet"
-        secondary_crystal = "Citrine Quartz"
+        secondary_crystal = "सिट्रीन क्वार्ट्ज"
         sec_visual = "Golden radiant citrine quartz crystal cluster with natural facets"
     elif any(k in t_lower for k in ["citrine", "सिट्रीन"]):
-        entity_name = "Citrine Quartz"
+        entity_name = "सिट्रीन क्रिस्टल"
         hook_on_screen = "CITRINE WEALTH CLASH"
-        hook_spoken = "क्या आपका Citrine crystal आपकी कुंडली के 2nd house के साथ clash कर रहा है?"
+        hook_spoken = "क्या आपका सिट्रीन क्रिस्टल आपकी कुंडली के धन भाव से क्लैश कर रहा है?"
         hook_visual = "Macro photograph of vibrant golden-yellow citrine crystal gemstone glowing under warm golden light"
-        secondary_crystal = "Yellow Sapphire"
+        secondary_crystal = "पीला पुखराज"
         sec_visual = "Flawless natural yellow sapphire gemstone on dark velvet"
     elif any(k in t_lower for k in ["tourmaline", "टूरमैलीन"]):
-        entity_name = "Black Tourmaline"
+        entity_name = "ब्लैक टूरमैलीन"
         hook_on_screen = "TOURMALINE SHIELD CLASH"
-        hook_spoken = "क्या आपका Black Tourmaline आपकी aura frequency के साथ align नहीं हो रहा?"
+        hook_spoken = "क्या आपका ब्लैक टूरमैलीन आपकी एनर्जी फ्रीक्वेंसी से मैच नहीं कर रहा?"
         hook_visual = "Macro photograph of raw needle-textured black tourmaline crystal cluster on dark slate stone"
-        secondary_crystal = "Clear Quartz"
+        secondary_crystal = "नेचुरल स्फटिक"
         sec_visual = "Prismatic clear quartz natural crystal point"
     elif any(k in t_lower for k in ["sapphire", "neelam", "नीलम"]):
-        entity_name = "Royal Blue Sapphire"
+        entity_name = "प्राकृतिक नीलम"
         hook_on_screen = "NEELAM DANGER CLASH"
-        hook_spoken = "बिना कुंडली जांचे Neelam पहनना आपकी mental peace को क्यों disrupt कर सकता है?"
+        hook_spoken = "बिना कुंडली जांचे नीलम पहनना आपकी मानसिक शांति को क्यों प्रभावित कर सकता है?"
         hook_visual = "Macro photograph of radiant royal blue sapphire gemstone showing hexagonal crystal growth lines"
-        secondary_crystal = "Emerald Gemstone"
+        secondary_crystal = "पन्ना रत्न"
         sec_visual = "Flawless faceted natural emerald and blue sapphire gemstones glowing on dark velvet"
     else:
-        entity_name = "Tiger Eye Gemstone"
+        entity_name = "टाइगर आई स्टोन"
         hook_on_screen = "TIGER EYE NOT WORKING"
-        hook_spoken = "क्या आपका Tiger Eye स्टोन आपकी कुंडली की एनर्जी के साथ क्लैश कर रहा है?"
+        hook_spoken = "क्या आपका टाइगर आई स्टोन आपकी कुंडली की ऊर्जा से क्लैश कर रहा है?"
         hook_visual = "Extreme macro close-up photograph of a radiant golden-brown Tiger's Eye gemstone and bracelet showing vivid silky chatoyancy resting on dark antique Sanskrit parchment"
-        secondary_crystal = "Royal Blue Sapphire"
+        secondary_crystal = "प्राकृतिक नीलम"
         sec_visual = "Flawless faceted natural emerald and blue sapphire gemstones glowing on dark velvet"
 
     # Use hook override if provided
@@ -1115,36 +1117,36 @@ def _generate_fallback_reel_data(
 
     # Determine planetary scene 2
     if any(k in t_lower for k in ["jupiter", "guru", "बृहस्पति"]):
-        sc2_spoken = "पहला मुख्य संकेत, जब आपकी कुंडली में Guru Jupiter कमजोर स्थिति में होता है, तो यह higher wisdom और focus को disrupt करता है।"
+        sc2_spoken = "पहला मुख्य संकेत: जब आपकी कुंडली में गुरु बृहस्पति कमजोर होते हैं, तो सही डिसीजन लेना और फोकस करना मुश्किल हो जाता है।"
         sc2_onscreen = "JUPITER ENERGY CLASH"
         sc2_badge = "GURU PLACEMENT"
         sc2_visual = "3D Guru Jupiter planet in Vedic Kundli 9th house with glowing golden aura"
     else:
-        sc2_spoken = "पहला मुख्य संकेत, जब आपकी कुंडली में Sun और Rahu का ग्रहण संघर्ष आपके nervous system और mental peace को हिला देता है।"
+        sc2_spoken = "पहला मुख्य संकेत: जब कुंडली में सूर्य और राहु का प्रभाव पड़ता है, तो मानसिक शांति और नर्वस सिस्टम पर सीधा असर दिखता है।"
         sc2_onscreen = "SUN RAHU CONFLICT"
         sc2_badge = "AURA SHIELD"
         sc2_visual = "Authentic ancient Vedic Kundli birth chart parchment showing Sun and Rahu planetary positions"
 
     # Determine planetary scene 4
     if any(k in t_lower for k in ["mars", "mangal", "मंगल"]):
-        sc4_spoken = "तीसरा कारण, जब Mars की fierce energy गलत भाव में होती है, तो यह aggression और internal stress पैदा करती है।"
+        sc4_spoken = "तीसरा कारण: मंगल की उग्र ऊर्जा अगर गलत भाव में हो, तो बात-बात पर गुस्सा और जल्दबाजी में नुकसान होने लगता है।"
         sc4_onscreen = "MARS OVERHEATING MIND"
         sc4_badge = "BIO-ENERGY CODE"
         sc4_visual = "3D Planet Mars in Vedic Kundli 1st house glowing with fierce crimson-amber Martian aura"
     else:
-        sc4_spoken = "तीसरा कारण, जब Mars की fierce energy गलत भाव में होती है, तो यह aggression और internal stress पैदा करती है।"
+        sc4_spoken = "तीसरा कारण: मंगल की उग्र ऊर्जा अगर गलत भाव में हो, तो बात-बात पर गुस्सा और जल्दबाजी में नुकसान होने लगता है।"
         sc4_onscreen = "MARS MISALIGNMENT"
         sc4_badge = "BIO-ENERGY CODE"
         sc4_visual = "Fiery red planet Mars in deep space showing atmospheric dust and cratered surface"
 
     # Determine planetary scene 5
     if any(k in t_lower for k in ["saturn", "shani", "शनि"]):
-        sc5_spoken = "चौथा नियम, जब Shani ki dristi आपके chart पर पड़ती है, तो यह unexpected delays और heavy karmic pressure लाती है।"
+        sc5_spoken = "चौथा नियम: शनि की दृष्टि जब आपके मुख्य भावों पर पड़ती है, तो काम बार-बार टलने लगते हैं और भारी दबाव महसूस होता है।"
         sc5_onscreen = "SHANI KARMIC DELAYS"
         sc5_badge = "INSTANT CALM"
         sc5_visual = "3D Planet Saturn in 7th house drawing 3 aspect arrows to 9th, 1st, and 4th house"
     else:
-        sc5_spoken = "चौथा नियम, जब Shani ki dristi आपके chart पर पड़ती है, तो यह unexpected delays और heavy karmic pressure लाती है।"
+        sc5_spoken = "चौथा नियम: शनि की दृष्टि जब आपके मुख्य भावों पर पड़ती है, तो काम बार-बार टलने लगते हैं और भारी दबाव महसूस होता है।"
         sc5_onscreen = "SHANI KARMIC IMPACT"
         sc5_badge = "INSTANT CALM"
         sc5_visual = "Planet Saturn with majestic cosmic rings in deep starry space"
@@ -1168,7 +1170,7 @@ def _generate_fallback_reel_data(
         },
         {
             "scene_num": 3,
-            "spoken_line": "दूसरा गहरा भेद, जब 12th House की सक्रियता आपकी vital energy को drain करके focus पूरी तरह खत्म कर देती है।",
+            "spoken_line": "दूसरा गहरा भेद: कुंडली का बारहवां भाव जब अचानक सक्रिय होता है, तो मानसिक तनाव और अनचाहे खर्चे लगातार बढ़ने लगते हैं।",
             "on_screen_text": "12TH HOUSE DRAIN",
             "badge": "SECRET FREQUENCY",
             "visual_description": "Vedic astrology diamond Kundli chart with 12th house quadrant highlighted on ancient parchment",
@@ -1192,7 +1194,7 @@ def _generate_fallback_reel_data(
         },
         {
             "scene_num": 6,
-            "spoken_line": f"पांचवां नियम: बिना complete birth chart analysis के कोई भी {entity_name} या {secondary_crystal} कभी न पहनें, यह adverse impact दे सकता है।",
+            "spoken_line": f"पांचवां नियम: बिना संपूर्ण जन्म कुंडली विश्लेषण के कोई भी {entity_name} या {secondary_crystal} कभी न पहनें, यह प्रतिकूल प्रभाव दे सकता है।",
             "on_screen_text": "AVOID BLIND REMEDIES",
             "badge": "SPIRITUAL WARNING",
             "visual_description": sec_visual,
@@ -1200,13 +1202,14 @@ def _generate_fallback_reel_data(
         },
         {
             "scene_num": 7,
-            "spoken_line": "यह reel तुरंत save करें। अपनी कुंडली की planetary placement comment करें और personal consultation के लिए हमें तुरंत DM करें।",
+            "spoken_line": "यह रील तुरंत सेव करें। अपनी कुंडली में ग्रहों की स्थिति नीचे कमेंट करें और पर्सनल कुंडली विश्लेषण के लिए हमें तुरंत डीएम करें।",
             "on_screen_text": "SAVE REEL • DM US",
             "badge": "CHECK PLACEMENT & DM US",
             "visual_description": "Ancient sacred stone temple sanctum with glowing golden brass oil lamps and Shiva lingam",
-            "estimated_seconds": 4.0,
+            "estimated_seconds": 4.2,
         },
     ]
+
 
     return {
         "title": f"{entity_name} & Kundli Energy Blueprint",
@@ -1454,33 +1457,34 @@ STRICT MANDATE - ANCHOR EVERY SCENE TO CONCRETE ASTROLOGICAL / GEMSTONE ENTITIES
 - On-Screen cards MUST be strictly 100% English (ALL CAPS, 2-4 punchy words, ZERO Hindi text, ZERO number prefixes like '1.' or '2.').
 
 1. SCENE 1 (0-3s) - THE HOOK:
-   - Spoken: Winning hook above (calling out whether the gemstone is clashing with birth chart energy).
-   - On-Screen: Winning on-screen text in ALL CAPS English (e.g. "TIGER EYE NOT WORKING", "GEMSTONE CLASHING").
+   - Spoken: Winning hook above (natural conversational question, e.g. "क्या आपका रुद्राक्ष आपकी कुंडली की एनर्जी से क्लैश कर रहा है?").
+   - On-Screen: Winning on-screen text in ALL CAPS English (e.g. "RUDRAKSHA ENERGY CLASH", "ENERGY MISMATCH").
    - Badge: "SACRED ENERGY SECRET"
 2. SCENE 2 (3-7s) - POINT 1 (PLANETARY CONFLICT):
-   - Spoken: "पहला मुख्य संकेत, जब आपकी कुंडली में Sun और Rahu का टकराव आपके nervous system और mental peace को हिला देता है।"
+   - Spoken: "पहला मुख्य संकेत: जब कुंडली में सूर्य और राहु का प्रभाव पड़ता है, तो मानसिक शांति और नर्वस सिस्टम पर सीधा असर दिखता है।"
    - On-Screen: "SUN RAHU CONFLICT"
    - Badge: "AURA SHIELD"
 3. SCENE 3 (7-11s) - POINT 2 (HOUSE ENERGY DRAIN):
-   - Spoken: "दूसरा गहरा भेद, जब 12th House की सक्रियता आपकी vital energy को drain करके focus पूरी तरह खत्म कर देती है।"
+   - Spoken: "दूसरा गहरा संकेत: कुंडली का बारहवां भाव जब सक्रिय होता है, तो ऊर्जा का रिसाव होने लगता है और काम में फोकस नहीं बनता।"
    - On-Screen: "12TH HOUSE DRAIN"
    - Badge: "SECRET FREQUENCY"
 4. SCENE 4 (11-15s) - POINT 3 (FIERCE PLANET MISALIGNMENT):
-   - Spoken: "तीसरा कारण, जब Mars की fierce energy गलत भाव में होती है, तो यह aggression और internal stress पैदा करती है।"
+   - Spoken: "तीसरा कारण: मंगल की उग्र ऊर्जा अगर प्रतिकूल भाव में हो, तो बात-बात पर गुस्सा और जल्दबाजी में बड़े नुकसान होते हैं।"
    - On-Screen: "MARS FIERCE ENERGY"
    - Badge: "BIO-ENERGY CODE"
-5. SCENE 5 (15-19s) - POINT 4 (KARMIC ASPECT / SHANI DRISTI):
-   - Spoken: "चौथा रहस्य, जब Shani ki dristi आपके chart पर पड़ती है, तो यह unexpected delays और heavy karmic pressure लाती है।"
+5. SCENE 5 (15-19s) - POINT 4 (KARMIC ASPECT / SHANI DRISHTI):
+   - Spoken: "चौथा रहस्य: शनि की दृष्टि जब आपके मुख्य भावों पर पड़ती है, तो काम बार-बार टलने लगते हैं और भारी दबाव महसूस होता है।"
    - On-Screen: "SHANI KARMIC IMPACT"
    - Badge: "INSTANT CALM"
 6. SCENE 6 (19-24s) - POINT 5 (DANGER OF BLIND REMEDIES):
-   - Spoken: "पांचवां नियम: बिना complete birth chart analysis के कोई भी gemstone कभी न पहनें, यह adverse impact दे सकता है।"
+   - Spoken: "पांचवां नियम: बिना पूरी कुंडली जांचे कोई भी रत्न या रुद्राक्ष न पहनें, क्योंकि गलत ऊर्जा आपके पूरे चक्र को ब्लॉक कर सकती है।"
    - On-Screen: "AVOID BLIND REMEDIES"
    - Badge: "SPIRITUAL WARNING"
 7. SCENE 7 (24-28s) - 4-LAYER VIRAL CALL TO ACTION:
-   - Spoken: "यह reel तुरंत save करें। अपनी कुंडली की planetary placement comment करें और personal consultation के लिए हमें तुरंत DM करें।"
+   - Spoken: "यह रील तुरंत सेव करें। अपनी कुंडली में ग्रहों की स्थिति नीचे कमेंट करें और पर्सनल परामर्श के लिए हमें तुरंत डीएम करें।"
    - On-Screen: "SAVE REEL • DM US"
    - Badge: "CHECK PLACEMENT & DM US"
+
 """
 
     prompt = f"""
