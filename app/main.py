@@ -243,6 +243,14 @@ def main():
     audit_parser.add_argument("--bio", type=str, required=True)
     audit_parser.add_argument("--link", type=str, default="")
 
+    # Command: verify (Production verification test mode without publishing)
+    verify_parser = subparsers.add_parser("verify", help="Generate and thoroughly verify Reel output without publishing")
+    verify_parser.add_argument("--topic", "-t", type=str, required=True, help="Topic for the Reel")
+    verify_parser.add_argument("--niche", "-n", type=str, default="Vedic astrology", help="Content niche")
+    verify_parser.add_argument("--lang", "-l", type=str, default=CONTENT_LANGUAGE, help="Script language")
+    verify_parser.add_argument("--duration", "-d", type=int, default=30, help="Target duration in seconds")
+    verify_parser.add_argument("--voice", "-v", type=str, default="astrologer", help="TTS Voice ID")
+
     # Command: test
     subparsers.add_parser("test", help="Test Gemini API and system dependencies")
 
@@ -252,16 +260,17 @@ def main():
         parser.print_help()
         return
 
-    if args.command == "run":
+    if args.command in ("run", "verify"):
+        is_verify_mode = (args.command == "verify")
         run_full_pipeline(
             topic=args.topic,
             niche=args.niche,
             language=args.lang,
             duration=args.duration,
-            theme_name=args.theme,
+            theme_name="3d_space" if is_verify_mode else args.theme,
             voice=args.voice,
-            upload=args.upload,
-            force_dry_run=args.dry_run,
+            upload=False if is_verify_mode else args.upload,
+            force_dry_run=True if is_verify_mode else args.dry_run,
         )
 
     elif args.command == "script":

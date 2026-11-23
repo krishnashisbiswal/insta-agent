@@ -1045,4 +1045,24 @@ def create_cinematic_reel_video(
         if not qc_report.checks.get("file_exists") or not qc_report.checks.get("decode_success") or not qc_report.checks.get("no_black_frames", True):
             raise VideoQCError(f"Critical Video QC failure for {output_path.name}: {qc_report.errors}")
 
+    # 10. Strict Production Verification Report Generation
+    try:
+        from app.video.production_verifier import ProductionReelVerifier
+        prod_report = ProductionReelVerifier.verify_production(
+            video_path=output_path,
+            script_data=script_data,
+            assigned_images=assigned_scene_images,
+            master_audio_path=PROJECT_ROOT / "insta content" / "voiceover_audio.mp3",
+            job_id=active_job_id,
+        )
+        report_txt = prod_report.format_text_report()
+        report_file = output_path.parent / "production_verification_report.txt"
+        report_file.write_text(report_txt, encoding="utf-8")
+        report_json = output_path.parent / "production_verification_report.json"
+        with open(report_json, "w", encoding="utf-8") as f:
+            json.dump(prod_report.to_dict(), f, indent=2, ensure_ascii=False)
+        print("\n" + report_txt + "\n")
+    except Exception as v_err:
+        logger.warning(f"Production verification notice: {v_err}")
+
     return output_path
