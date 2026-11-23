@@ -636,7 +636,7 @@ Return ONLY a valid JSON object with the following fields:
         Direct 1-to-1 literal script mapping for core Vedic astrology & gemstone subjects.
         Returns: (core_meaning, visual_concept, visual_metaphor, subject, action, environment)
         """
-        # 1. Tiger's Eye gemstone
+        # 1. Tiger's Eye gemstone (Explicit mention only)
         if any(w in text_lower for w in ["tiger's eye", "tiger eye", "टाइगर आई", "टाइगर"]):
             return (
                 "The grounding yet intense energetic frequency of genuine Tiger's Eye",
@@ -647,7 +647,52 @@ Return ONLY a valid JSON object with the following fields:
                 "an opulent astrological sanctuary with soft candlelight and ancient Vedic manuscripts"
             )
 
-        # 2. Sun & Rahu in Kundali
+        # 2. 7th House & Marriage / Relationships (Strict: relationship/marriage dynamics, delays, or 7th house)
+        has_7th_or_marriage = any(w in text_lower for w in [
+            "7th house", "seventh house", "7th bhav", "सातवां भाव", "सातवें भाव", "marriage",
+            "विवाह", "शादी", "delay marriage", "relationship", "relationships", "spouse",
+            "partner", "partnership", "दांपत्य", "जीवनसाथी", "marriage delay", "delayed marriage"
+        ])
+        if has_7th_or_marriage:
+            has_saturn = any(w in text_lower for w in ["saturn", "shani", "शनि"])
+            p_desc = "Saturn (Shani) karmic delay aspect" if has_saturn else "partnership timing"
+            return (
+                f"The astrological dynamics of the 7th house governing marriage, partnership karma, and {p_desc}",
+                "An authentic North Indian Vedic Kundli birth chart highlighting the 7th house (Yuvati Bhava) in warm amber-gold light, with partnership and marriage symbolism beside an ancient Sanskrit matrimonial scroll, in warm evening light",
+                "Illuminating the karmic blueprint of union, marriage timing, and relational harmony",
+                "An authentic Vedic Kundli birth chart with illuminated 7th House (Yuvati Bhava) and partnership harmony",
+                "radiating focused amber-gold light specifically illuminating the 7th house grid beside an ancient rolled marriage parchment",
+                "a dignified Vedic astrological study at warm twilight with antique brass instruments and soft candlelight"
+            )
+
+        # 3. 10th House & Career / Profession (Strict: career direction, workplace, leadership, or 10th house)
+        has_10th_or_career = any(w in text_lower for w in [
+            "10th house", "tenth house", "10th bhav", "दसवां भाव", "दसवें भाव", "career",
+            "करियर", "profession", "business", "job", "नौकरी", "व्यापार", "workplace",
+            "कार्यक्षेत्र", "head of department", "breakthrough", "leadership role", "career direction"
+        ])
+        if has_10th_or_career:
+            return (
+                "The astrological placement of the 10th house governing career direction, professional endurance, and leadership breakthroughs",
+                "An authentic North Indian Vedic Kundli birth chart highlighting the 10th house (Karma Bhava) in radiant golden light, beside an executive wooden desk with fountain pen and journal in morning sunlight",
+                "The karmic forge of the 10th house transforming disciplined struggle into unshakeable career leadership",
+                "An authentic Vedic Kundli birth chart with illuminated 10th House (Karma Bhava) and executive leadership desk",
+                "radiating focused amber-gold light on the 10th house grid alongside a clean executive leather journal and pen",
+                "a refined executive astrological study with warm morning sunlight streaming across polished dark oak"
+            )
+
+        # 4. Emerald & Mercury (Strict: Panna / Emerald gemstone strengthening Mercury)
+        if any(w in text_lower for w in ["emerald", "panna", "पन्ना"]):
+            return (
+                "Strengthening Mercury's communicative, analytical, and intellectual frequency through authentic natural Emerald",
+                "A luxurious macro photograph of a certified natural vivid green Zambian Emerald gemstone glowing with crystalline facets on sacred parchment inscribed with the Sanskrit symbol for Mercury (Budha)",
+                "The vibrant crystalline green fire of Emerald awakening Mercurial intellect",
+                "A certified natural vivid green Zambian Emerald gemstone glowing with rich emerald luster",
+                "reflecting crisp morning light with sharp crystalline facets beside an ink-drawn Sanskrit chart of Mercury",
+                "a scholarly gemological sanctuary with rich dark wood textures and warm ambient study light"
+            )
+
+        # 5. Sun & Rahu in Kundali
         if (any(w in text_lower for w in ["rahu", "राहु"]) and any(w in text_lower for w in ["sun", "सूर्य", "surya"])) or "sun rahu" in text_lower or "सूर्य और राहु" in text_lower or "सूर्य-राहु" in text_lower:
             return (
                 "The intense cosmic tension between solar confidence and Rahu's shadowy eclipse in the birth chart",
@@ -658,7 +703,7 @@ Return ONLY a valid JSON object with the following fields:
                 "a mystical Vedic observatory desk surrounded by brass astrological instruments and ancient charts"
             )
 
-        # 3. 12th House Energy Drain
+        # 6. 12th House Energy Drain
         if any(w in text_lower for w in ["12th house", "twelfth house", "बारहवें भाव", "बारहवां भाव", "12 भाव", "12वां"]):
             return (
                 "The 12th house representing subconscious energy dissipation, sleep disruption, and spiritual release",
@@ -669,7 +714,7 @@ Return ONLY a valid JSON object with the following fields:
                 "a tranquil astrological sanctum bathed in warm amber diya light and mystical starlight"
             )
 
-        # 4. Mars (Mangal) Planet & Fiery Energy
+        # 7. Mars (Mangal) Planet & Fiery Energy
         if any(w in text_lower for w in ["mars", "mangal", "मंगल", "मंगलेश"]):
             return (
                 "The intense, decisive fire and warrior focus governed by planet Mars",
@@ -680,7 +725,7 @@ Return ONLY a valid JSON object with the following fields:
                 "deep cosmic space with dramatic swirling interstellar clouds and distant twinkling constellations"
             )
 
-        # 5. Saturn (Shani Dev) Drishti & Karmic Aspects
+        # 8. Saturn (Shani Dev) Drishti & Karmic Aspects (Celestial context)
         if any(w in text_lower for w in ["shani ki drishti", "drishti", "दृष्टि", "saturn aspect", "saturn's aspect", "shani", "शनि", "saturn"]):
             return (
                 "The formidable, all-seeing gaze and karmic discipline of Saturn across the chart",
@@ -691,8 +736,14 @@ Return ONLY a valid JSON object with the following fields:
                 "the deep majestic cosmos with rich indigo and violet nebulae and celestial starlight"
             )
 
-        # 6. Gemstones Warning & Authenticity
-        if any(w in text_lower for w in ["gemstone", "gemstones", "रत्न", "ratna", "stones", "stone", "remedy", "उपाय", "blind remedies"]):
+        # 9. Explicit Gemstones (Strict: only when gemstone names or ratna are explicitly spoken; NOT for general 'remedy' or 'stone')
+        gem_explicit_words = [
+            "gemstone", "gemstones", "रत्न", "ratna", "neelam", "blue sapphire", "नीलम",
+            "pukhraj", "yellow sapphire", "पुखराज", "panna", "emerald", "पन्ना", "manik",
+            "ruby", "माणिक", "heera", "diamond", "हीरा", "moti", "pearl", "मोती",
+            "moonga", "coral", "मूँगा", "मूंगा"
+        ]
+        if any(w in text_lower for w in gem_explicit_words):
             return (
                 "The critical importance of exact chart alignment before wearing powerful gemstones",
                 "A breathtaking, luxurious macro shot of authentic royal gemstones (deep blue Neelam sapphire, glowing red ruby, sparkling green emerald, and golden topaz) radiating pure internal light atop ancient Sanskrit palm leaves",
@@ -702,15 +753,27 @@ Return ONLY a valid JSON object with the following fields:
                 "an ancient Vedic sanctuary study with rich teakwood textures and antique brass instruments"
             )
 
-        # 7. Call to Action / DM Consultation / Save Reel
-        if scene_idx == total_scenes - 1 or any(w in text_lower for w in ["dm", "डीएम", "comment", "कमेंट", "save", "सेव", "consultation", "परामर्श"]):
+        # 10. Call to Action / DM Consultation / Personal Chart Reading
+        cta_words = ["dm", "डीएम", "comment", "कमेंट", "save", "सेव", "consultation", "परामर्श", "मार्गदर्शन", "booking", "बुक", "message", "मैसेज"]
+        if any(w in text_lower for w in cta_words):
+            # If gemstones are explicitly discussed in the CTA sentence, allow gemstone presentation
+            if any(w in text_lower for w in gem_explicit_words):
+                return (
+                    "Inviting the viewer to discover their personal chart placements through private consultation",
+                    "A captivating, warm cinematic close-up of open hands gently cradling authentic glowing gemstones and an ancient rolled Vedic birth chart, bathed in welcoming, radiant golden light that draws the viewer in",
+                    "The inviting gateway to personal astrological guidance and energetic harmony",
+                    "Dignified, welcoming hands presenting radiant natural gemstones and a rolled parchment Kundli",
+                    "held gracefully in warm inviting golden light with soft inviting bokeh in the background",
+                    "a serene, luxurious Vedic consultation study bathed in warm amber glow and quiet elegance"
+                )
+            # Default CTA: Professional astrologer consultation setting without forcing gemstones or temples
             return (
-                "Inviting the viewer to discover their personal chart placements through private consultation",
-                "A captivating, warm cinematic close-up of open hands gently cradling authentic glowing gemstones and an ancient rolled Vedic birth chart, bathed in welcoming, radiant golden light that draws the viewer in",
-                "The inviting gateway to personal astrological guidance and energetic harmony",
-                "Dignified, welcoming hands presenting radiant natural gemstones and a rolled parchment Kundli",
-                "held gracefully in warm inviting golden light with soft inviting bokeh in the background",
-                "a serene, luxurious Vedic consultation study bathed in warm amber glow and quiet elegance"
+                "Inviting the viewer to discover their personal chart placements through private astrological consultation",
+                "A warm, dignified cinematic close-up of a professional Vedic astrologer consultation desk with handwritten horoscope charts on aged parchment, antique brass reading lamp, and traditional reading instruments in inviting golden light",
+                "The scholarly gateway to personal astrological clarity and charted guidance",
+                "A professional Vedic astrologer consultation desk with authentic parchment Kundli chart and brass reading lamp",
+                "illuminated by warm golden candlelight and soft atmospheric study bokeh, welcoming the viewer for personal guidance",
+                "a serene, scholarly Vedic consultation study bathed in warm amber glow and dignified elegance"
             )
 
         return None
@@ -873,7 +936,7 @@ Return ONLY a valid JSON object with the following fields:
         # Specific Astrological: Dynamic Kundli House analysis & chart mapping (Strict: only when explicitly discussing horoscope charts)
         from app.video.kundli_chart_generator import KundliChartGenerator, HOUSE_METADATA
         house_num, planet_name = KundliChartGenerator.extract_house_and_planet(text_lower)
-        is_explicit_chart = any(k in text_lower for k in ["kundli", "कुंडली", "birth chart", "natal chart", "horoscope chart", "जन्मपत्रिका", "जन्म कुंडली"])
+        is_explicit_chart = any(k in text_lower for k in ["kundli", "कुंडली", "birth chart", "natal chart", "horoscope chart", "जन्मपत्रिका", "जन्म कुंडली", "house", "भाव", "लग्न", "chart"])
         if is_explicit_chart and house_num and house_num in HOUSE_METADATA:
             meta = HOUSE_METADATA[house_num]
             planet_clause = f" with {planet_name} placement" if planet_name else ""
@@ -906,26 +969,15 @@ Return ONLY a valid JSON object with the following fields:
                 "an ancient stone observatory library at midnight with starlight filtering through arched windows"
             )
 
-        # Hook / Opener scene
-        if scene_idx == 0:
+        # Content-driven opening or closing realization (NEVER forces gemstones or temples by position)
+        if any(w in text_lower for w in ["consultation", "परामर्श", "मार्गदर्शन", "dm", "comment", "save"]):
             return (
-                "Immediate scroll-stopping intrigue addressing a deeply personal mistake or dilemma",
-                "A dramatic low-key close-up of a person's hands holding a sacred unpolished mineral or parchment while looking up with intense realization",
-                "The sudden awakening to a long-hidden personal truth",
-                "An expressive protagonist with direct, compelling eye contact communicating urgency",
-                "pausing in sharp focus with hands lifted in sudden revelation",
-                "a moody dramatic study bathed in focused warm directional light with deep atmospheric bokeh"
-            )
-
-        # Closing / Call to Action scene
-        if scene_idx == total_scenes - 1:
-            return (
-                "Empowering resolution inviting the audience to comment or seek personal guidance",
-                "A serene, beautifully illuminated temple sanctum with rows of steady golden oil lamps reflecting on dark polished stone, offering peaceful resolution",
-                "The sacred sanctuary where answers are revealed in stillness",
-                "Rows of carved brass diyas burning with steady, fragrant pure golden flames",
-                "flickering harmoniously on ancient carved granite temple steps",
-                "a tranquil Vedic temple courtyard at sacred dusk, soft amber glow and serene architectural depth"
+                "Personal astrological consultation and charted guidance",
+                "A warm, dignified cinematic close-up of a professional Vedic astrologer consultation desk with handwritten horoscope charts on aged parchment, antique brass reading lamp, and traditional reading instruments in inviting golden light",
+                "The scholarly gateway to personal astrological clarity and charted guidance",
+                "A professional Vedic astrologer consultation desk with authentic parchment Kundli chart and brass reading lamp",
+                "illuminated by warm golden candlelight and soft atmospheric study bokeh, welcoming the viewer for personal guidance",
+                "a serene, scholarly Vedic consultation study bathed in warm amber glow and dignified elegance"
             )
 
         # Universal storytelling fallback based on emotion

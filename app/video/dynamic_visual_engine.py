@@ -747,7 +747,9 @@ class DynamicVisualEngine:
         vis_desc = scene_dict.get("visual_description", "").lower()
         scene_txt = f"{spoken} {on_screen} {vis_desc}".lower()
         topic_lower = (topic or "").lower()
-        full_context = f"{topic_lower} {scene_txt}"
+        # Strictly scene-first: scene narration and visual description MUST control the image subject.
+        # Topic provides only a fallback if the scene text is entirely empty.
+        active_context = scene_txt if any(c.isalnum() for c in scene_txt) else topic_lower
 
         calc_seed = seed if seed is not None else int(time.time() * 1000000) % 999999
         rng = random.Random(calc_seed)
@@ -770,143 +772,84 @@ class DynamicVisualEngine:
         if master_asset_override and is_available(master_asset_override):
             master_asset = master_asset_override
 
-        # (A) Crystal / Gemstone / Rudraksha specific topics
+        # (A) Crystal / Gemstone / Rudraksha: ONLY when explicitly discussed in THIS scene
         if not master_asset:
-            if any(k in full_context for k in ["pyrite", "पायराइट"]):
+            if any(k in scene_txt for k in ["pyrite", "पायराइट"]):
                 master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "crystal_pyrite_cluster.jpg",
                     CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
                     CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
                 ])
-            elif any(k in full_context for k in ["rudraksha", "रुद्राक्ष", "mukhi", "मुख"]):
+            elif any(k in scene_txt for k in ["rudraksha", "रुद्राक्ष", "mukhi", "मुख"]):
                 master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
                     CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
                 ])
-            elif any(k in full_context for k in ["amethyst", "कटेला", "जामुनिया"]):
+            elif any(k in scene_txt for k in ["amethyst", "कटेला", "जामुनिया"]):
                 master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "crystal_amethyst_cluster.jpg",
                     CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
                 ])
-            elif any(k in full_context for k in ["tourmaline", "टूमलाइन"]):
+            elif any(k in scene_txt for k in ["tourmaline", "टूमलाइन"]):
                 master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "crystal_black_tourmaline.jpg",
                     CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
                 ])
-            elif any(k in full_context for k in ["citrine", "सिट्रीन"]):
+            elif any(k in scene_txt for k in ["citrine", "सिट्रीन"]):
                 master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
                     CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_pyrite_cluster.jpg",
                 ])
-            elif any(k in full_context for k in ["rose quartz"]):
-                master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "crystal_rose_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
-                ])
-            elif any(k in full_context for k in ["tiger", "tigers eye", "टाइगर"]):
+            elif any(k in scene_txt for k in ["tiger", "tigers eye", "टाइगर"]):
                 master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg",
                     CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
                 ])
-            elif any(k in full_context for k in ["selenite", "सेलेनाइट"]):
+            elif any(k in scene_txt for k in ["neelam", "blue sapphire", "नीलम"]):
                 master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg",
                 ])
-            elif any(k in full_context for k in ["aventurine", "एवेंट्यूरिन"]):
+            elif any(k in scene_txt for k in ["pukhraj", "yellow sapphire", "पुखराज"]):
                 master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "gemstone_yellow_sapphire.jpg",
                 ])
-            elif any(k in full_context for k in ["clear quartz", "sphatik", "स्फटिक"]):
+            elif any(k in scene_txt for k in ["panna", "emerald", "पन्ना"]):
                 master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
+                    CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg",
                 ])
-            elif any(k in full_context for k in ["carnelian", "कार्नेलियन"]):
+            elif any(k in scene_txt for k in ["manik", "ruby", "माणिक"]):
                 master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "crystal_carnelian.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
+                    CINEMATIC_BROLL_DIR / "gemstone_ruby.jpg",
                 ])
-            elif any(k in full_context for k in ["labradorite", "लैब्राडोराइट"]):
+            elif any(k in scene_txt for k in ["heera", "diamond", "हीरा"]):
                 master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "crystal_labradorite.jpg",
-                    CINEMATIC_BROLL_DIR / "crystal_black_tourmaline.jpg",
+                    CINEMATIC_BROLL_DIR / "gemstone_diamond.jpg",
+                ])
+            elif any(k in scene_txt for k in ["moti", "pearl", "मोती"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "gemstone_pearl.jpg",
+                ])
+            elif any(k in scene_txt for k in ["moonga", "coral", "मूँगा", "मूंगा"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "gemstone_red_coral.jpg",
                 ])
 
         # (B) Script scene semantic matching
         if not master_asset:
-            if any(k in scene_txt for k in ["meditat", "silhouette", "एकांत", "ध्यान", "peace", "serenity"]):
-                master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
-                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                ])
-            elif any(k in scene_txt for k in ["lamp", "diya", "दीपक", "दीप", "oil lamp"]):
-                master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
-                    CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
-                ])
-            elif any(k in scene_txt for k in ["dream", "astral", "dreamscape", "sleep", "नींद", "starlight", "vivid", "सपने", "सपनों"]):
-                master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "planet_moon.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-                    CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
-                    CINEMATIC_BROLL_DIR / "planet_jupiter.jpg",
-                ])
-            elif any(k in scene_txt for k in ["constellation", "star map", "cosmic map"]):
-                master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
-                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-                    CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
-                ])
-            elif any(k in scene_txt for k in ["kundli", "birth chart", "कुंडली", "जन्मपत्रिका", "house", "भाव", "8th house"]):
-                master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-                    CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
-                    CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
-                ])
-            elif any(k in scene_txt for k in ["palmleaf", "manuscript", "पांडुलिपि", "शास्त्र", "ग्रंथ", "remedy", "caution", "उपाय", "सावधानी"]):
+            # 1. Consultation & CTA (Clean guidance desk, NOT a temple)
+            if any(k in scene_txt for k in ["consultation", "परामर्श", "मार्गदर्शन", "dm", "कमेंट", "comment", "save", "सेव", "guidance"]):
                 master_asset = pick_unused([
                     CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
                     CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
                 ])
-            elif any(k in scene_txt for k in ["mala", "bead", "माला", "desk"]):
+            # 2. Kundli & Astrological House analysis
+            elif any(k in scene_txt for k in ["kundli", "birth chart", "कुंडली", "जन्मपत्रिका", "house", "भाव", "10th", "7th", "8th", "12th"]):
                 master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
-                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+                    CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
+                    CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
                 ])
-            elif any(k in scene_txt for k in ["havan", "fire", "altar", "हवन", "अग्नि"]):
-                master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
-                    CINEMATIC_BROLL_DIR / "4_sacred_havan.jpg",
-                ])
-            elif any(k in scene_txt for k in ["temple", "sanctum", "मंदिर", "dm", "consultation", "परामर्श", "सेव"]):
-                master_asset = pick_unused([
-                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
-                    CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
-                    CINEMATIC_BROLL_DIR / "5_temple_sanctum.jpg",
-                ])
+            # 3. Celestial & Planetary bodies (Strictly when discussed in THIS scene)
             elif any(k in scene_txt for k in ["saturn", "shani", "शनि"]):
                 master_asset = pick_unused([CINEMATIC_BROLL_DIR / "planet_saturn.jpg"])
             elif any(k in scene_txt for k in ["moon", "chandra", "चंद्रमा"]):
@@ -915,38 +858,44 @@ class DynamicVisualEngine:
                 master_asset = pick_unused([CINEMATIC_BROLL_DIR / "planet_sun.jpg"])
             elif any(k in scene_txt for k in ["jupiter", "guru", "बृहस्पति"]):
                 master_asset = pick_unused([CINEMATIC_BROLL_DIR / "planet_jupiter.jpg"])
-            elif any(k in scene_txt for k in ["yantra", "mandala", "यंत्र"]):
+            elif any(k in scene_txt for k in ["mars", "mangal", "मंगल"]):
+                master_asset = pick_unused([CINEMATIC_BROLL_DIR / "planet_mars.jpg"])
+            elif any(k in scene_txt for k in ["venus", "shukra", "शुक्र"]):
+                master_asset = pick_unused([CINEMATIC_BROLL_DIR / "planet_venus.jpg"])
+            elif any(k in scene_txt for k in ["mercury", "budh", "बुध"]):
+                master_asset = pick_unused([CINEMATIC_BROLL_DIR / "planet_mercury.jpg"])
+            # 4. Sacred Fire / Havan (ONLY when explicitly in narration)
+            elif any(k in scene_txt for k in ["havan", "fire", "altar", "हवन", "अग्नि", "यज्ञ"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "sacred_havan_flame_altar.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
+                ])
+            # 5. Temple (ONLY when temple / sanctum is explicitly mentioned in narration)
+            elif any(k in scene_txt for k in ["temple", "sanctum", "मंदिर"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
+                    CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
+                ])
+            # 6. Sacred Yantra & Geometry
+            elif any(k in scene_txt for k in ["yantra", "mandala", "यंत्र", "geometry"]):
                 master_asset = pick_unused([CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg"])
+            # 7. Meditation / Serenity
+            elif any(k in scene_txt for k in ["meditat", "silhouette", "एकांत", "ध्यान", "peace", "serenity"]):
+                master_asset = pick_unused([
+                    CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
+                    CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
+                ])
 
-        # Final default fallback to safe authentic photographic master
-        is_crystal_topic = any(k in full_context for k in ["pyrite", "crystal", "amethyst", "tourmaline", "citrine", "rudraksha", "mukhi"])
-        safe_pool = [
-            CINEMATIC_BROLL_DIR / "crystal_citrine_quartz.jpg",
-            CINEMATIC_BROLL_DIR / "crystal_tigers_eye.jpg",
-            CINEMATIC_BROLL_DIR / "crystal_clear_quartz.jpg",
-            CINEMATIC_BROLL_DIR / "crystal_green_aventurine.jpg",
-            CINEMATIC_BROLL_DIR / "crystal_selenite.jpg",
-            CINEMATIC_BROLL_DIR / "crystal_carnelian.jpg",
-            CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-        ] if is_crystal_topic else [
-            CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg",
-            CINEMATIC_BROLL_DIR / "planet_saturn.jpg",
-            CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg",
-            CINEMATIC_BROLL_DIR / "planet_moon.jpg",
-            CINEMATIC_BROLL_DIR / "sacred_temple_oil_lamps.jpg",
-            CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg",
-            CINEMATIC_BROLL_DIR / "sacred_vedic_fire_altar.jpg",
-            CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg",
-            CINEMATIC_BROLL_DIR / "vedic_astrology_parchment_chart.jpg",
-            CINEMATIC_BROLL_DIR / "rudraksha_sacred_beads.jpg",
-            CINEMATIC_BROLL_DIR / "sacred_geometric_yantra.jpg",
-        ]
-
+        # Semantic fallback based strictly on scene subject, NEVER random rotation or forced temple
         if not master_asset:
-            master_asset = pick_unused(safe_pool)
-
-        if not master_asset:
-            master_asset = safe_pool[scene_idx % len(safe_pool)]
+            if any(k in scene_txt for k in ["consultation", "परामर्श", "मार्गदर्शन", "dm", "comment", "save"]):
+                master_asset = CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg"
+            elif any(k in scene_txt for k in ["saturn", "shani", "शनि"]):
+                master_asset = CINEMATIC_BROLL_DIR / "planet_saturn.jpg"
+            elif any(k in scene_txt for k in ["moon", "chandra", "चंद्रमा"]):
+                master_asset = CINEMATIC_BROLL_DIR / "planet_moon.jpg"
+            else:
+                master_asset = CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg"
 
         # Track in used_master_assets so no scene in this reel reuses this master asset
         if used_master_assets is not None and master_asset:

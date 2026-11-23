@@ -59,50 +59,48 @@ CINEMATIC_BROLL_DIR = PROJECT_ROOT / "assets" / "cinematic_broll"
 def resolve_topic_visuals(topic_str: str) -> List[Path]:
     """
     Dynamically maps topics to relevant cinematic b-roll assets based on context.
-    Avoids fixed repetitive cycles of havan/temple endings.
+    Strictly avoids hardcoded cycles or forced havan/temple endings.
     """
     t = (topic_str or "").lower()
 
-    kundli_img = CINEMATIC_BROLL_DIR / "2_kundli_chart.jpg"
-    havan_img = CINEMATIC_BROLL_DIR / "4_sacred_havan.jpg"
-    temple_img = CINEMATIC_BROLL_DIR / "5_temple_sanctum.jpg"
+    kundli_img = CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg"
     consult_img = CINEMATIC_BROLL_DIR / "astrology_consultation_scroll.jpg"
 
     # 1. Specific Gemstone topics
     if any(k in t for k in ["diamond", "heera"]):
-        return [CINEMATIC_BROLL_DIR / "gemstone_diamond.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_venus.jpg", consult_img, temple_img]
+        return [CINEMATIC_BROLL_DIR / "gemstone_diamond.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_venus.jpg", consult_img]
     elif any(k in t for k in ["yellow sapphire", "pukhraj"]):
-        return [CINEMATIC_BROLL_DIR / "gemstone_yellow_sapphire.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_jupiter.jpg", consult_img, temple_img]
+        return [CINEMATIC_BROLL_DIR / "gemstone_yellow_sapphire.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_jupiter.jpg", consult_img]
     elif any(k in t for k in ["blue sapphire", "neelam"]):
-        return [CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_saturn.jpg", consult_img, temple_img]
+        return [CINEMATIC_BROLL_DIR / "gemstone_blue_sapphire.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_saturn.jpg", consult_img]
     elif any(k in t for k in ["ruby", "manik"]):
-        return [CINEMATIC_BROLL_DIR / "gemstone_ruby.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_sun.jpg", consult_img, temple_img]
+        return [CINEMATIC_BROLL_DIR / "gemstone_ruby.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_sun.jpg", consult_img]
     elif any(k in t for k in ["emerald", "panna"]):
-        return [CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_mercury.jpg", consult_img, temple_img]
+        return [CINEMATIC_BROLL_DIR / "gemstone_emerald.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_mercury.jpg", consult_img]
     elif any(k in t for k in ["coral", "moonga"]):
-        return [CINEMATIC_BROLL_DIR / "gemstone_red_coral.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_mars.jpg", consult_img, temple_img]
+        return [CINEMATIC_BROLL_DIR / "gemstone_red_coral.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_mars.jpg", consult_img]
     elif any(k in t for k in ["pearl", "moti"]):
-        return [CINEMATIC_BROLL_DIR / "gemstone_pearl.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_moon.jpg", consult_img, temple_img]
+        return [CINEMATIC_BROLL_DIR / "gemstone_pearl.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_moon.jpg", consult_img]
 
-    # 2. Wealth, Money Leakage & Dhana Yogas
+    # 2. Wealth, Money & Prosperity
     elif any(k in t for k in ["wealth", "money", "drain", "riches", "income", "financial", "paisa", "dhan", "lakshmi", "bank", "ruin"]):
-        return [kundli_img, CINEMATIC_BROLL_DIR / "planet_jupiter.jpg", CINEMATIC_BROLL_DIR / "planet_saturn.jpg", consult_img, CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg"]
+        return [kundli_img, CINEMATIC_BROLL_DIR / "planet_jupiter.jpg", CINEMATIC_BROLL_DIR / "planet_saturn.jpg", consult_img]
 
-    # 3. Marriage, Relationships & Love Karma
-    elif any(k in t for k in ["marriage", "love", "relationship", "partner", "shaadi", "vivah", "manglik", "heartbreak", "divorce", "soulmate", "7th"]):
-        return [kundli_img, CINEMATIC_BROLL_DIR / "planet_venus.jpg", CINEMATIC_BROLL_DIR / "planet_mars.jpg", consult_img, CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg"]
+    # 3. Marriage, Relationships & 7th House
+    elif any(k in t for k in ["marriage", "love", "relationship", "partner", "shaadi", "vivah", "manglik", "divorce", "soulmate", "7th"]):
+        return [kundli_img, CINEMATIC_BROLL_DIR / "planet_venus.jpg", CINEMATIC_BROLL_DIR / "planet_mars.jpg", consult_img]
 
-    # 4. Career, Saturn & Sade Sati
+    # 4. Career, Saturn & 10th House
     elif any(k in t for k in ["career", "job", "business", "sade sati", "shani", "saturn", "stagnation", "struggle", "10th", "dhaiya"]):
-        return [kundli_img, CINEMATIC_BROLL_DIR / "planet_saturn.jpg", CINEMATIC_BROLL_DIR / "planet_sun.jpg", consult_img, CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg"]
+        return [kundli_img, CINEMATIC_BROLL_DIR / "planet_saturn.jpg", CINEMATIC_BROLL_DIR / "planet_sun.jpg", consult_img]
 
-    # 5. Psychic Intuition, 3 AM Wakeup & Divine Signs
-    elif any(k in t for k in ["psychic", "intuition", "3 am", "3:00", "wakeup", "divine", "protection", "deva kripa", "dreams", "aura", "third eye", "spiritual", "old soul"]):
-        return [CINEMATIC_BROLL_DIR / "planet_moon.jpg", kundli_img, CINEMATIC_BROLL_DIR / "planet_jupiter.jpg", consult_img, temple_img]
+    # 5. Temple / Devotional (Only if explicitly in topic)
+    elif any(k in t for k in ["temple", "mandir", "sanctum"]):
+        return [CINEMATIC_BROLL_DIR / "temple_sanctum_golden_diyas.jpg", kundli_img, consult_img]
 
     # 6. Default High-Impact Fallback
     else:
-        return [kundli_img, CINEMATIC_BROLL_DIR / "planet_saturn.jpg", CINEMATIC_BROLL_DIR / "planet_jupiter.jpg", consult_img, CINEMATIC_BROLL_DIR / "authentic_vedic_kundli_parchment.jpg"]
+        return [kundli_img, CINEMATIC_BROLL_DIR / "planet_saturn.jpg", CINEMATIC_BROLL_DIR / "planet_jupiter.jpg", consult_img]
 
 
 def get_font(size: int, bold: bool = True, family: str = "impact", text: str = "") -> ImageFont.FreeTypeFont:

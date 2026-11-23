@@ -324,6 +324,40 @@ class VisionQualityGate:
         relevance_score = 0.95
         rejection_reason = None
 
+        # Strict Semantic Relevance Inspection:
+        # Reject assets whose main subject contradicts narration or injects forced categories
+        narration_text = (getattr(plan, "exact_narration", "") or getattr(plan, "narration", "")).lower()
+        asset_identity = Path(image_path_str).name.lower()
+        
+        # 1. Gemstone rejection when narration does NOT discuss gemstones
+        gem_terms = ["gemstone", "sapphire", "ruby", "emerald", "diamond", "pearl", "coral", "neelam", "pukhraj", "panna", "manik", "heera", "रत्न"]
+        if any(g in asset_identity for g in ["gemstone", "sapphire", "ruby", "emerald", "diamond", "pearl", "coral"]):
+            if not any(g in narration_text for g in gem_terms):
+                relevance_score = 0.2
+                rejection_reason = "Semantic mismatch: Gemstone visual assigned to scene without gemstone narration."
+
+        # 2. Temple rejection when narration does NOT mention temple
+        if ("temple" in asset_identity or "diya" in asset_identity) and not any(k in narration_text for k in ["temple", "mandir", "दीपक", "दीप", "sanctum"]):
+            relevance_score = 0.2
+            rejection_reason = "Semantic mismatch: Temple visual assigned to scene without temple mention in narration."
+
+        # 3. Havan/fire rejection when narration does NOT mention havan
+        if ("havan" in asset_identity or "fire_altar" in asset_identity) and not any(k in narration_text for k in ["havan", "fire", "altar", "हवन", "अग्नि", "यज्ञ"]):
+            relevance_score = 0.2
+            rejection_reason = "Semantic mismatch: Sacred fire/havan visual assigned to scene without havan/fire narration."
+
+        # 4. Career narration must NOT receive marriage imagery
+        if any(c in narration_text for c in ["career", "करियर", "10th house", "tenth house", "दसवां भाव", "job", "नौकरी", "workplace"]):
+            if any(m in asset_identity for m in ["marriage", "vivah", "shaadi", "wedding", "love"]):
+                relevance_score = 0.2
+                rejection_reason = "Semantic mismatch: Marriage imagery assigned to career/10th house narration."
+
+        # 5. Marriage narration must NOT receive gemstone imagery
+        if any(m in narration_text for m in ["marriage", "विवाह", "7th house", "seventh house", "सातवां भाव", "relationship", "spouse"]):
+            if not any(g in narration_text for g in gem_terms) and any(g in asset_identity for g in ["gemstone", "sapphire", "ruby", "emerald", "diamond"]):
+                relevance_score = 0.2
+                rejection_reason = "Semantic mismatch: Gemstone imagery assigned to marriage/7th house narration."
+
         # Check topic entity contamination in positive generation elements:
         # If the scene plan specifies forbidden entity elements (e.g., Rudraksha barred from nervous system scene),
         # ensure the main subject or positive prompt (before 'no ' or 'avoid:') does not contain them.
