@@ -914,8 +914,8 @@ def create_cinematic_reel_video(
         img_file = assigned_scene_images[idx]
         badge = get_scene_badge(sc, idx, topic)
 
-        # Dynamic zoom rates per scene for punchy, modern video pacing
-        zoom_rates = [0.15, 0.10, 0.12, 0.14, 0.08]
+        # Dynamic subtle zoom rates per scene for restrained, professional cinematic motion
+        zoom_rates = [0.06, 0.04, 0.05, 0.05, 0.04]
         z_rate = zoom_rates[idx % len(zoom_rates)]
 
         # Pass ORIGINAL spoken_line to create_cinematic_scene_clip for clean captions
@@ -962,8 +962,8 @@ def create_cinematic_reel_video(
     ambient_clip = AudioFileClip(str(drone_wav_path)).with_duration(total_video_duration)
     audio_clips_to_close.append(ambient_clip)
 
-    # Ambient sound design mixed underneath voiceover at -18dB (0.13 volume) - exactly as proven in Commit 30bc381
-    ambient_mixed = ambient_clip.with_volume_scaled(0.13)
+    # Ambient sound design mixed underneath voiceover at -22dB (0.08 volume) for maximum vocal clarity on phone speakers
+    ambient_mixed = ambient_clip.with_volume_scaled(0.08)
     composite_audio = CompositeAudioClip([final_video.audio, ambient_mixed])
     final_video = final_video.with_audio(composite_audio)
 
