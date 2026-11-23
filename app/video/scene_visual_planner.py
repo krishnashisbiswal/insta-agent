@@ -610,11 +610,11 @@ class SceneVisualPlanner:
         if any(k in spoken for k in cta_keywords):
             return {
                 "visual_intent": "sacred_consultation_guidance",
-                "required_entities": ["astrology consultation study", "antique scroll", "warm sacred oil lamp"],
-                "primary_visual_strategy": "reverent Vedic astrologer consultation desk with brass oil lamps and rolled parchment",
-                "fallback_visual_strategy": "sacred temple sanctum with warm golden diyas and ancient stone carvings in tranquil amber light",
+                "required_entities": ["astrology consultation study", "antique scroll", "warm study lamp"],
+                "primary_visual_strategy": "reverent Vedic astrologer consultation desk with authentic parchment charts and brass study lamp",
+                "fallback_visual_strategy": "authentic ancient astrological consultation study with parchment scroll and brass lamp",
                 "fallback_generation_prompt": (
-                    "cinematic photorealistic 9:16 vertical luxury photograph of an authentic ancient temple sanctum illuminated by warm golden oil lamps, sacred stone relief carvings, tranquil amber chiaroscuro, serene reverent atmosphere, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons"
+                    "cinematic photorealistic 9:16 vertical luxury photograph of an authentic Vedic astrologer consultation desk with handwritten horoscope charts on parchment, antique brass reading lamp, clean dark wood desk, thoughtful scholarly ambiance, 35mm film grain, 8k resolution, no text overlays, no watermarks, no cgi, no cartoons"
                 ),
             }
 
@@ -884,8 +884,9 @@ class SceneVisualPlanner:
 
         # Step 3: Call-to-action scene (last scene) fallback
         if not matched_entity_def and scene_idx == total_scenes - 1:
-            matched_entity_key = "sacred_temple_lamps"
-            matched_entity_def = cls.SPECIFIC_ENTITIES["sacred_temple_lamps"]
+            # Match the CTA action or brand discussion rather than forcing sacred temple lamps
+            matched_entity_key = "astrology_consultation"
+            matched_entity_def = cls.SPECIFIC_ENTITIES.get("astrology_consultation", cls.SPECIFIC_ENTITIES["sacred_temple_lamps"])
 
         # Step 4: If still unmatched, use topic as secondary background theme
         if not matched_entity_def and matched_topic:

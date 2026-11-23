@@ -33,12 +33,11 @@ logger = logging.getLogger(__name__)
 
 def apply_astrologer_vocal_dsp(input_path: Path, output_path: Optional[Path] = None) -> Path:
     """
-    Applies professional Vedic astrologer vocal mastering:
-    - 140Hz bass boost (+6dB) for deep, resonant chest resonance
-    - 4200Hz gentle high shelf cut (-1.5dB) to remove digital sibilance
-    - EBU R128 loudness normalization for warm, dignified broadcast authority
+    Subtle broadcast vocal mastering:
+    - Transparent loudness normalization and subtle high-sibilance control
+    - Does NOT apply boomy bass boost (+6dB) or artificial pitch manipulation.
     """
-    if os.getenv("TESTING", "").lower() in ("true", "1"):
+    if os.getenv("TESTING", "").lower() in ("true", "1") or os.getenv("DISABLE_VOCAL_DSP", "").lower() in ("true", "1"):
         return input_path
 
     from app.utils.ffmpeg_resolver import get_ffmpeg_binary
@@ -50,7 +49,8 @@ def apply_astrologer_vocal_dsp(input_path: Path, output_path: Optional[Path] = N
         return input_path
 
     target_out = output_path or input_path.with_name(f"{input_path.stem}_mastered.mp3")
-    filter_chain = "bass=g=6:f=140:w=0.6,treble=g=-1.5:f=4200,loudnorm=I=-16:TP=-1.5:LRA=11"
+    # Natural, clean speech filter: light de-essing / gentle high-shelf smoothing and standard broadcast normalization
+    filter_chain = "highpass=f=80,treble=g=-0.5:f=5000,loudnorm=I=-16:TP=-1.5:LRA=11"
 
     cmd = [
         str(ffmpeg_exe),
@@ -142,9 +142,9 @@ async def generate_speech_async(
     if is_astrologer:
         chosen_voice = "hi-IN-MadhurNeural"
         if rate in ("+25%", "+0%"):
-            rate = "-3%"
+            rate = "-2%"
         if pitch == "+0Hz":
-            pitch = "-12Hz"
+            pitch = "+0Hz"
     else:
         chosen_voice = raw_voice
 
@@ -392,11 +392,11 @@ def generate_speech(
         or "subh" in raw_voice.lower()
     )
 
-    eff_rate = rate or ("-3%" if is_astrologer else "+0%")
+    eff_rate = rate or ("-2%" if is_astrologer else "+0%")
     if is_astrologer and eff_rate == "+25%":
-        eff_rate = "-3%"
+        eff_rate = "-2%"
 
-    eff_pitch = pitch or ("-12Hz" if is_astrologer else "+0Hz")
+    eff_pitch = pitch or "+0Hz"
 
     # Check engine preference and API credentials
     active_engine = os.getenv("VOICE_ENGINE", VOICE_ENGINE).strip().lower()

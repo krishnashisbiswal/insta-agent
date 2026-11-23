@@ -148,7 +148,7 @@ VOICE_ENGINE = os.getenv("VOICE_ENGINE", "sarvam").strip().lower()
 SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "").strip()
 SARVAM_SPEAKER = os.getenv("SARVAM_SPEAKER", "shubh_hi_devotional").strip()
 SARVAM_MODEL = os.getenv("SARVAM_MODEL", "bulbul:v4-flash").strip()
-SARVAM_PACE = float(os.getenv("SARVAM_PACE", "1.05"))
+SARVAM_PACE = float(os.getenv("SARVAM_PACE", "1.0"))
 DEFAULT_SPEECH_PACE = SARVAM_PACE
 
 
