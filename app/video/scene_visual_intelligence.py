@@ -519,13 +519,16 @@ CREATIVE DIRECTION MANDATE (HIGH-END AESTHETIC):
    - NEVER generate: mundane domestic scenes (dining tables, kitchen, modern bedrooms, alarm clocks, casual hoodies, people slouching on phones, grey concrete).
    - NEVER generate: cheap flat clip-art, generic floating cartoon planets, or synthetic plastic 3D wireframes.
 4. EXACT SCRIPT-DRIVEN LITERAL VISUAL TRANSLATIONS:
-   - Tiger's Eye: If the scene mentions Tiger's Eye -> Depict a stunning, luxurious macro shot of an authentic radiant Tiger's Eye gemstone and bead bracelet showing vivid golden chatoyancy on sacred velvet or ancient Sanskrit parchment!
+   - Tiger's Eye: If the scene explicitly mentions Tiger's Eye -> Depict an authentic radiant Tiger's Eye gemstone and bead bracelet showing vivid golden chatoyancy on sacred velvet or ancient Sanskrit parchment!
+   - 7th House & Marriage / Relationships: If the scene mentions 7th house, marriage, or partnership -> Depict an authentic Vedic Kundli birth chart highlighting the 7th house (Yuvati Bhava) and partnership harmony symbolism (two respectful silhouettes or wedding knot on aged parchment). NEVER gemstones, havan, or temple!
+   - 10th House & Career / Profession: If the scene mentions 10th house, career, job, or workplace struggle/breakthrough -> Depict an authentic Vedic Kundli birth chart highlighting the 10th house (Karma Bhava) in radiant golden light, or an executive study desk with journal and morning light. NEVER gemstones, havan, or temple!
+   - Emerald & Mercury: If the scene mentions Emerald or Mercury -> Depict a natural certified vivid green Zambian Emerald gemstone glowing with crystalline facets beside Mercury planetary symbolism!
    - Sun & Rahu: If the scene mentions Sun and Rahu / Rahu in Kundali -> Depict a glowing sacred Vedic Kundli birth chart with Sun and Rahu highlighted in contrasting golden fire and dark cosmic eclipse shadow!
    - 12th House Energy: If the scene mentions 12th house / energy drain -> Depict an authentic Vedic Kundli birth chart with the 12th house distinctly illuminated in gold and ethereal energy streams dissipating outward!
    - Mars (Mangal): If the scene mentions Mars / Mangal -> Depict the majestic fiery red planet Mars glowing in deep cosmic space with powerful crimson energy flares!
-   - Saturn (Shani) & Drishti: If the scene mentions Saturn / Shani / Drishti -> Depict the magnificent planet Saturn with its detailed crystalline ice rings casting 3 distinct cosmic aspect rays across the cosmos!
-   - Gemstones Caution: If the scene mentions Gemstones / remedies -> Depict flawless, radiant natural gemstones (Neelam, Ruby, Emerald) glowing with vibrant internal fire on sacred scriptures!
-   - Call to Action / DM: If the scene is CTA / DM / consultation -> Depict warm, dignified hands holding radiant gemstones and a rolled parchment Kundli in inviting golden light inviting the viewer to DM!
+   - Saturn (Shani): If the scene mentions Saturn/Shani cosmic aspect -> Depict the magnificent planet Saturn with detailed crystalline ice rings casting focused aspect rays!
+   - Gemstones: ONLY if the scene explicitly mentions gemstones (Neelam, Ruby, Emerald, Pukhraj, Diamond, etc.) -> Depict radiant natural gemstones glowing with vibrant internal fire on sacred scriptures! NEVER insert gemstones for non-gemstone narration!
+   - Call to Action / DM: If the scene is CTA / DM / consultation -> Depict a warm, dignified Vedic astrologer consultation desk with handwritten horoscope charts on parchment, antique brass reading lamp, clean dark wood desk inviting private guidance! NEVER force gemstones or temples on CTA!
 
 Return ONLY a valid JSON object with the following fields:
 {{
