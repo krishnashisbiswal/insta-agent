@@ -501,22 +501,21 @@ class MockImageProvider(BaseImageProvider):
             primary = cinematic_dir / "crystal_black_tourmaline.jpg"
             target_plate = primary if primary.exists() else None
         elif any(k in p_clean for k in ["tiger", "tigers eye", "टाइगर"]):
-            primary = cinematic_dir / "fresh_tiger_eye_macro.jpg"
-            target_plate = primary if primary.exists() else (cinematic_dir / "crystal_tigers_eye.jpg")
+            primary = cinematic_dir / "crystal_tigers_eye.jpg"
+            target_plate = primary if primary.exists() else None
         elif any(k in p_clean for k in ["citrine", "सिट्रीन"]):
             primary = cinematic_dir / "crystal_citrine_quartz.jpg"
             target_plate = primary if primary.exists() else None
         elif any(k in p_clean for k in ["saturn", "shani", "शनि"]):
             target_plate = cinematic_dir / "planet_saturn.jpg"
-        elif any(k in p_clean for k in ["kundli", "birth chart", "कुंडली"]):
+        elif any(k in p_clean for k in ["kundli", "birth chart", "कुंडली", "chart", "house", "भाव", "लग्न"]):
             target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
         elif any(k in p_clean for k in ["jupiter", "guru", "बृहस्पति"]):
             target_plate = cinematic_dir / "planet_jupiter.jpg"
         elif any(k in p_clean for k in ["sun", "surya", "सूर्य"]):
             target_plate = cinematic_dir / "planet_sun.jpg"
         elif any(k in p_clean for k in ["mars", "mangal", "मंगल"]):
-            primary = cinematic_dir / "fresh_planet_mars_hubble.jpg"
-            target_plate = primary if primary.exists() else (cinematic_dir / "planet_mars.jpg")
+            target_plate = cinematic_dir / "planet_mars.jpg"
         elif any(k in p_clean for k in ["venus", "shukra", "शुक्र"]):
             target_plate = cinematic_dir / "planet_venus.jpg"
         elif any(k in p_clean for k in ["mercury", "budh", "बुध"]):
@@ -527,18 +526,29 @@ class MockImageProvider(BaseImageProvider):
             target_plate = cinematic_dir / "planet_rahu.jpg"
         elif any(k in p_clean for k in ["ketu", "केतु"]):
             target_plate = cinematic_dir / "planet_ketu.jpg"
-        elif any(k in p_clean for k in ["emerald", "sapphire", "neelam", "gemstone", "रत्न", "remedies"]):
+        elif any(k in p_clean for k in ["blue sapphire", "neelam"]):
             target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
-        elif any(k in p_clean for k in ["dm", "consultation", "welcoming hands", "hands presenting", "save reel"]):
+        elif any(k in p_clean for k in ["yellow sapphire", "pukhraj"]):
+            target_plate = cinematic_dir / "gemstone_yellow_sapphire.jpg"
+        elif any(k in p_clean for k in ["emerald", "panna"]):
+            target_plate = cinematic_dir / "gemstone_emerald.jpg"
+        elif any(k in p_clean for k in ["ruby", "manik"]):
+            target_plate = cinematic_dir / "gemstone_ruby.jpg"
+        elif any(k in p_clean for k in ["diamond", "heera"]):
+            target_plate = cinematic_dir / "gemstone_diamond.jpg"
+        elif any(k in p_clean for k in ["pearl", "moti"]):
+            target_plate = cinematic_dir / "gemstone_pearl.jpg"
+        elif any(k in p_clean for k in ["coral", "moonga"]):
+            target_plate = cinematic_dir / "gemstone_red_coral.jpg"
+        elif any(k in p_clean for k in ["consultation", "परामर्श", "horoscope chart", "reading lamp", "study desk", "scholarly", "guide"]):
             target_plate = cinematic_dir / "astrology_consultation_scroll.jpg"
         elif any(k in p_clean for k in ["havan", "fire altar", "यज्ञ", "अग्नि"]):
             target_plate = cinematic_dir / "sacred_havan_flame_altar.jpg"
-        elif any(k in p_clean for k in ["temple", "mandir", "दीपक", "दीप", "oil lamp"]):
+        elif any(k in p_clean for k in ["temple", "mandir", "sanctum"]):
             target_plate = cinematic_dir / "temple_sanctum_golden_diyas.jpg"
         else:
-            from app.video.dynamic_visual_engine import BANNED_IMAGE_NAMES
-            all_plates = sorted([p for p in cinematic_dir.glob("*.jpg") if p.is_file() and p.name not in BANNED_IMAGE_NAMES])
-            target_plate = all_plates[s_val % len(all_plates)] if all_plates else None
+            # Clean scholarly consultation desk when no physical entity was named
+            target_plate = cinematic_dir / "astrology_consultation_scroll.jpg"
 
         if target_plate and target_plate.exists():
             with Image.open(target_plate) as raw_img:

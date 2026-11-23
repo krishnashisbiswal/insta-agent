@@ -277,190 +277,104 @@ class DynamicVisualEngine:
 
     @classmethod
     def get_trait_visual_prompt(cls, scene_dict: Dict[str, Any], topic: str, scene_idx: int) -> str:
-        """Constructs an ultra-photorealistic, cinematic 9:16 vertical image prompt strictly matching scene content."""
-        spoken = scene_dict.get("spoken_line", "")
-        on_screen = scene_dict.get("on_screen_text", "")
-        vis_desc = scene_dict.get("visual_description", "")
-        entity_context = f"{spoken} {on_screen} {vis_desc} {topic}".lower()
-        scene_context = f"{spoken} {on_screen} {vis_desc}".lower()
+        """
+        Constructs a dedicated, scene-accurate prompt strictly matching the scene's actual content.
+        Priority:
+        1. visual_description (exact visual instructions for the scene)
+        2. spoken_line (what is actually being narrated)
+        3. on_screen_text (on-screen message)
+        Topic only provides minimal context and NEVER overrides the scene subject.
+        Scene index NEVER determines visual categories.
+        """
+        spoken = scene_dict.get("spoken_line", "").strip()
+        on_screen = scene_dict.get("on_screen_text", "").strip()
+        vis_desc = scene_dict.get("visual_description", "").strip()
+        scene_context = f"{spoken} {on_screen}".lower()
 
         base_modifiers = (
-            "cinematic lighting, photorealistic, 9:16 vertical aspect ratio, masterwork"
+            "cinematic lighting, photorealistic, 9:16 vertical aspect ratio, masterwork, 8k resolution, 35mm film grain, "
+            "no text overlays, no watermarks, no cgi cartoons, no flat solid colors"
         )
 
-        # 1. Identify specific celestial/gemstone/crystal/rudraksha entity
-        gem_name = "Vedic Astrological Gemstone"
-        planet_name = "Cosmic Celestial Entity"
-        if any(k in entity_context for k in ["pyrite"]):
-            gem_name = "natural raw golden Pyrite crystal cluster sparkling with metallic brass luster"
-            planet_name = "golden solar abundance aura and sacred geometry"
-        elif any(k in entity_context for k in ["amethyst"]):
-            gem_name = "natural deep violet raw Amethyst geode cluster glowing with sacred purple crystalline light"
-            planet_name = "soothing crown chakra spiritual aura and peaceful starlight"
-        elif any(k in entity_context for k in ["tourmaline"]):
-            gem_name = "raw natural Black Tourmaline crystalline tower with glossy jet-black striated texture"
-            planet_name = "impenetrable auric protective shield and grounding earth energy"
-        elif any(k in entity_context for k in ["citrine"]):
-            gem_name = "warm radiant natural Golden Citrine quartz crystal glowing with amber sunshine"
-            planet_name = "radiant solar plexus chakra energy of manifestation and prosperity"
-        elif any(k in entity_context for k in ["rose quartz"]):
-            gem_name = "delicate translucent pink Rose Quartz raw crystal specimen with soft loving luminescence"
-            planet_name = "gentle anahata heart chakra pink aura of harmony and peace"
-        elif any(k in entity_context for k in ["tiger", "tigers eye", "tiger's eye"]):
-            gem_name = "polished golden-brown Tiger's Eye gemstone revealing silky chatoyant bands of light"
-            planet_name = "fearless courage and grounded inner power"
-        elif any(k in entity_context for k in ["clear quartz", "sphatik"]):
-            gem_name = "flawless prismatic natural Clear Quartz crystal point refracting crystalline rainbow light"
-            planet_name = "pure high-frequency universal light and mental clarity"
-        elif any(k in entity_context for k in ["selenite"]):
-            gem_name = "luminous silky white Selenite crystal tower with pearlescent cleansing glow"
-            planet_name = "pure lunar high-frequency light and auric cleansing"
-        elif any(k in entity_context for k in ["labradorite"]):
-            gem_name = "natural raw Labradorite crystal with iridescent peacock blue-green flash and spectral labradorescence"
-            planet_name = "mystical psychic shielding and aura protection"
-        elif any(k in entity_context for k in ["carnelian"]):
-            gem_name = "vibrant fiery orange Carnelian crystal polished stone with warm translucent glow"
-            planet_name = "sacral chakra creative energy and vital motivation"
-        elif any(k in entity_context for k in ["obsidian"]):
-            gem_name = "mirror-reflective glossy Black Obsidian volcanic stone with deep dark protection shield"
-            planet_name = "grounding root chakra security and negative energy reflection"
-        elif any(k in entity_context for k in ["gauri shankar"]):
-            gem_name = "sacred natural Nepali Gauri Shankar Rudraksha two naturally joined beads with distinct divine grooves"
-            planet_name = "sacred cosmic Shiva-Shakti union and divine grace"
-        elif any(k in entity_context for k in ["rudraksha", "rudraksh", "mukhi"]):
-            gem_name = "authentic sacred Nepali Rudraksha bead with deep natural mukhi grooves and sacred water droplets"
-            planet_name = "calming bio-electromagnetic energy field and Lord Shiva's divine consciousness"
-        elif any(k in entity_context for k in ["neelam", "blue sapphire", "shani", "saturn"]):
-            gem_name = "natural certified royal Blue Sapphire (Neelam) gemstone with deep velvety blue luster"
-            planet_name = "planet Saturn with majestic dust rings in dark cosmos"
-        elif any(k in entity_context for k in ["manik", "ruby", "surya", "sun"]):
-            gem_name = "natural certified pigeon-blood Ruby (Manik) gemstone glowing with crimson fire"
-            planet_name = "blazing radiant Sun with golden solar flares in space"
-        elif any(k in entity_context for k in ["pukhraj", "yellow sapphire", "guru", "jupiter"]):
-            gem_name = "natural certified Ceylon Yellow Sapphire (Pukhraj) gemstone glowing like golden sunshine"
-            planet_name = "giant banded planet Jupiter in cosmic space"
-        elif any(k in entity_context for k in ["panna", "emerald", "budh", "mercury"]):
-            gem_name = "natural certified vivid green Zambian Emerald (Panna) gemstone"
-            planet_name = "planet Mercury in sunlit space"
-        elif any(k in entity_context for k in ["moti", "pearl", "chandra", "moon"]):
-            gem_name = "natural certified South Sea Pearl (Moti) glowing with iridescent silver luster"
-            planet_name = "glowing celestial full Moon in midnight starfield"
-        elif any(k in entity_context for k in ["moonga", "coral", "mangal", "mars"]):
-            gem_name = "natural certified triangular Red Coral (Moonga) gemstone"
-            planet_name = "reddish planet Mars in starry cosmos"
-        elif any(k in entity_context for k in ["heera", "diamond", "shukra", "venus"]):
-            gem_name = "natural certified brilliant-cut Diamond (Heera) refracting rainbow spectral fire"
-            planet_name = "pearlescent planet Venus shining brilliant silver in twilight"
-        elif any(k in entity_context for k in ["gomed", "hessonite", "rahu"]):
-            gem_name = "natural certified honey-colored Ceylon Hessonite (Gomed) gemstone"
-            planet_name = "mysterious total solar eclipse with glowing corona"
-        elif any(k in entity_context for k in ["lehsuniya", "cat's eye", "ketu"]):
-            gem_name = "natural certified Chrysoberyl Cat's Eye (Lehsuniya) gemstone with sharp chatoyant band"
-            planet_name = "luminous celestial comet in deep starry galaxy"
-
-        # 2. Semantic scene intent matching (STRICTLY Anchored to the Crystal/Gemstone/Rudraksha Subject)
-        # Hook / Opener Scene (Scene 1)
-        if scene_idx == 0:
-            return (
-                f"cinematic dramatic macro luxury shot of {gem_name} resting upon a clean dark reflective surface, "
-                f"soft celestial aura of {planet_name} radiating around it, inspiring high-vibrational sacred lighting, {base_modifiers}"
-            )
-
-        # Call to Action / DM Consultation / Sacred Temple Sanctuary
-        if any(k in scene_context for k in ["dm", "save", "consultation", "परामर्श", "कमेंट", "booking", "message"]):
-            return (
-                f"cinematic sacred sanctum sanctorum of an ancient Vedic temple, {gem_name} respectfully placed on a pure silk offering cloth "
-                f"before multiple glowing brass oil lamps (diyas) casting warm golden reflections on sacred carved stone pillars, peaceful divine tranquility, {base_modifiers}"
-            )
-
-        # Calming Nervous System / Meditation / Mental Clarity / Peace
-        if any(k in scene_context for k in ["calm", "nervous system", "peace", "meditat", "focus", "clarity", "anxiety relief", "blood pressure", "एकाग्रता", "शांति", "तंत्रिका", "तनाव", "ध्यान", "फायदे", "राहत"]):
-            return (
-                f"cinematic serene macro shot of {gem_name} held gently in mindful hands during morning meditation in gentle golden sunlight, "
-                f"soft glowing aura of {planet_name} harmonizing the atmosphere, warm zen aesthetic, high vibrational peace, {base_modifiers}"
-            )
-
-        # Aura Cleansing / Energy Shielding / EMF Protection / Negative Energy Absorption
-        if any(k in scene_context for k in ["shield", "aura", "protect", "negative", "absorb", "emf", "psychic", "सुरक्षा", "आभामंडल", "नजर", "नकारात्मक"]):
-            return (
-                f"cinematic visual of {gem_name} radiating an impenetrable luminous energetic aura shield, "
-                f"sacred protective crystalline light particles deflecting shadowy negative waves, high vibrational {planet_name} energy field, {base_modifiers}"
-            )
-
-        # Wealth Attraction / Abundance / Prosperity / Work Desk Sacred Setup
-        if any(k in scene_context for k in ["attract", "wealth", "abundance", "prosperity", "money", "desk", "office", "धन", "समृद्धि", "आकर्षण", "बरकत", "कार्यस्थल"]):
-            return (
-                f"cinematic macro photograph of {gem_name} catching warm morning sunlight on a refined executive wooden desk beside a clean journal, "
-                f"subtle golden bokeh, inspiring atmosphere of abundance and success, {base_modifiers}"
-            )
-
-        # Sacred Bio-Electromagnetism / Ancient Vedic Science / Heart & Bodily Harmony
-        if any(k in scene_context for k in ["science", "bio-electric", "electromagnetic", "heart", "frequency", "resonance", "विज्ञान", "हृदय", "रक्तचाप", "ऊर्जा"]):
-            return (
-                f"cinematic sacred macro shot of {gem_name} radiating subtle golden sacred geometric frequency waves, "
-                f"harmonizing bio-energy fields, ancient Vedic spiritual science visualization, {base_modifiers}"
-            )
-
-        # Warning Against Blind Internet Remedies / Unverified Rules / Sacred Knowledge
-        if any(k in scene_context for k in ["blind", "remedy", "remedies", "unverified", "internet", "नियम", "उपाय", "अंधाधुंध"]):
-            return (
-                f"cinematic moody mystical shot of {gem_name} resting beside ancient palm-leaf astrological manuscripts and an antique brass compass, "
-                f"single warm oil lamp flickering on dark weathered wood, sacred wisdom and precision, {base_modifiers}"
-            )
-
-        # Birth Chart, Kundli Houses (6th, 8th, 12th House, Lagna, Kendra)
-        if any(k in scene_context for k in ["kundli", "house", "houses", "chart", "horoscope", "भाव", "लग्न", "केंद्र", "त्रिकोण", "छठे", "आठवें", "बारहवें"]):
-            return (
-                f"cinematic ancient Vedic astrological birth chart manuscript with {gem_name} resting gracefully upon the astrological houses, "
-                f"glowing cosmic Sanskrit numbers and stardust softly illuminating the crystalline facets, {base_modifiers}"
-            )
-
-        # Opposing Enemy Planets Clashing / Energy Collision (e.g. Saturn clashing with Sun/Ruby)
-        if any(k in scene_context for k in ["enemy", "clash", "collision", "opposing", "शत्रु", "टकराव", "विपरीत"]):
-            return (
-                f"cinematic dramatic macro shot of {gem_name} glowing steadily while harmonizing turbulent contrasting cosmic energies of {planet_name}, "
-                f"luminous glowing plasma particles and celestial balancing waves in deep space, {base_modifiers}"
-            )
-
-        # Panic, Anxiety, Insomnia, 3 AM Restlessness, Stress
-        if any(k in scene_context for k in ["panic", "anxiety", "insomnia", "3 am", "sleep", "restless", "तनाव", "घबराहट", "अनिद्रा", "बेचैनी"]):
-            return (
-                f"cinematic calming night shot of {gem_name} resting on a clean wooden bedside stand in soft warm amber ambient light, "
-                f"soothing tranquil aura melting away nighttime restlessness, peaceful deep serenity, {base_modifiers}"
-            )
-
-        # Career Destruction, Bankruptcy, Financial Loss, Business Crash / Grounding
-        if any(k in scene_context for k in ["career", "financ", "money", "drain", "ruin", "destruct", "loss", "करियर", "नुकसान", "हानि", "कर्ज", "बर्बाद"]):
-            return (
-                f"cinematic macro luxury shot of {gem_name} resting firmly on a sleek dark executive desk, "
-                f"providing grounding stability and resolute mental focus amidst high stakes, rich warm ambient reflections, {base_modifiers}"
-            )
-
-        # Wrong Metal, Wrong Finger, Ring Fitting, Physical Gemstone Placement
-        if any(k in scene_context for k in ["metal", "finger", "hand", "wear", "ring", "धातु", "उंगली", "हाथ", "अंगूठी"]):
-            return (
-                f"cinematic macro luxury photograph of a person's hand wearing an elegant ring or holding {gem_name}, "
-                f"dramatic moody studio lighting, subtle golden visual flare, fine jewelry details, {base_modifiers}"
-            )
-
-        # Use Gemini's custom visual description if provided (guaranteeing subject inclusion)
+        # Priority 1: High-detail visual_description from script generator
         if vis_desc and len(vis_desc.split()) >= 4:
-            clean_desc = re.sub(r"^(cinematic\s+)?(8k\s+)?(shot\s+of\s+)?", "", vis_desc.strip(), flags=re.I)
-            is_crystal_or_gem = any(k in f"{entity_context} {topic.lower()}" for k in [
-                "pyrite", "amethyst", "tourmaline", "citrine", "rose quartz", "tiger",
-                "sphatik", "selenite", "carnelian", "labradorite", "rudraksha", "mukhi"
-            ])
-            if is_crystal_or_gem:
-                gem_kw_token = gem_name.split()[0].lower()
-                if gem_kw_token not in clean_desc.lower() and not any(k in clean_desc.lower() for k in ["crystal", "gemstone", "rudraksha", "stone", "bead"]):
-                    clean_desc = f"{gem_name}, {clean_desc}"
-            return f"cinematic 8k {clean_desc}, moody dramatic atmosphere, {base_modifiers}"
+            clean_desc = re.sub(
+                r"^(cinematic\s+)?(8k\s+)?(photorealistic\s+)?(macro\s+)?(luxury\s+)?(shot\s+of\s+)?(close-up\s+of\s+)?(high-end\s+visual\s+of\s+)?(clear\s+cinematic\s+focus\s+on\s+)?",
+                "",
+                vis_desc.strip(),
+                flags=re.I,
+            ).strip()
+            return f"cinematic photorealistic 9:16 vertical shot of {clean_desc}, {base_modifiers}"
 
-        # Default Planetary / Gemstone Macro (strictly featuring subject)
-        return (
-            f"cinematic dramatic macro luxury photograph of {gem_name} bathed in ethereal glowing radiance of {planet_name}, "
-            f"crystalline reflections and sacred aesthetic, {base_modifiers}"
-        )
+        # Priority 2: Narration-driven subject identification (strictly what is in this scene)
+        # Gemstones & Crystals (Only if explicitly in narration)
+        if cls.matches_keyword(scene_context, ["pyrite", "पायराइट"]):
+            return f"natural raw golden Pyrite crystal cluster sparkling with metallic brass luster, warm studio lighting, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["amethyst", "कटेला", "जामुनिया"]):
+            return f"natural deep violet raw Amethyst geode cluster glowing with sacred purple crystalline light, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["tourmaline", "टूमलाइन"]):
+            return f"raw natural Black Tourmaline crystalline tower with glossy jet-black striated texture, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["citrine", "सिट्रीन"]):
+            return f"warm radiant natural Golden Citrine quartz crystal glowing with amber sunshine, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["rudraksha", "रुद्राक्ष", "mukhi", "मुख"]):
+            return f"authentic sacred natural Nepali Mukhi Rudraksha bead resting on clean dark wood surface with water droplets, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["neelam", "blue sapphire", "नीलम"]):
+            return f"natural certified royal Blue Sapphire gemstone with deep velvety blue luster, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["pukhraj", "yellow sapphire", "पुखराज"]):
+            return f"natural certified Ceylon Yellow Sapphire gemstone glowing like golden sunshine, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["panna", "emerald", "पन्ना"]):
+            return f"natural certified vivid green Zambian Emerald gemstone with fine crystalline facets, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["ruby", "manik", "माणिक"]):
+            return f"natural certified pigeon-blood Ruby gemstone glowing with deep crimson fire, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["diamond", "heera", "हीरा"]):
+            return f"natural certified brilliant-cut Diamond refracting rainbow spectral fire, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["pearl", "moti", "मोती"]):
+            return f"natural certified South Sea Pearl glowing with iridescent silver luster, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["coral", "moonga", "मूँगा"]):
+            return f"natural certified triangular Red Coral gemstone with rich natural texture, {base_modifiers}"
+
+        # Planets (Only if explicitly in narration)
+        if cls.matches_keyword(scene_context, ["saturn", "shani", "शनि"]):
+            return f"majestic planet Saturn with crystalline ice rings and subtle volumetric lighting in deep dark cosmos, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["moon", "chandra", "चंद्रमा"]):
+            return f"glowing crescent Moon in clear midnight starfield with celestial depth, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["sun", "surya", "सूर्य"]):
+            return f"blazing radiant Sun with golden solar corona in space, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["jupiter", "guru", "बृहस्पति"]):
+            return f"giant banded planet Jupiter in deep space with atmospheric storm bands, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["mars", "mangal", "मंगल"]):
+            return f"reddish planet Mars with dusty canyons in starry cosmos, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["venus", "shukra", "शुक्र"]):
+            return f"pearlescent planet Venus shining brilliant silver in twilight celestial atmosphere, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["mercury", "budh", "बुध"]):
+            return f"planet Mercury in sharp contrast against dark sunlit space, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["rahu", "राहु"]):
+            return f"mysterious celestial eclipse alignment with glowing corona in deep cosmos, {base_modifiers}"
+        if cls.matches_keyword(scene_context, ["ketu", "केतु"]):
+            return f"luminous celestial comet with long trailing stardust tail in deep starry galaxy, {base_modifiers}"
+
+        # 3D Kundali & Astrological Chart (Only when house, chart, or bhav is spoken)
+        if cls.matches_keyword(scene_context, ["kundli", "birth chart", "कुंडली", "जन्मपत्रिका", "house", "भाव", "लग्न"]):
+            return f"authentic Vedic astrological birth chart manuscript with illuminated Sanskrit house divisions and planetary glyphs, {base_modifiers}"
+
+        # Consultation & Advice (When consultation, personal chart reading, or advice is spoken)
+        if cls.matches_keyword(scene_context, ["consultation", "परामर्श", "मार्गदर्शन", "guidance", "dm", "कमेंट", "comment", "save"]):
+            return f"thoughtful Vedic astrologer consultation desk with handwritten horoscope charts on parchment, antique brass reading lamp, clean dark wood desk, {base_modifiers}"
+
+        # Mindset, Calm & Meditation
+        if cls.matches_keyword(scene_context, ["meditat", "ध्यान", "peace", "calm", "शांत", "शांति", "एकांत"]):
+            return f"person meditating in serene morning golden light with peaceful posture and mindful stillness, {base_modifiers}"
+
+        # Career & Workplace Focus
+        if cls.matches_keyword(scene_context, ["career", "job", "business", "office", "desk", "करियर", "व्यापार", "नौकरी"]):
+            return f"refined executive wooden desk with journal, pen, and focused professional morning atmosphere, {base_modifiers}"
+
+        # Sacred Fire / Altar (Only when havan or yajna is explicitly mentioned)
+        if cls.matches_keyword(scene_context, ["havan", "fire", "altar", "हवन", "अग्नि", "यज्ञ"]):
+            return f"sacred Vedic fire altar with burning camphor and wood flame, warm amber chiaroscuro, {base_modifiers}"
+
+        # Fallback to authentic scholarly study desk
+        return f"scholarly Vedic astrology study desk with rolled astrological parchment and warm brass reading lamp, {base_modifiers}"
 
     @classmethod
     def matches_keyword(cls, text: str, keywords: List[str]) -> bool:
