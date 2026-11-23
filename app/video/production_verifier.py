@@ -413,6 +413,7 @@ class ProductionReelVerifier:
                     on_screen=on_screen,
                     vis_desc=vis_desc,
                     asset_name=asset_name,
+                    asset_path=p_img,
                 )
 
             scene_records.append(
@@ -503,10 +504,34 @@ class ProductionReelVerifier:
         on_screen: str,
         vis_desc: str,
         asset_name: str,
+        asset_path: Optional[Union[Path, str]] = None,
     ) -> Tuple[str, str]:
         """
-        Validates whether the assigned visual strictly matches the narration.
+        Validates whether the assigned visual strictly matches the narration
+        using multi-dimensional SceneSemanticContract validation and pixel/entity checks.
         """
+        from app.video.scene_semantic_contract import SceneSemanticContract
+
+        contract = SceneSemanticContract.build_from_scene(
+            scene_dict={
+                "spoken_line": spoken,
+                "on_screen_text": on_screen,
+                "visual_description": vis_desc,
+            },
+            scene_idx=scene_idx,
+            total_scenes=total_scenes,
+        )
+
+        # Validate asset against contract
+        target_check = asset_path if (asset_path and Path(asset_path).exists()) else asset_name
+        contract_res = contract.validate_asset(
+            image_input=target_check,
+            asset_identity=asset_name,
+        )
+
+        if not contract_res.overall_accepted:
+            return "FAIL", contract_res.rejection_reason or "Scene semantic contract rejected asset"
+
         txt = f"{spoken} {on_screen} {vis_desc}".lower()
         name = asset_name.lower()
 
@@ -522,15 +547,9 @@ class ProductionReelVerifier:
             if not any(g in txt for g in gem_terms):
                 return "FAIL", "Gemstone visual selected for non-gemstone narration"
 
-        # Reject Kundli parchment when chart/house/horoscope is not discussed
-        if "kundli" in name and not any(k in txt for k in ["kundli", "कुंडली", "chart", "house", "भाव", "लग्न", "horoscope", "जन्मपत्रिका"]):
-            return "FAIL", "Kundli chart selected for scene not discussing astrological chart or houses"
-
-        # Reject Saturn when Saturn is not discussed
-        if "saturn" in name and not any(k in txt for k in ["saturn", "shani", "शनि"]):
-            return "FAIL", "Saturn planet image selected for scene not mentioning Saturn/Shani"
-
         # Positive relevance confirmation
+        if any(k in txt for k in ["emerald", "panna", "पन्ना"]) and "emerald" in name:
+            return "PASS", "Asset matches explicit Emerald gemstone narration"
         if any(k in txt for k in ["shani", "saturn", "शनि"]) and "saturn" in name:
             return "PASS", "Asset matches explicit Saturn/Shani narration"
         if any(k in txt for k in ["kundli", "कुंडली", "house", "भाव"]) and ("kundli" in name or "chart" in name):
@@ -542,4 +561,4 @@ class ProductionReelVerifier:
         if any(k in txt for k in ["consultation", "परामर्श", "comment", "dm", "save"]) and ("consultation" in name or "scroll" in name or "desk" in name):
             return "PASS", "Asset matches astrologer consultation / personal reading CTA"
 
-        return "PASS", "Contextually relevant visual aligned with script description"
+        return "PASS", "Contextually relevant visual aligned with script contract"

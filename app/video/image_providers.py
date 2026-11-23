@@ -506,10 +506,24 @@ class MockImageProvider(BaseImageProvider):
         elif any(k in p_clean for k in ["citrine", "सिट्रीन"]):
             primary = cinematic_dir / "crystal_citrine_quartz.jpg"
             target_plate = primary if primary.exists() else None
+        # Priority 1: Specific Sacred Gemstones (Strict Precedence over General Kundli/Planets)
+        elif any(k in p_clean for k in ["emerald", "panna", "मरकत", "पन्ना"]):
+            target_plate = cinematic_dir / "gemstone_emerald.jpg"
+        elif any(k in p_clean for k in ["blue sapphire", "neelam", "नीलम"]):
+            target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
+        elif any(k in p_clean for k in ["yellow sapphire", "pukhraj", "पुखराज"]):
+            target_plate = cinematic_dir / "gemstone_yellow_sapphire.jpg"
+        elif any(k in p_clean for k in ["ruby", "manik", "माणिक"]):
+            target_plate = cinematic_dir / "gemstone_ruby.jpg"
+        elif any(k in p_clean for k in ["diamond", "heera", "हीरा"]):
+            target_plate = cinematic_dir / "gemstone_diamond.jpg"
+        elif any(k in p_clean for k in ["pearl", "moti", "मोती"]):
+            target_plate = cinematic_dir / "gemstone_pearl.jpg"
+        elif any(k in p_clean for k in ["coral", "moonga", "मूंगा"]):
+            target_plate = cinematic_dir / "gemstone_red_coral.jpg"
+        # Priority 2: Specific Celestial Bodies / Planets
         elif any(k in p_clean for k in ["saturn", "shani", "शनि"]):
             target_plate = cinematic_dir / "planet_saturn.jpg"
-        elif any(k in p_clean for k in ["kundli", "birth chart", "कुंडली", "chart", "house", "भाव", "लग्न"]):
-            target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
         elif any(k in p_clean for k in ["jupiter", "guru", "बृहस्पति"]):
             target_plate = cinematic_dir / "planet_jupiter.jpg"
         elif any(k in p_clean for k in ["sun", "surya", "सूर्य"]):
@@ -526,20 +540,9 @@ class MockImageProvider(BaseImageProvider):
             target_plate = cinematic_dir / "planet_rahu.jpg"
         elif any(k in p_clean for k in ["ketu", "केतु"]):
             target_plate = cinematic_dir / "planet_ketu.jpg"
-        elif any(k in p_clean for k in ["blue sapphire", "neelam"]):
-            target_plate = cinematic_dir / "gemstone_blue_sapphire.jpg"
-        elif any(k in p_clean for k in ["yellow sapphire", "pukhraj"]):
-            target_plate = cinematic_dir / "gemstone_yellow_sapphire.jpg"
-        elif any(k in p_clean for k in ["emerald", "panna"]):
-            target_plate = cinematic_dir / "gemstone_emerald.jpg"
-        elif any(k in p_clean for k in ["ruby", "manik"]):
-            target_plate = cinematic_dir / "gemstone_ruby.jpg"
-        elif any(k in p_clean for k in ["diamond", "heera"]):
-            target_plate = cinematic_dir / "gemstone_diamond.jpg"
-        elif any(k in p_clean for k in ["pearl", "moti"]):
-            target_plate = cinematic_dir / "gemstone_pearl.jpg"
-        elif any(k in p_clean for k in ["coral", "moonga"]):
-            target_plate = cinematic_dir / "gemstone_red_coral.jpg"
+        # Priority 3: Astrological Birth Charts & House Quadrants
+        elif any(k in p_clean for k in ["kundli", "birth chart", "कुंडली", "chart", "house", "भाव", "लग्न"]):
+            target_plate = cinematic_dir / "authentic_vedic_kundli_parchment.jpg"
         elif any(k in p_clean for k in ["consultation", "परामर्श", "horoscope chart", "reading lamp", "study desk", "scholarly", "guide"]):
             target_plate = cinematic_dir / "astrology_consultation_scroll.jpg"
         elif any(k in p_clean for k in ["havan", "fire altar", "यज्ञ", "अग्नि"]):

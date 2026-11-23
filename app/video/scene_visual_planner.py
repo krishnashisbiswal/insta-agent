@@ -206,6 +206,73 @@ class SceneVisualPlanner:
             "lighting": "warm directional candlelight and flickering brass oil lamp glow",
             "color_palette": "rich sepia, antique brass gold, dark mahogany",
         },
+        # Specific Sacred Vedic Gemstones (Strict Precedence)
+        "emerald_gemstone": {
+            "name": "certified natural vivid green Zambian Emerald gemstone",
+            "keywords": [
+                "emerald", "panna", "पन्ना", "green emerald", "जाम्बियन पन्ना",
+                "मरकत", "mercury gemstone"
+            ],
+            "objects": [
+                "natural cut vivid green emerald gemstone",
+                "crystalline facets glowing with brilliant emerald luster",
+                "velvet gemologist pedestal"
+            ],
+            "exclusions": [
+                "generic horoscope chart", "kundli chart alone", "temple", "havan",
+                "fire", "saturn", "rudraksha", "unrelated gemstones"
+            ],
+            "default_action": "glowing with intense natural crystalline green brilliance",
+            "default_setting": "luxurious dark obsidian display pedestal with subtle studio rim lighting",
+            "time_of_day": "studio lighting",
+            "mood": "luxurious, crystalline, radiant",
+            "composition": "extreme macro hero product shot of emerald gemstone facets",
+            "camera_framing": "100mm macro lens, 1:1 ratio, razor sharp facet focus",
+            "lighting": "focused directional diamond spotlight catching emerald crystal depth",
+            "color_palette": "vivid emerald green, deep forest green, obsidian black, subtle gold",
+        },
+        "blue_sapphire_gemstone": {
+            "name": "certified natural royal blue sapphire Neelam gemstone",
+            "keywords": ["blue sapphire", "sapphire", "neelam", "नीलम", "saturn gemstone"],
+            "objects": ["natural cut royal blue sapphire gemstone", "crystalline facets catching deep blue brilliance"],
+            "exclusions": ["generic horoscope chart", "temple", "havan", "emerald"],
+            "default_action": "radiating deep celestial royal blue luminescence",
+            "default_setting": "dark velvet pedestal with dramatic side lighting",
+            "time_of_day": "studio lighting",
+            "mood": "regal, powerful, celestial",
+            "composition": "extreme macro product shot of sapphire facets",
+            "camera_framing": "macro focus on crystalline crown facets",
+            "lighting": "sharp directional white rim light on blue crystal",
+            "color_palette": "royal blue, cobalt, midnight navy, silver",
+        },
+        "yellow_sapphire_gemstone": {
+            "name": "certified natural golden yellow sapphire Pukhraj gemstone",
+            "keywords": ["yellow sapphire", "pukhraj", "पुखराज", "jupiter gemstone"],
+            "objects": ["natural cut golden yellow sapphire gemstone", "crystalline facets glowing with warm amber-gold light"],
+            "exclusions": ["generic horoscope chart", "temple", "havan", "emerald"],
+            "default_action": "glowing with warm honey-yellow crystalline warmth",
+            "default_setting": "warm dark marble pedestal",
+            "time_of_day": "studio lighting",
+            "mood": "auspicious, warm, radiant",
+            "composition": "macro close-up of golden gemstone",
+            "camera_framing": "macro prime lens focus",
+            "lighting": "warm directional golden key light",
+            "color_palette": "canary yellow, warm amber, honey gold",
+        },
+        "ruby_gemstone": {
+            "name": "certified natural pigeon blood red Ruby Manik gemstone",
+            "keywords": ["ruby", "manik", "माणिक", "माणिक्य", "sun gemstone"],
+            "objects": ["natural cut deep red ruby gemstone", "crystalline facets glowing with radiant crimson luster"],
+            "exclusions": ["generic horoscope chart", "temple", "havan", "emerald"],
+            "default_action": "radiating passionate crimson red crystalline fire",
+            "default_setting": "dark obsidian gemstone stage",
+            "time_of_day": "studio lighting",
+            "mood": "regal, passionate, solar",
+            "composition": "extreme macro hero shot of ruby facets",
+            "camera_framing": "macro 1:1 focus",
+            "lighting": "high-contrast dramatic rim light catching ruby fire",
+            "color_palette": "pigeon blood red, crimson, deep scarlet, obsidian",
+        },
         "kundli_chart": {
             "name": "ancient authentic Vedic astrological Kundli birth chart",
             "keywords": [
@@ -477,11 +544,34 @@ class SceneVisualPlanner:
     def detect_scene_entity(cls, text: str) -> Optional[Tuple[str, Dict[str, Any]]]:
         """
         Detects specific entity from text using strict token boundary matching.
-        Returns (entity_key, entity_def) or None.
+        Priority: Specific physical subjects (gemstones, crystals, specific planets)
+        take strict precedence over generic background mentions like 'kundli'.
         """
         if not text:
             return None
         text_lower = text.lower()
+
+        # Priority 1: Specific Sacred Gemstones & Crystals (Strict Precedence)
+        gemstone_keys = [
+            "emerald_gemstone", "blue_sapphire_gemstone", "yellow_sapphire_gemstone",
+            "ruby_gemstone", "pyrite_crystal", "amethyst_crystal", "black_tourmaline",
+            "citrine_crystal", "rudraksha_bead", "copper_water_remedy"
+        ]
+        for key in gemstone_keys:
+            if key in cls.SPECIFIC_ENTITIES and cls.matches_entity(text_lower, cls.SPECIFIC_ENTITIES[key]["keywords"]):
+                return key, cls.SPECIFIC_ENTITIES[key]
+
+        # Priority 2: Specific Celestial Bodies / Planets
+        planet_keys = ["planet_saturn", "planet_jupiter", "planet_mars", "planet_moon", "planet_sun"]
+        for key in planet_keys:
+            if key in cls.SPECIFIC_ENTITIES and cls.matches_entity(text_lower, cls.SPECIFIC_ENTITIES[key]["keywords"]):
+                return key, cls.SPECIFIC_ENTITIES[key]
+
+        # Priority 3: Executive Desk / Career Focus
+        if "executive_desk_focus" in cls.SPECIFIC_ENTITIES and cls.matches_entity(text_lower, cls.SPECIFIC_ENTITIES["executive_desk_focus"]["keywords"]):
+            return "executive_desk_focus", cls.SPECIFIC_ENTITIES["executive_desk_focus"]
+
+        # Priority 4: All other specific entities in definition order
         for key, entity_def in cls.SPECIFIC_ENTITIES.items():
             if cls.matches_entity(text_lower, entity_def["keywords"]):
                 return key, entity_def

@@ -258,3 +258,148 @@ def test_two_distinct_scenes_receive_distinct_semantic_visuals():
     assert prompt_a != prompt_b
     assert "kundli" in prompt_a.lower() or "chart" in prompt_a.lower()
     assert "consultation" in prompt_b.lower() or "desk" in prompt_b.lower()
+
+
+# ==============================================================================
+# ADVERSARIAL EMERALD VS KUNDLI & SCENE SEMANTIC CONTRACT TESTS
+# ==============================================================================
+
+def test_emerald_narration_rejects_generic_kundli_chart():
+    """
+    CRITICAL TEST CASE (User Prompt):
+    Narration: 'बुध को मजबूत करने के लिए जाम्बियन पन्ना रत्न धारण करना लाभकारी माना जाता है।'
+    A generic astrological Kundli chart MUST FAIL this test.
+    """
+    spoken = "बुध को मजबूत करने के लिए जाम्बियन पन्ना रत्न धारण करना लाभकारी माना जाता है।"
+    on_screen = "PANNA EMERALD GEMSTONE"
+    vis_desc = "Certified natural vivid green Zambian Emerald gemstone glowing with crystalline facets"
+
+    status, reason = ProductionReelVerifier._evaluate_scene_relevance(
+        scene_idx=3,
+        total_scenes=5,
+        spoken=spoken,
+        on_screen=on_screen,
+        vis_desc=vis_desc,
+        asset_name="authentic_vedic_kundli_parchment.jpg",
+    )
+    assert status == "FAIL", f"Expected FAIL for Kundli chart on Emerald scene, got {status} ({reason})"
+    assert "mismatch" in reason.lower() or "emerald" in reason.lower() or "chart" in reason.lower()
+
+
+def test_emerald_narration_rejects_temple_imagery():
+    """Emerald narration must reject temple / sanctum imagery."""
+    spoken = "बुध को मजबूत करने के लिए जाम्बियन पन्ना रत्न धारण करना लाभकारी माना जाता है।"
+    status, reason = ProductionReelVerifier._evaluate_scene_relevance(
+        scene_idx=3,
+        total_scenes=5,
+        spoken=spoken,
+        on_screen="PANNA EMERALD",
+        vis_desc="Emerald gemstone",
+        asset_name="temple_sanctum_golden_diyas.jpg",
+    )
+    assert status == "FAIL"
+    assert "temple" in reason.lower() or "forbidden" in reason.lower()
+
+
+def test_emerald_narration_rejects_saturn_imagery():
+    """Emerald narration must reject planet Saturn imagery."""
+    spoken = "बुध को मजबूत करने के लिए जाम्बियन पन्ना रत्न धारण करना लाभकारी माना जाता है।"
+    status, reason = ProductionReelVerifier._evaluate_scene_relevance(
+        scene_idx=3,
+        total_scenes=5,
+        spoken=spoken,
+        on_screen="PANNA EMERALD",
+        vis_desc="Emerald gemstone",
+        asset_name="planet_saturn.jpg",
+    )
+    assert status == "FAIL"
+    assert "saturn" in reason.lower() or "forbidden" in reason.lower()
+
+
+def test_emerald_narration_accepts_emerald_gemstone():
+    """Emerald narration must accept authentic emerald gemstone imagery."""
+    spoken = "बुध को मजबूत करने के लिए जाम्बियन पन्ना रत्न धारण करना लाभकारी माना जाता है।"
+    status, reason = ProductionReelVerifier._evaluate_scene_relevance(
+        scene_idx=3,
+        total_scenes=5,
+        spoken=spoken,
+        on_screen="PANNA EMERALD",
+        vis_desc="Certified natural vivid green Zambian Emerald gemstone",
+        asset_name="gemstone_emerald.jpg",
+        asset_path=Path("assets/cinematic_broll/gemstone_emerald.jpg"),
+    )
+    assert status == "PASS"
+
+
+def test_subordinate_kundli_clause_preserves_emerald_gemstone_entity():
+    """
+    Subordinate clause mentioning Kundli ('जब ग्रह आपकी कुंडली में कारक हो')
+    must NOT hijack the entity into a Kundli chart when Emerald is the primary subject.
+    """
+    text = "बुध को मजबूत करने के लिए जाम्बियन पन्ना रत्न तभी पहनें जब ग्रह आपकी कुंडली में कारक हो। PANNA EMERALD GEMSTONE"
+    matched = SceneVisualPlanner.detect_scene_entity(text)
+    assert matched is not None
+    assert matched[0] == "emerald_gemstone"
+    assert "emerald" in matched[1]["name"].lower() or "panna" in matched[1]["keywords"]
+
+
+def test_emerald_actual_pixel_chromatic_contract_rejection():
+    """
+    Tests that actual physical pixels of a non-green parchment are rejected by
+    SceneSemanticContract even if passed as an in-memory image.
+    """
+    from app.video.scene_semantic_contract import SceneSemanticContract
+    contract = SceneSemanticContract.build_from_scene(
+        {
+            "spoken_line": "बुध को मजबूत करने के लिए जाम्बियन पन्ना रत्न पहनें।",
+            "on_screen_text": "EMERALD",
+            "visual_description": "Green emerald gemstone",
+        },
+        scene_idx=0,
+        total_scenes=1,
+    )
+    # Kundli parchment has 0 green dominance
+    kundli_path = Path("assets/cinematic_broll/authentic_vedic_kundli_parchment.jpg")
+    res = contract.validate_asset(kundli_path)
+    assert res.overall_accepted is False
+    assert "green" in res.rejection_reason.lower() or "parchment" in res.rejection_reason.lower()
+
+
+def test_adversarial_calibration_set_minimizes_false_positives():
+    """
+    Calibration test set verifying that the false positive rate for irrelevant assets is exactly 0.0.
+    """
+    calibration_cases = [
+        # (spoken, on_screen, vis_desc, asset_name, expected_verdict)
+        ("पन्ना रत्न बुध को बल देता है।", "PANNA EMERALD", "Emerald stone", "gemstone_emerald.jpg", "PASS"),
+        ("पन्ना रत्न बुध को बल देता है।", "PANNA EMERALD", "Emerald stone", "authentic_vedic_kundli_parchment.jpg", "FAIL"),
+        ("पन्ना रत्न बुध को बल देता है।", "PANNA EMERALD", "Emerald stone", "planet_saturn.jpg", "FAIL"),
+        ("पन्ना रत्न बुध को बल देता है।", "PANNA EMERALD", "Emerald stone", "temple_sanctum_golden_diyas.jpg", "FAIL"),
+        ("शनि का प्रभाव 7वें भाव में देरी लाता है।", "SHANI DELAY", "Saturn planet", "planet_saturn.jpg", "PASS"),
+        ("शनि का प्रभाव 7वें भाव में देरी लाता है।", "SHANI DELAY", "Saturn planet", "gemstone_emerald.jpg", "FAIL"),
+        ("कुंडली का दसवां भाव करियर तय करता है।", "10TH HOUSE CAREER", "Career desk", "gemstone_blue_sapphire.jpg", "FAIL"),
+        ("पर्सनल परामर्श के लिए हमें डीएम करें।", "DM FOR CONSULTATION", "Consultation desk", "astrology_consultation_scroll.jpg", "PASS"),
+        ("पर्सनल परामर्श के लिए हमें डीएम करें।", "DM FOR CONSULTATION", "Consultation desk", "temple_sanctum_golden_diyas.jpg", "FAIL"),
+    ]
+
+    false_positives = 0
+    false_negatives = 0
+
+    for spoken, on_scr, vis, asset, exp in calibration_cases:
+        status, reason = ProductionReelVerifier._evaluate_scene_relevance(
+            scene_idx=0,
+            total_scenes=1,
+            spoken=spoken,
+            on_screen=on_scr,
+            vis_desc=vis,
+            asset_name=asset,
+        )
+        if exp == "FAIL" and status == "PASS":
+            false_positives += 1
+        elif exp == "PASS" and status == "FAIL":
+            false_negatives += 1
+
+    fp_rate = false_positives / len(calibration_cases)
+    assert false_positives == 0, f"False positives detected: {false_positives}/{len(calibration_cases)}"
+    assert fp_rate == 0.0
+

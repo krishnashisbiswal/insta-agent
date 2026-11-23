@@ -320,16 +320,38 @@ class VisionQualityGate:
                     dimensions=(w, h),
                 )
 
-        # 5. Scene Relevance & Topic Contamination Check
-        relevance_score = 0.95
-        rejection_reason = None
+        # 5. Strict Scene Semantic Contract & Multi-Dimensional Validation
+        from app.video.scene_semantic_contract import SceneSemanticContract
 
-        # Strict Semantic Relevance Inspection:
-        # Reject assets whose main subject contradicts narration or injects forced categories
+        scene_dict = {
+            "spoken_line": getattr(plan, "exact_narration", "") or getattr(plan, "narration", ""),
+            "on_screen_text": getattr(plan, "on_screen_text", ""),
+            "visual_description": getattr(plan, "visual_description", "") or getattr(plan, "generation_prompt", ""),
+        }
+        contract = SceneSemanticContract.build_from_scene(
+            scene_dict=scene_dict,
+            topic=getattr(plan, "topic", ""),
+            scene_idx=scene_idx,
+            total_scenes=getattr(plan, "total_scenes", 1),
+        )
+
         narration_text = (getattr(plan, "exact_narration", "") or getattr(plan, "narration", "")).lower()
         asset_identity = Path(image_path_str).name.lower()
-        
-        # 1. Gemstone rejection when narration does NOT discuss gemstones
+
+        contract_res = contract.validate_asset(
+            image_input=img,
+            asset_identity=asset_identity,
+            metadata={"subject": expected_subject},
+        )
+
+        if not contract_res.overall_accepted:
+            relevance_score = contract_res.confidence_score
+            rejection_reason = f"Semantic contract failure: {contract_res.rejection_reason}"
+        else:
+            relevance_score = 0.95
+            rejection_reason = None
+
+        # Additional domain checks
         gem_terms = ["gemstone", "sapphire", "ruby", "emerald", "diamond", "pearl", "coral", "neelam", "pukhraj", "panna", "manik", "heera", "रत्न"]
         if any(g in asset_identity for g in ["gemstone", "sapphire", "ruby", "emerald", "diamond", "pearl", "coral"]):
             if not any(g in narration_text for g in gem_terms):
