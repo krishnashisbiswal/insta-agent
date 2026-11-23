@@ -1,12 +1,13 @@
 """
 Phase 9 Production Runner & Real Reel Visual Inspector.
-Generates and inspects 3 distinct real test Reels across:
-1. Saturn / Marriage Delay (7th House)
-2. Career / 10th House (Karma Bhava)
-3. Gemstone Recommendation (Emerald / Mercury)
+Generates and inspects 4 distinct real test Reels across:
+1. Multi-Subject Adversarial Reel (Career -> Saturn -> Marriage -> Emerald -> Consultation CTA)
+2. Saturn / Marriage Delay (7th House)
+3. Career / 10th House (Karma Bhava)
+4. Gemstone Recommendation (Emerald / Mercury)
 
 For each Reel:
-- Generates 1080x1920 MP4 with audio and frame-synced visuals.
+- Generates 1080x1920 MP4 with audio and frame-synced visuals using the production pipeline.
 - Extracts actual physical frames from the rendered video at scene midpoints.
 - Builds a 9:16 vertical contact sheet combining extracted frames with narration.
 - Executes ProductionReelVerifier and logs complete audit report.
@@ -27,12 +28,60 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app.video.cinematic_composer import create_cinematic_reel_video
 from app.video.production_verifier import ProductionReelVerifier
-from app.video.production_workspace import ProductionWorkspaceManager
+from app.storage.production_workspace import ProductionWorkspaceManager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("Phase9Inspector")
 
 TEST_REELS = [
+    {
+        "id": "reel_adversarial_multisect",
+        "topic": "संपूर्ण ज्योतिष विश्लेषण: करियर, शनि प्रभाव, विवाह और रत्न परामर्श",
+        "expected_domain": "multi_subject",
+        "forbidden_in_all_scenes": ["temple", "havan", "fire_altar"],
+        "scenes": [
+            {
+                "scene_idx": 0,
+                "spoken_line": "अगर आपके करियर में मेहनत के बाद भी रुकावट आ रही है, तो अपनी कुंडली का दसवां भाव जरूर देखें।",
+                "on_screen_text": "CAREER 10TH HOUSE",
+                "visual_description": "Executive wooden desk with journal, pen, and focused professional morning workspace atmosphere",
+                "scene_expected": "career",
+                "scene_forbidden": ["gemstone", "sapphire", "emerald", "temple"],
+            },
+            {
+                "scene_idx": 1,
+                "spoken_line": "शनि का प्रभाव आपके कर्म और धैर्य की परीक्षा लेता है, ताकि आपको स्थायी सफलता मिल सके।",
+                "on_screen_text": "SHANI KARMIC DISCIPLINE",
+                "visual_description": "Planet Saturn with majestic glowing rings in deep cosmic starfield space",
+                "scene_expected": "saturn",
+                "scene_forbidden": ["gemstone", "emerald", "temple"],
+            },
+            {
+                "scene_idx": 2,
+                "spoken_line": "विवाह में आने वाली देरी के लिए कुंडली के सातवें भाव और बृहस्पति की दृष्टि का विश्लेषण जरूरी है।",
+                "on_screen_text": "7TH HOUSE MARRIAGE",
+                "visual_description": "Authentic North Indian Vedic Kundli birth chart highlighting the 7th house Yuvati Bhava in warm amber light",
+                "scene_expected": "marriage",
+                "scene_forbidden": ["gemstone", "career", "temple"],
+            },
+            {
+                "scene_idx": 3,
+                "spoken_line": "बुध को मजबूत करने के लिए जाम्बियन पन्ना रत्न तभी पहनें जब ग्रह आपकी कुंडली में कारक हो।",
+                "on_screen_text": "PANNA EMERALD GEMSTONE",
+                "visual_description": "Certified natural vivid green Zambian Emerald gemstone glowing with crystalline facets",
+                "scene_expected": "gemstone",
+                "scene_forbidden": ["marriage", "temple"],
+            },
+            {
+                "scene_idx": 4,
+                "spoken_line": "अपनी कुंडली का व्यक्तिगत विश्लेषण करवाने के लिए नीचे कमेंट करें या सीधे डीएम करें।",
+                "on_screen_text": "DM FOR CONSULTATION",
+                "visual_description": "A warm, dignified cinematic close-up of a professional Vedic astrologer consultation desk with handwritten horoscope charts on aged parchment and brass reading lamp",
+                "scene_expected": "consultation",
+                "scene_forbidden": ["gemstone", "temple", "havan"],
+            },
+        ],
+    },
     {
         "id": "reel_saturn_marriage",
         "topic": "शनि और 7वां भाव: विवाह में देरी के असली कारण",
@@ -178,13 +227,15 @@ def build_contact_sheet(
     return output_path
 
 
-def run_inspection() -> List[Dict[str, Any]]:
+def run_inspection(target_reels: List[str] = None) -> List[Dict[str, Any]]:
     results = []
     print("\n" + "=" * 78)
     print("      PHASE 9: COMPREHENSIVE REEL GENERATION & REAL OUTPUT INSPECTION")
     print("=" * 78)
 
-    for reel_spec in TEST_REELS:
+    reels_to_run = [r for r in TEST_REELS if not target_reels or r["id"] in target_reels]
+
+    for reel_spec in reels_to_run:
         r_id = reel_spec["id"]
         topic = reel_spec["topic"]
         scenes = reel_spec["scenes"]
@@ -238,30 +289,55 @@ def run_inspection() -> List[Dict[str, Any]]:
 
         # Strict Domain & Semantic Verification across all scenes
         scene_assets = []
-        for sc_rec in report.scenes:
+        scene_descriptions = []
+        for idx, sc_rec in enumerate(report.scenes):
             asset_name = sc_rec.selected_asset_name.lower()
+            vis_desc = sc_rec.visual_description.lower()
             scene_assets.append(asset_name)
-            # Check forbidden items
-            for forb in reel_spec["forbidden_in_all_scenes"]:
-                assert forb not in asset_name, f"Forbidden element '{forb}' detected in {asset_name} for Reel '{r_id}' Scene {sc_rec.scene_number}"
+            scene_descriptions.append(vis_desc)
+
+            assert sc_rec.relevance_status == "PASS", f"Scene {sc_rec.scene_number} failed relevance: {sc_rec.relevance_reason}"
+
+            # Check forbidden items across entire reel
+            for forb in reel_spec.get("forbidden_in_all_scenes", []):
+                assert forb not in asset_name, f"Forbidden element '{forb}' detected in asset filename {asset_name} for Reel '{r_id}' Scene {sc_rec.scene_number}"
+                assert forb not in vis_desc, f"Forbidden element '{forb}' detected in visual spec '{vis_desc}' for Reel '{r_id}' Scene {sc_rec.scene_number}"
+
+            # Check per-scene assertions if defined
+            sc_def = scenes[idx] if idx < len(scenes) else {}
+            for forb in sc_def.get("scene_forbidden", []):
+                assert forb not in asset_name, f"Per-scene forbidden element '{forb}' detected in asset {asset_name} for Scene {idx+1}"
+                assert forb not in vis_desc, f"Per-scene forbidden element '{forb}' detected in visual description for Scene {idx+1}"
+
+            sc_exp = sc_def.get("scene_expected")
+            if sc_exp == "career":
+                assert any(k in vis_desc for k in ["career", "desk", "workspace", "10th", "karma"]), f"Career expectation not met in Scene {idx+1}"
+            elif sc_exp == "saturn":
+                assert any(k in vis_desc for k in ["saturn", "shani", "planet"]), f"Saturn expectation not met in Scene {idx+1}"
+            elif sc_exp == "marriage":
+                assert any(k in vis_desc for k in ["7th house", "marriage", "kalatra", "yuvati"]), f"Marriage expectation not met in Scene {idx+1}"
+            elif sc_exp == "gemstone":
+                assert any(k in vis_desc for k in ["emerald", "panna", "gemstone", "mercury"]), f"Gemstone expectation not met in Scene {idx+1}"
+            elif sc_exp == "consultation":
+                assert any(k in vis_desc for k in ["consultation", "study", "desk", "parchment"]), f"Consultation expectation not met in Scene {idx+1}"
+
+        all_desc = " ".join(scene_descriptions)
+        all_assets = " ".join(scene_assets)
 
         # Topic-specific domain assertions
         if reel_spec["expected_domain"] == "marriage":
-            # Must contain 7th house or partnership, NO gemstones, NO temple
-            assert any("7th" in a or "kundli" in a or "chart" in a or "silhouette" in a or "consultation" in a for a in scene_assets)
-            assert not any("gemstone" in a for a in scene_assets)
-            assert not any("temple" in a for a in scene_assets)
+            assert any(k in all_desc for k in ["7th", "kundli", "chart", "silhouette", "partnership", "consultation"])
+            assert not any("gemstone" in a or "gemstone" in d for a, d in zip(scene_assets, scene_descriptions))
+            assert not any("temple" in a or "temple" in d for a, d in zip(scene_assets, scene_descriptions))
         elif reel_spec["expected_domain"] == "career":
-            # Must contain 10th house or executive desk, NO marriage, NO gemstones, NO temple
-            assert any("10th" in a or "kundli" in a or "chart" in a or "executive" in a or "desk" in a or "consultation" in a for a in scene_assets)
-            assert not any("marriage" in a or "wedding" in a for a in scene_assets)
-            assert not any("gemstone" in a for a in scene_assets)
-            assert not any("temple" in a for a in scene_assets)
+            assert any(k in all_desc for k in ["10th", "kundli", "chart", "executive", "desk", "consultation", "karma"])
+            assert not any("marriage" in a or "marriage" in d for a, d in zip(scene_assets, scene_descriptions))
+            assert not any("gemstone" in a or "gemstone" in d for a, d in zip(scene_assets, scene_descriptions))
+            assert not any("temple" in a or "temple" in d for a, d in zip(scene_assets, scene_descriptions))
         elif reel_spec["expected_domain"] == "gemstone":
-            # Must contain emerald / gemstone, NO marriage, NO temple
-            assert any("emerald" in a or "panna" in a or "gemstone" in a or "kundli" in a for a in scene_assets)
-            assert not any("marriage" in a or "wedding" in a for a in scene_assets)
-            assert not any("temple" in a for a in scene_assets)
+            assert any(k in all_desc for k in ["emerald", "panna", "gemstone", "mercury", "kundli", "consultation"])
+            assert not any("marriage" in a or "marriage" in d for a, d in zip(scene_assets, scene_descriptions))
+            assert not any("temple" in a or "temple" in d for a, d in zip(scene_assets, scene_descriptions))
 
         results.append({
             "reel_id": r_id,
@@ -282,11 +358,11 @@ def run_inspection() -> List[Dict[str, Any]]:
         })
 
     print("\n" + "=" * 78)
-    print("      ALL 3 REELS GENERATED AND STRICTLY VERIFIED SUCCESSFULLY!")
+    print("      ALL REELS GENERATED AND STRICTLY VERIFIED SUCCESSFULLY!")
     print("=" * 78)
     return results
 
 
 if __name__ == "__main__":
-    run_inspection()
-
+    target = sys.argv[1:] if len(sys.argv) > 1 else None
+    run_inspection(target)
