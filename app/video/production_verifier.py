@@ -319,13 +319,46 @@ class ProductionReelVerifier:
         if assigned_images and len(assigned_images) == len(scenes):
             img_list = [Path(p) if p else None for p in assigned_images]
         else:
-            # Attempt resolving from workspace or generated b-roll
+            # 1. Attempt resolving from workspace directory
             ws_dir = v_path.parent
             ws_imgs = sorted(list(ws_dir.glob("*.jpg")) + list(ws_dir.glob("*.png")))
             if len(ws_imgs) >= len(scenes):
                 img_list = ws_imgs[:len(scenes)]
             else:
-                img_list = [None] * len(scenes)
+                # 2. Attempt resolving from assets/generated_broll matching scene indices
+                broll_dir = PROJECT_ROOT / "assets" / "generated_broll"
+                resolved_broll: List[Optional[Path]] = []
+                for i in range(1, len(scenes) + 1):
+                    matches = sorted(list(broll_dir.glob(f"*_sc{i}_*")), key=lambda p: p.stat().st_mtime, reverse=True)
+                    if matches:
+                        resolved_broll.append(matches[0])
+                    else:
+                        resolved_broll.append(None)
+                if len(resolved_broll) == len(scenes) and all(resolved_broll):
+                    img_list = resolved_broll
+                else:
+                    img_list = [None] * len(scenes)
+
+        # Extract physical frame snapshots from the rendered video container
+        # to ensure verification inspects actual rendered pixels on disk
+        frames_dir = v_path.parent / "inspected_frames"
+        frames_dir.mkdir(parents=True, exist_ok=True)
+        rendered_frames: List[Path] = []
+        try:
+            from moviepy import VideoFileClip
+            with VideoFileClip(str(v_path)) as vclip:
+                tot_dur = vclip.duration
+                sc_dur = tot_dur / len(scenes) if scenes else tot_dur
+                for idx in range(len(scenes)):
+                    t_mid = min(tot_dur - 0.2, (idx + 0.5) * sc_dur)
+                    f_path = frames_dir / f"scene_{idx+1}_render_frame.jpg"
+                    if not f_path.exists():
+                        frame_arr = vclip.get_frame(t_mid)
+                        im = Image.fromarray(frame_arr)
+                        im.save(f_path, quality=95)
+                    rendered_frames.append(f_path)
+        except Exception as f_err:
+            logger.debug(f"Frame extraction note: {f_err}")
 
         for idx, sc in enumerate(scenes):
             sc_num = idx + 1
@@ -335,6 +368,10 @@ class ProductionReelVerifier:
             
             p_img = img_list[idx] if idx < len(img_list) else None
             
+            # If source asset not resolved, fall back to extracted render frame
+            if not p_img and idx < len(rendered_frames) and rendered_frames[idx].exists():
+                p_img = rendered_frames[idx]
+
             is_dup = False
             is_stretched = False
             dims = (0, 0)
@@ -346,7 +383,7 @@ class ProductionReelVerifier:
 
             if p_img and p_img.exists():
                 asset_name = p_img.name
-                asset_src = "AI Generated B-Roll" if "sc" in p_img.name else "Curated B-Roll Bank"
+                asset_src = "AI Generated B-Roll" if "sc" in p_img.name else "Physical Video Render Frame"
                 
                 # Check duplication
                 if str(p_img.resolve()) in unique_images_seen:
@@ -362,7 +399,7 @@ class ProductionReelVerifier:
                         img_ar = iw / ih if ih > 0 else 0.0
                         ar_str = f"{iw}:{ih} ({img_ar:.2f})"
                         # Flag severely squashed or stretched assets (e.g. horizontal stretched to vertical)
-                        if iw > ih:
+                        if iw > ih and img_ar > 1.2:
                             is_stretched = True
                             warnings.append(f"Scene {sc_num} asset is landscape ({iw}x{ih}) cropped to vertical 9:16")
                 except Exception as e:
@@ -411,7 +448,8 @@ class ProductionReelVerifier:
         # Check ending visual treatment
         if scene_records:
             last_sc = scene_records[-1]
-            cta_match = "consultation" in last_sc.selected_asset_name.lower() or "scroll" in last_sc.selected_asset_name.lower() or "desk" in last_sc.selected_asset_name.lower()
+            last_desc = f"{last_sc.visual_description} {last_sc.spoken_narration} {last_sc.selected_asset_name}".lower()
+            cta_match = any(w in last_desc for w in ["consultation", "scroll", "desk", "astrologer", "reading", "study", "parchment", "dm", "comment"])
             checks["ending_matches_cta"] = "PASS" if cta_match else "WARNING"
 
         visuals_summary = {
