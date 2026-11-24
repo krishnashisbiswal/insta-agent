@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-11-24 21:24:36",
+  "timestamp": "2026-11-25 00:24:42",
   "timezone": "Asia/Kolkata",
-  "algorithm_velocity_score": 100.0,
-  "is_high_velocity_window": true,
-  "active_phase": "Late Night Subconscious & Gemstone Truth",
+  "algorithm_velocity_score": 40.0,
+  "is_high_velocity_window": false,
+  "active_phase": "Algorithmic Indexing & Quiet Hours",
   "ai_indexing_lead_time_minutes": 15,
   "core_ranking_vectors": {
     "watch_time_multiplier": 1.45,
