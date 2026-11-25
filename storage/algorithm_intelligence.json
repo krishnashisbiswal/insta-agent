@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-11-25 04:34:34",
+  "timestamp": "2026-11-25 18:15:10",
   "timezone": "Asia/Kolkata",
-  "algorithm_velocity_score": 40.0,
-  "is_high_velocity_window": false,
-  "active_phase": "Algorithmic Indexing & Quiet Hours",
+  "algorithm_velocity_score": 92.9,
+  "is_high_velocity_window": true,
+  "active_phase": "Prime Evening Explore Feed Surge",
   "ai_indexing_lead_time_minutes": 15,
   "core_ranking_vectors": {
     "watch_time_multiplier": 1.45,
